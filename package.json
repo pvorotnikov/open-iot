@@ -1,0 +1,59 @@
+{
+  "name": "open-home-ui",
+  "version": "1.0.0",
+  "description": "UI to Open Home project",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon src/bin/www",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch-js": "watchify src/public/js/src/*.js -o src/public/js/dist/bundle.js -dv -t [ babelify --presets [ env react ] ]",
+    "watch": "npm run watch-js",
+    "build-js": "browserify src/public/js/src/*.js -o src/public/js/dist/bundle.js -t [ babelify --presets [ env react ] ]",
+    "build": "npm run build-js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pvorotnikov/open-home-ui.git"
+  },
+  "author": "Petar Vorotnikov (petar@vorotnikov.net)",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/pvorotnikov/open-home-ui/issues"
+  },
+  "homepage": "https://github.com/pvorotnikov/open-home-ui#readme",
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "body-parser": "^1.18.2",
+    "cookie-parser": "^1.4.3",
+    "express": "^4.16.2",
+    "express-session": "^1.15.6",
+    "lodash": "^4.17.4",
+    "moment": "^2.19.1",
+    "morgan": "^1.9.0",
+    "nconf": "^0.8.5",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0",
+    "semantic-ui-react": "^0.75.1",
+    "uuid": "^3.1.0",
+    "winston": "^2.4.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "babelify": "^8.0.0",
+    "browserify": "^14.5.0",
+    "chai": "^4.1.2",
+    "mocha": "^4.0.1",
+    "sinon": "^4.0.2",
+    "sinon-chai": "^2.14.0",
+    "watchify": "^3.9.0"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "test/*",
+      "docs/*",
+      "src/public/*"
+    ]
+  }
+}

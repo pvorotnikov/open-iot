@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+
+// parse configuration
+const nconf = require('nconf')
+nconf.env().file({ file: './src/config.json' })
+nconf.set('ENV', nconf.get('NODE_ENV') || 'development')
+
+const { logger } = require('../lib')
+const http = require('http')
+const app = require('../index')
+
+// set time zone to UTC
+process.env.TZ = 'UTC'
+
+const port = nconf.get('PORT')
+const server = http.createServer(app)
+
+server.on('error', (e) => {
+    switch (e.code) {
+        case 'EADDRINUSE':
+            logger.warn('Address in use, retrying...')
+            setTimeout(() => {
+                server.close()
+                server.listen(port)
+            }, 1000)
+            break
+
+        case 'EACCES':
+            logger.warn('Elevated privileges required')
+            break
+
+        default:
+            throw e
+    }
+})
+
+server.on('listening', () => {
+  var addr = server.address()
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port
+  logger.info('Server listening on ' + bind)
+})
+
+server.listen(port)
