@@ -1,8 +1,6 @@
 import React, { Component } from 'react'
 
-import {
-  Button, Container, Grid, Header, Icon, Image, Item, Label, Menu, Segment, Step, Table,
-} from 'semantic-ui-react'
+import { Container, Header } from 'semantic-ui-react'
 
 
 import AddTodo from './AddTodo'
@@ -13,9 +11,12 @@ class App extends Component {
     render() {
         return (
             <div>
-                <AddTodo />
-                <VisibleTodoList />
-                <Footer />
+                <Container style={{ marginTop: '3em' }}>
+                    <Header as='h2'>My Todo</Header>
+                    <AddTodo />
+                    <VisibleTodoList />
+                    <Footer />
+                </Container>
             </div>
         )
     }
