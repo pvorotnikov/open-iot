@@ -11,7 +11,7 @@ npm install
 
 ```bash
 # To build the frontend once
-npm run build 
+npm run build
 
 # To continuously watch for changes on the frontend
 npm run watch
@@ -25,3 +25,10 @@ npm tset
 
 ## Configuration
 TODO
+
+### Reference reading material
+* http://sandboxelectronics.com/?product=lorago-dock-single-channel-lorawan-gateway
+* https://www.slideshare.net/MemSQL/building-the-ideal-stack-for-realtime-analytics
+* http://www.instructables.com/id/Use-Lora-Shield-and-RPi-to-Build-a-LoRaWAN-Gateway/
+* https://www.thethingsnetwork.org/wiki/Backend/Home
+* https://github.com/TheThingsNetwork
