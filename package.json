@@ -6,9 +6,9 @@
   "scripts": {
     "start": "nodemon src/bin/www",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch-js": "watchify src/public/js/src/*.js -o src/public/js/dist/bundle.js -dv -t [ babelify --presets [ env react ] ]",
+    "watch-js": "watchify src/public/js/src/*.js -o src/public/js/dist/bundle.js -dv --transform [ babelify ]",
     "watch": "npm run watch-js",
-    "build-js": "browserify src/public/js/src/*.js -o src/public/js/dist/bundle.js -t [ babelify --presets [ env react ] ]",
+    "build-js": "browserify src/public/js/src/*.js -o src/public/js/dist/bundle.js --transform [ babelify ]",
     "build": "npm run build-js"
   },
   "repository": {
@@ -31,8 +31,11 @@
     "moment": "^2.19.1",
     "morgan": "^1.9.0",
     "nconf": "^0.8.5",
+    "prop-types": "^15.6.0",
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
+    "react-redux": "^5.0.6",
+    "redux": "^3.7.2",
     "semantic-ui-react": "^0.75.1",
     "uuid": "^3.1.0",
     "winston": "^2.4.0"

@@ -1,11 +1,17 @@
-import React, { Component } from 'react'
-import ReactDOM from 'react-dom'
-import { Rating } from 'semantic-ui-react'
+import React from 'react'
+import { render} from 'react-dom'
+import { Provider } from 'react-redux'
+import { createStore } from 'redux'
 
-class App extends Component {
-    render() {
-        return (<Rating rating={1} maxRating={10} />)
-    }
-}
+import openHomeApp from './reducers'
+import App from './components/App'
 
-ReactDOM.render(<App />, document.getElementById('root'))
+let store = createStore(openHomeApp)
+
+// App bootstrap
+render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById('root')
+)
