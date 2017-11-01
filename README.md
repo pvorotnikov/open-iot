@@ -32,3 +32,4 @@ TODO
 * http://www.instructables.com/id/Use-Lora-Shield-and-RPi-to-Build-a-LoRaWAN-Gateway/
 * https://www.thethingsnetwork.org/wiki/Backend/Home
 * https://github.com/TheThingsNetwork
+* http://jasonwatmore.com/post/2017/09/16/react-redux-user-registration-and-login-tutorial-example
