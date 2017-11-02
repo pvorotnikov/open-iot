@@ -3,9 +3,11 @@ import PropTypes from 'prop-types'
 
 class Todo extends Component {
     render() {
-        return <span style={{ textDecoration: this.props.completed ? 'line-through' : 'none' }}>
-            {this.props.text}
-        </span>
+        return (
+            <span style={{ textDecoration: this.props.completed ? 'line-through' : 'none' }}>
+                {this.props.text}
+            </span>
+        )
     }
 }
 

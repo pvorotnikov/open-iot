@@ -1,3 +1,5 @@
+import { alertConstants } from '../_constants'
+
 let nextTodoId = 0
 
 export const addTodo = text => {
@@ -20,4 +22,18 @@ export const toggleTodo = id => {
         type: 'TOGGLE_TODO',
         id
     }
+}
+
+export const login = (username, password) => {
+    return {
+        type: 'LOGIN',
+        username,
+        password
+    }
+}
+
+export const alertActions = {
+    success: (message) => ({ type: alertConstants.SUCCESS, message }),
+    error: (message) => ({ type: alertConstants.ERROR, message }),
+    clear: (message) => ({ type: alertConstants.CLEAR, message }),
 }
