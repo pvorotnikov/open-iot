@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { Segment, Header, Form, Button } from 'semantic-ui-react'
 
-import { login } from '../actions'
+import { login } from '../_actions'
 
 class LoginForm extends Component {
 

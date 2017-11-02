@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { Form } from 'semantic-ui-react'
 
-import { addTodo } from '../actions'
+import { addTodo } from '../_actions'
 
 class AddTodo extends React.Component {
 

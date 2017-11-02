@@ -2,8 +2,9 @@ const passport = (state = 'SHOW_ALL', action) => {
 
     switch (action.type) {
 
-        case 'SET_VISIBILITY_FILTER':
-            return action.filter
+        case 'LOGIN':
+            console.log('Calling login', action)
+            return state
 
         default:
             return state

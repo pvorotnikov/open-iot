@@ -25,9 +25,7 @@ const todos = (state = [], action) => {
                 }
             })
 
-        case 'LOGIN':
-            console.log('Calling login', action)
-            return state
+
 
         default:
             return state
