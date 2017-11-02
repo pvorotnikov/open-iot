@@ -3,6 +3,7 @@ import { userService } from '../_services'
 import { alertActions } from './'
 import { history } from '../_helpers'
 
+// export actions
 export const userActions = {
     login,
     logout,
@@ -11,6 +12,12 @@ export const userActions = {
     delete: _delete,
 }
 
+/**
+ * Attempt login
+ * @param  {String} username
+ * @param  {String} password
+ * @return {Function} login async action
+ */
 function login(username, password) {
     return dispatch => {
         dispatch(request({ username }))
@@ -35,11 +42,20 @@ function login(username, password) {
     function failure(error) { return { type: userConstants.LOGIN_FAILURE, error } }
 }
 
+/**
+ * Log out current user
+ * @return {Object} logout action
+ */
 function logout() {
     userService.logout()
     return { type: userConstants.LOGOUT }
 }
 
+/**
+ * Register new user
+ * @param  {Object} user user object
+ * @return {Function} register async action
+ */
 function register(user) {
     return dispatch => {
         dispatch(request(user))
@@ -65,6 +81,10 @@ function register(user) {
     function failure(error) { return { type: userConstants.REGISTER_FAILURE, error } }
 }
 
+/**
+ * Get all users
+ * @return {Function} get all async action
+ */
 function getAll() {
     return dispatch => {
         dispatch(request())
@@ -86,7 +106,13 @@ function getAll() {
     function failure(error) { return { type: userConstants.GETALL_FAILURE, error } }
 }
 
-// prefixed function name with underscore because delete is a reserved word in javascript
+/**
+ * Delete user.
+ * Prefixed function name with underscore because
+ * delete is a reserved word in js
+ * @param  {Number} id user id
+ * @return {Function} delete async action
+ */
 function _delete(id) {
     return dispatch => {
         dispatch(request(id))

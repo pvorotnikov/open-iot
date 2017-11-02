@@ -1,3 +1,7 @@
+/**
+ * User-related constants
+ * @type {Object}
+ */
 export const userConstants = {
     REGISTER_REQUEST: 'USERS_REGISTER_REQUEST',
     REGISTER_SUCCESS: 'USERS_REGISTER_SUCCESS',
