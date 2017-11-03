@@ -1,23 +1,31 @@
+import { todoConstants } from '../_constants'
+
 let nextTodoId = 0
 
-export const addTodo = text => {
+export const todoActions = {
+    addTodo,
+    setFilter,
+    toggleTodo,
+}
+
+function addTodo(text) {
     return {
-        type: 'ADD_TODO',
+        type: todoConstants.ADD,
         id: nextTodoId++,
         text
     }
 }
 
-export const setVisibilityFilter = filter => {
+function setFilter(filter) {
     return {
-        type: 'SET_VISIBILITY_FILTER',
+        type: todoConstants.FILTER,
         filter
     }
 }
 
-export const toggleTodo = id => {
+function toggleTodo(id) {
     return {
-        type: 'TOGGLE_TODO',
+        type: todoConstants.TOGGLE,
         id
     }
 }

@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { todoConstants } from '../_constants'
 import FilterLink from '../containers/FilterLink'
 
 class Footer extends Component {
@@ -6,9 +7,9 @@ class Footer extends Component {
         return (
             <p>
                 Show:
-                {' '} <FilterLink filter="SHOW_ALL">All</FilterLink>
-                {', '} <FilterLink filter="SHOW_ACTIVE">Active</FilterLink>
-                {', '} <FilterLink filter="SHOW_COMPLETED">Completed</FilterLink>
+                {' '} <FilterLink filter={todoConstants.FILTER_SHOW_ALL}>All</FilterLink>
+                {', '} <FilterLink filter={todoConstants.FILTER_SHOW_ACTIVE}>Active</FilterLink>
+                {', '} <FilterLink filter={todoConstants.FILTER_SHOW_COMPLETED}>Completed</FilterLink>
             </p>
         )
     }

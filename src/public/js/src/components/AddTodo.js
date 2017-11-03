@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { Form } from 'semantic-ui-react'
 
-import { addTodo } from '../_actions'
+import { todoActions } from '../_actions'
 
 class AddTodo extends React.Component {
 
@@ -17,7 +17,7 @@ class AddTodo extends React.Component {
         if (!title.trim()) {
             return
         }
-        this.props.dispatch(addTodo(title))
+        this.props.dispatch(todoActions.addTodo(title))
         e.target.title.value = ''
     }
 

@@ -1,9 +1,11 @@
 import moment from 'moment'
+import { todoConstants } from '../_constants'
 
-const todos = (state = [], action) => {
+export function todos(state = [], action) {
 
     switch (action.type) {
-        case 'ADD_TODO':
+
+        case todoConstants.ADD:
             return [
                 ...state,
                 {
@@ -14,7 +16,8 @@ const todos = (state = [], action) => {
                     updated: moment(),
                 }
             ]
-        case 'TOGGLE_TODO':
+
+        case todoConstants.TOGGLE:
             return state.map((todo) => {
                 if (todo.id === action.id) {
                     todo.completed = !todo.completed
@@ -25,12 +28,21 @@ const todos = (state = [], action) => {
                 }
             })
 
-
-
         default:
             return state
     }
 
 }
 
-export default todos
+export function visibilityFilter(state = todoConstants.FILTER_SHOW_ALL, action) {
+
+    switch (action.type) {
+
+        case todoConstants.FILTER:
+            return action.filter
+
+        default:
+            return state
+    }
+
+}
