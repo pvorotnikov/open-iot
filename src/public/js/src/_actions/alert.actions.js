@@ -26,9 +26,8 @@ function error(message) {
 
 /**
  * Clear any messages action creator
- * @param  {String} message
  * @return {Object}
  */
-function clear(message) {
-    return { type: alertConstants.CLEAR, message }
+function clear() {
+    return { type: alertConstants.CLEAR }
 }
