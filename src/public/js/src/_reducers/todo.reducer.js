@@ -18,15 +18,12 @@ export function todos(state = [], action) {
             ]
 
         case todoConstants.TOGGLE:
-            return state.map((todo) => {
-                if (todo.id === action.id) {
-                    todo.completed = !todo.completed
-                    todo.updated = moment()
-                    return todo
-                } else {
-                    return todo
-                }
-            })
+            return state.map((todo) =>
+                todo.id === action.id
+                    // set completed flag to true and refresh updated timestamp
+                    ? {...todo, completed: !todo.completed, updated: moment() }
+                    : todo
+            )
 
         default:
             return state

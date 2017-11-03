@@ -1,8 +1,11 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+import { connect } from 'react-redux'
 import { Table } from 'semantic-ui-react'
 
-import Todo from './Todo'
+import { todoActions } from '../_actions'
+import { todoConstants } from '../_constants'
+import { Todo } from './'
 
 class TodoList extends Component {
     render() {
@@ -45,4 +48,30 @@ TodoList.propTypes = {
     onTodoClick: PropTypes.func.isRequired
 }
 
-export default TodoList
+const getVisibleTodos = (todos, filter) => {
+    switch (filter) {
+        case todoConstants.FILTER_SHOW_ALL:
+            return todos
+        case todoConstants.FILTER_SHOW_COMPLETED:
+            return todos.filter(t => t.completed)
+        case todoConstants.FILTER_SHOW_ACTIVE:
+            return todos.filter(t => !t.completed)
+    }
+}
+
+const mapStateToProps = state => {
+    return {
+        todos: getVisibleTodos(state.todos, state.visibilityFilter)
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        onTodoClick: id => {
+            dispatch(todoActions.toggleTodo(id))
+        }
+    }
+}
+
+const connectedTodoList = connect(mapStateToProps, mapDispatchToProps)(TodoList)
+export { connectedTodoList as TodoList }

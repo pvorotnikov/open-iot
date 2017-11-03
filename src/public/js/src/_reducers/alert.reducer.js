@@ -17,14 +17,14 @@ export function alert(state = {}, action) {
 
         case alertConstants.SUCCESS:
             return {
-                type: 'alert-success',
+                type: 'success',
                 message: action.message,
             }
             break
 
         case alertConstants.ERROR:
             return {
-                type: 'alert-danger',
+                type: 'error',
                 message: action.message,
             }
             break

@@ -10,3 +10,11 @@ export function authHeader() {
         return {}
     }
 }
+
+/**
+ * Returns content-type header with application/json value
+ * @return {Object} header object
+ */
+export function jsonHeader() {
+    return { 'Content-Type': 'application/json' }
+}

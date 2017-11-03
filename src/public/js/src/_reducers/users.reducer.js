@@ -59,7 +59,7 @@ export function users(state = {}, action) {
                 items: state.items.map(user => {
 
                     if (user.id === action.id) {
-                        // copy user
+                        // copy user (without the deleting flag)
                         const { deleting, ...userCopy } = user
                         // return the copied user with delete error
                         return { ...userCopy, deleteError: action.error }

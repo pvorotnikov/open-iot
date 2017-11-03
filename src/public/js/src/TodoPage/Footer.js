@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
 import { todoConstants } from '../_constants'
-import FilterLink from '../containers/FilterLink'
+import { FilterLink } from './'
 
-class Footer extends Component {
+export class Footer extends Component {
     render() {
         return (
             <p>
@@ -15,5 +15,3 @@ class Footer extends Component {
     }
 
 }
-
-export default Footer

@@ -37,6 +37,5 @@ AddTodo.propTypes = {
     dispatch: PropTypes.func.isRequired,
 }
 
-AddTodo = connect()(AddTodo)
-
-export default AddTodo
+const connectedAddTodo = connect()(AddTodo)
+export { connectedAddTodo as AddTodo }

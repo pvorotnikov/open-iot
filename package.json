@@ -7,9 +7,10 @@
     "postinstall": "mkdir -p src/public/js/dist && cp node_modules/semantic-ui-css/semantic.min.css src/public/css/",
     "start": "nodemon src/bin/www",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch-js": "watchify src/public/js/src/*.js -o src/public/js/dist/bundle.js -dv --transform [ babelify ]",
+    "clean": "rm -Rf src/public/js/dist && mkdir -p src/public/js/dist",
+    "watch-js": "npm run clean && watchify src/public/js/src/*.js -o src/public/js/dist/bundle.js -dv --transform [ babelify ]",
     "watch": "npm run watch-js",
-    "build-js": "browserify src/public/js/src/*.js -o src/public/js/dist/bundle.js --transform [ babelify ]",
+    "build-js": "npm run clean && browserify src/public/js/src/*.js -o src/public/js/dist/bundle.js --transform [ babelify ]",
     "build": "npm run build-js"
   },
   "repository": {

@@ -98,7 +98,7 @@ export function configureFakeBackend() {
                     }
 
                     // save new user
-                    newUser.id = Math.max(...users.map(user => user.id)) + 1
+                    newUser.id = users.length + 1
                     users.push(newUser)
                     localStorage.setItem('users', JSON.stringify(users))
 
