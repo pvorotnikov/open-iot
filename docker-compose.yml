@@ -1,0 +1,18 @@
+version: '2'
+
+services:
+
+  ui:
+    build:
+      context: ./
+      dockerfile: ./helpers/Dockerfile
+    image: ui:latest
+    links:
+      - "db"
+    # volumes: # for development purposes
+    #   - ./vopen-broker/auth/app.js:/usr/app/app.js
+    #   - ./vopen-broker/auth/db.js:/usr/app/db.js
+
+  db:
+    image: mongo:latest
+
