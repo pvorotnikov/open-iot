@@ -32,7 +32,7 @@ class HomePage extends Component {
 
         return (
             <Container>
-                <Header as='h1'>Hi {user.firstName}!</Header>
+                <Header as='h1'>Hi {user.firstName} {user.lastName}!</Header>
                 <Header as='h3'>Registered users</Header>
                 <Segment.Group>
                     {userItems}

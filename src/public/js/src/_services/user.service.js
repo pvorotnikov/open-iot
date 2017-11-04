@@ -10,17 +10,27 @@ export const userService = {
     delete: _delete,
 }
 
-function login(username, password) {
+function register(user) {
     const requestOptions = {
         method: 'POST',
         headers: jsonHeader(),
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(user)
+    }
+    return fetch('/api/passport/register', requestOptions)
+    .then(handleResponse)
+}
+
+function login(email, password) {
+    const requestOptions = {
+        method: 'POST',
+        headers: jsonHeader(),
+        body: JSON.stringify({ email, password }),
     }
 
-    return fetch('/users/authenticate', requestOptions)
+    return fetch('/api/passport/auth', requestOptions)
     .then(handleResponse)
     .then((user) => {
-        if (user && user.token) {
+        if (user && user.accessToken && user.refreshToken) {
             localStorage.setItem('user', JSON.stringify(user))
         }
         return user
@@ -36,7 +46,7 @@ function getAll() {
         method: 'GET',
         headers: authHeader()
     }
-    return fetch('/users', requestOptions)
+    return fetch('/api/users', requestOptions)
     .then(handleResponse)
 }
 
@@ -45,17 +55,7 @@ function getById(id) {
         method: 'GET',
         headers: authHeader()
     }
-    return fetch('/users/' + id, requestOptions)
-    .then(handleResponse)
-}
-
-function register(user) {
-    const requestOptions = {
-        method: 'POST',
-        headers: jsonHeader(),
-        body: JSON.stringify(user)
-    }
-    return fetch('/users/register', requestOptions)
+    return fetch('/api/users/' + id, requestOptions)
     .then(handleResponse)
 }
 
@@ -78,9 +78,31 @@ function _delete(id) {
     .then(handleResponse)
 }
 
+/**
+ * Generic handler for API protocol
+ * { status: 'ok', data: {...}|[...] }
+ * { status: 'error', errorMessage='...', data: {...}|[...] }
+ * @param  {Response} response
+ * @return {Promise}
+ */
 function handleResponse(response) {
-    if (!response.ok) {
-        return Promise.reject(response.statusText)
-    }
-    return response.json()
+    return new Promise((fulfill, reject) => {
+        if (!response.ok) {
+            response.json()
+            .then((res) => {
+                reject(res.errorMessage || response.statusText)
+            })
+            .catch((err) => {
+                reject(err.message)
+            })
+        } else {
+            response.json()
+            .then((res) => {
+                fulfill(res.data)
+            })
+            .catch((err) => {
+                reject(err.message)
+            })
+        }
+    })
 }

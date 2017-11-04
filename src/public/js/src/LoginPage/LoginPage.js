@@ -11,10 +11,10 @@ class LoginPage extends Component {
 
     onSubmit(e) {
         e.preventDefault()
-        let username = e.target.username.value
+        let email = e.target.email.value
         let password = e.target.password.value
-        if (username && password) {
-            this.props.dispatch(userActions.login(username, password))
+        if (email && password) {
+            this.props.dispatch(userActions.login(email, password))
         }
     }
 
@@ -23,7 +23,7 @@ class LoginPage extends Component {
             <Segment>
                 <Form loading={this.props.loggingIn} onSubmit={ e => this.onSubmit(e) }>
                     <Header as='h2'>Login</Header>
-                    <Form.Input name="username" label='Username' />
+                    <Form.Input name="email" label='Email' />
                     <Form.Input name="password" label='Password' type='password' />
                     <Button type='submit'>Login</Button>
                     <Link to='/register'>Register</Link>

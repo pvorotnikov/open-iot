@@ -57,7 +57,15 @@ const deviceSchema = mongoose.Schema({
     description: String,
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
-});
+})
+
+const tokenSchema = mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    type: String,   // access, refresh
+    value: String,
+    created: { type: Date, default: Date.now },
+    updated: { type: Date, default: Date.now },
+})
 
 /* ================================
  * Models
@@ -67,6 +75,7 @@ const User = mongoose.model('User', userSchema)
 const Application = mongoose.model('Application', applicationSchema)
 const Gateway = mongoose.model('Gateway', gatewaySchema)
 const Device = mongoose.model('Device', deviceSchema)
+const Token = mongoose.model('Token', tokenSchema)
 
 /* ================================
  * Database
@@ -90,7 +99,8 @@ function createDefaultUser() {
                 lastName: 'User',
                 email: 'admin',                      // default email
                 password: generatePassword('admin'), // default password
-                isDefault: true
+                isDefault: true,
+                accessLevel: ACCESS_LEVEL.ADMIN,
             })
             defaultUser.save()
             .then((u) => {
@@ -128,4 +138,5 @@ module.exports = {
     Application,
     Gateway,
     Device,
+    Token,
 }

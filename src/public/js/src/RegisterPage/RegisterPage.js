@@ -16,7 +16,7 @@ class RegisterPage extends Component {
             user: {
                 firstName: '',
                 lastName: '',
-                username: '',
+                email: '',
                 password: ''
             },
             submitted: false
@@ -41,7 +41,7 @@ class RegisterPage extends Component {
         this.setState({ submitted: true });
         const { user } = this.state;
         const { dispatch } = this.props;
-        if (user.firstName && user.lastName && user.username && user.password) {
+        if (user.firstName && user.lastName && user.email && user.password) {
             this.props.dispatch(userActions.register(user));
         }
     }
@@ -54,6 +54,20 @@ class RegisterPage extends Component {
                 <Form loading={registering} onSubmit={ e => this.onSubmit(e) }>
                     <Header as='h2'>Register</Header>
                     <Form.Field>
+                        <label>Email</label>
+                        <Input name="email" type="email" onChange={ (e, data) => this.onChange(e, data) } />
+                        { submitted && !user.email &&
+                            <Label basic color='red' pointing>Email is required</Label>
+                        }
+                    </Form.Field>
+                    <Form.Field>
+                        <label>Password</label>
+                        <Input name="password" type='password' onChange={ (e, data) => this.onChange(e, data) } />
+                        { submitted && !user.password &&
+                            <Label basic color='red' pointing>Password is required</Label>
+                        }
+                    </Form.Field>
+                    <Form.Field>
                         <label>First name</label>
                         <Input name="firstName" onChange={ (e, data) => this.onChange(e, data) } />
                         { submitted && !user.firstName &&
@@ -65,20 +79,6 @@ class RegisterPage extends Component {
                         <Input name="lastName" onChange={ (e, data) => this.onChange(e, data) } />
                         { submitted && !user.lastName &&
                             <Label basic color='red' pointing>Last name is required</Label>
-                        }
-                    </Form.Field>
-                    <Form.Field>
-                        <label>Username</label>
-                        <Input name="username" onChange={ (e, data) => this.onChange(e, data) } />
-                        { submitted && !user.username &&
-                            <Label basic color='red' pointing>Username is required</Label>
-                        }
-                    </Form.Field>
-                    <Form.Field>
-                        <label>Password</label>
-                        <Input name="password" type='password' onChange={ (e, data) => this.onChange(e, data) } />
-                        { submitted && !user.password &&
-                            <Label basic color='red' pointing>Password is required</Label>
                         }
                     </Form.Field>
                     <Button type='submit'>Register</Button>

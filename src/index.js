@@ -5,19 +5,46 @@ const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser')
 
 const { logger } = require('./lib')
+const DB = require('./models');
 const api = require('./api')
+
+/* ================================
+ * Database
+ * ================================
+ */
+DB.connection()
+.then((instance) => setupServer())
+.catch((err) => {});
+
+/* ================================
+ * Create app
+ * ================================
+ */
 
 // create app
 const app = express()
 
-// setup logging
-app.use(morgan('combined', { 'stream': logger.stream }))
+// setup middleware
+app.use(morgan('combined', { 'stream': logger.stream, skip: (req, res) => { return res.statusCode < 200 } }))
 app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
-app.get('/', function (req, res) {
-    res.send('hello, world!')
+app.use('/api', api);
+
+// catch 404 and forward it to error handler
+app.use((req, res, next) => {
+    let err = new Error('Not Found')
+    err.status = 404
+    next(err)
+})
+
+// error handler
+app.use(function(err, req, res, next) {
+    logger.error(err.message)
+    res.status(err.status || 500)
+    res.json({ status: 'error', errorMessage: err.message, data: {} })
 })
 
 module.exports = app

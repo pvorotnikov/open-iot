@@ -14,27 +14,24 @@ export const userActions = {
 
 /**
  * Attempt login
- * @param  {String} username
+ * @param  {String} email
  * @param  {String} password
  * @return {Function} login async action
  */
-function login(username, password) {
+function login(email, password) {
     return dispatch => {
-        dispatch(request({ username }))
+        dispatch(request({ email }))
 
         // perform async operation
-        userService.login(username, password)
-        .then(
-            user => {
-                dispatch(success(user))
-                history.push('/')
-            },
-            // TODO: move this to catch
-            error => {
-                dispatch(failure(error))
-                dispatch(alertActions.error(error))
-            }
-        )
+        userService.login(email, password)
+        .then(user => {
+            dispatch(success(user))
+            history.push('/')
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
     }
 
     function request(user) { return { type: userConstants.LOGIN_REQUEST, user } }

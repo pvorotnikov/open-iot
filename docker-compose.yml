@@ -6,12 +6,15 @@ services:
     build:
       context: ./
       dockerfile: ./helpers/Dockerfile
-    image: ui:latest
+    image: open-home-ui:latest
+    ports:
+      - 127.0.0.1:8080:8080
+    depends_on:
+      - db
     links:
       - "db"
-    # volumes: # for development purposes
-    #   - ./vopen-broker/auth/app.js:/usr/app/app.js
-    #   - ./vopen-broker/auth/db.js:/usr/app/db.js
+    volumes: # for development purposes
+      - ./src:/usr/app/src
 
   db:
     image: mongo:latest
