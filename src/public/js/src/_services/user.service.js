@@ -78,6 +78,21 @@ function _delete(id) {
     .then(handleResponse)
 }
 
+function refreshTokens() {
+    const requestOptions = {
+        method: 'GET',
+        headers: refreshHeader()
+    }
+    return fetch('/api/passport/refresh', requestOptions)
+    .then(handleResponse)
+    .then((tokens) => {
+        let user = JSON.parse(localStorage.getItem('user'))
+        let { accessToken, refreshToken } = tokens
+        user = {...user, accessToken, refreshToken}
+        localStorage.setItem('user', JSON.stringify(user))
+    })
+}
+
 /**
  * Generic handler for API protocol
  * { status: 'ok', data: {...}|[...] }

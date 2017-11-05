@@ -1,4 +1,4 @@
-const { logger } = require('../lib')
+const logger = require('../lib/logger')
 const nconf = require('nconf')
 const bcrypt = require('bcrypt')
 const uuidv4 = require('uuid/v4')
@@ -63,7 +63,7 @@ const tokenSchema = mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     type: String,   // access, refresh
     value: String,
-    created: { type: Date, default: Date.now },
+    created: { type: Date, default: Date.now, expires: 3600 }, // expire in 1 hour
     updated: { type: Date, default: Date.now },
 })
 

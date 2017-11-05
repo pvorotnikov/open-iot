@@ -1,11 +1,26 @@
 /**
- * Return authorization header with JWT token.
+ * Return authorization header with access JWT token.
  * @return {Object} header object
  */
 export function authHeader() {
     let user = JSON.parse(localStorage.getItem('user'))
     if (user && user.accessToken) {
-        return { 'Authorization': 'Bearer ' + user.token }
+        return { 'Authorization': 'Bearer ' + user.accessToken }
+    } else {
+        return {}
+    }
+}
+
+
+
+/**
+ * Return authorization header with refresh JWT token.
+ * @return {Object} header object
+ */
+export function refreshHeader() {
+    let user = JSON.parse(localStorage.getItem('user'))
+    if (user && user.refreshToken) {
+        return { 'Authorization': 'Bearer ' + user.refreshToken }
     } else {
         return {}
     }

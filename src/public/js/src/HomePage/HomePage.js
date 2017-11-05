@@ -10,7 +10,15 @@ import { userActions } from '../_actions'
 class HomePage extends Component {
 
     componentDidMount() {
-        this.props.dispatch(userActions.getAll())
+        // TODO: this is for testing purposes. Remove it eventually
+        this.refreshing = setInterval(() => {
+            this.props.dispatch(userActions.getAll())
+        }, 2000)
+    }
+
+    // TODO: this is for testing purposes. Remove it eventually
+    componentWillUnmount() {
+        clearInterval(this.refreshing)
     }
 
     handleDeleteUser(id) {
