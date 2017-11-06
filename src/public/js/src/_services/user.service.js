@@ -43,7 +43,6 @@ function logout() {
 function getAll() {
     const requestOptions = {
         method: 'GET',
-        headers: authHeader()
     }
     return new Request().send('/api/users', requestOptions)
 }
@@ -51,7 +50,6 @@ function getAll() {
 function getById(id) {
     const requestOptions = {
         method: 'GET',
-        headers: authHeader()
     }
     return new Request().send('/api/users/' + id, requestOptions)
 }
@@ -59,7 +57,7 @@ function getById(id) {
 function update(user) {
     const requestOptions = {
         method: 'PUT',
-        headers: { ...authHeader(), ...jsonHeader() },
+        headers: jsonHeader(),
         body: JSON.stringify(user)
     }
     return new Request().send('/api/users/' + user.id, requestOptions)
@@ -68,7 +66,6 @@ function update(user) {
 function _delete(id) {
     const requestOptions = {
         method: 'DELETE',
-        headers: authHeader()
     }
     return new Request().send('/api/users/' + id, requestOptions)
 }

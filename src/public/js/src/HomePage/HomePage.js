@@ -3,26 +3,18 @@ import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
 import { connect } from 'react-redux'
 
-import { Segment, Header, Container, Button } from 'semantic-ui-react'
+import { Segment, Header, Container, Button, Grid } from 'semantic-ui-react'
 
 import { userActions } from '../_actions'
 
 class HomePage extends Component {
 
     componentDidMount() {
-        // TODO: this is for testing purposes. Remove it eventually
-        this.refreshing = setInterval(() => {
-            this.props.dispatch(userActions.getAll())
-        }, 2000)
-    }
-
-    // TODO: this is for testing purposes. Remove it eventually
-    componentWillUnmount() {
-        clearInterval(this.refreshing)
+        this.props.dispatch(userActions.getAll())
     }
 
     handleDeleteUser(id) {
-        return (e) => this.props.dispatch(userActions.delete(id))
+        this.props.dispatch(userActions.delete(id))
     }
 
     handleLogout(e) {
@@ -33,7 +25,18 @@ class HomePage extends Component {
         const { user, users } = this.props
 
         let userItems = users.items
-            ? users.items.map((user, index) => (<Segment key={user.id}>{`${user.firstName} ${user.lastName}`}</Segment>))
+            ? users.items.map((user, index) => (
+                <Segment key={user.id}>
+                    <Grid >
+                        <Grid.Column width={13}>
+                            {`${user.firstName} ${user.lastName}`}
+                        </Grid.Column>
+                        <Grid.Column width={3}>
+                            <Button icon='delete' color='red' onClick={ e=> this.handleDeleteUser(user.id) } />
+                        </Grid.Column>
+                    </Grid>
+                </Segment>
+            ))
             : users.loading
                 ? <Segment>Loading</Segment>
                 : <Segment>No data</Segment>

@@ -60,18 +60,15 @@ function register(user) {
 
         // perform async operation
         userService.register(user)
-        .then(
-            user => {
-                dispatch(success())
-                history.push('/login')
-                dispatch(alertActions.success('Registration successful'))
-            },
-            // TODO: move this to catch
-            error => {
-                dispatch(failure(error))
-                dispatch(alertActions.error(error))
-            }
-        )
+        .then(user => {
+            dispatch(success())
+            history.push('/login')
+            dispatch(alertActions.success('Registration successful'))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
     }
 
     function request(user) { return { type: userConstants.REGISTER_REQUEST, user } }
@@ -89,14 +86,13 @@ function getAll() {
 
         // perform async operation
         userService.getAll()
-        .then(
-            users => dispatch(success(users)),
-            // TODO: move this to catch
-            error => {
-                dispatch(failure(error))
-                dispatch(alertActions.error(error))
-            }
-        )
+        .then(users => {
+            dispatch(success(users))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
     }
 
     function request() { return { type: userConstants.GETALL_REQUEST } }
@@ -117,15 +113,13 @@ function _delete(id) {
 
         // perform async operation
         userService.delete(id)
-        .then(
-            user => {
-                dispatch(success(id))
-            },
-            // TODO: move this to catch
-            error => {
-                dispatch(failure(id, error))
-            }
-        )
+        .then(() => {
+            dispatch(success(id))
+        })
+        .catch(error => {
+            dispatch(failure(id, error))
+            dispatch(alertActions.error(error))
+        })
     }
 
     function request(id) { return { type: userConstants.DELETE_REQUEST, id } }

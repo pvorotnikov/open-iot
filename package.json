@@ -49,6 +49,7 @@
     "semantic-ui-css": "^2.2.12",
     "semantic-ui-react": "^0.75.1",
     "uuid": "^3.1.0",
+    "validator": "^9.1.1",
     "winston": "^2.4.0"
   },
   "devDependencies": {

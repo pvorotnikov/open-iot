@@ -23,7 +23,7 @@ const ACCESS_LEVEL = {
  */
 
 const userSchema = mongoose.Schema({
-    email: String,
+    email: { type: String, unique : true },
     password: String,
     firstName: String,
     lastName: String,
@@ -139,4 +139,5 @@ module.exports = {
     Gateway,
     Device,
     Token,
+    generatePassword,
 }

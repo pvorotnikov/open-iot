@@ -1,8 +1,11 @@
+import { history } from './'
+
 import StateMachine from 'javascript-state-machine'
 
 export class Request {
 
-    constructor() {
+    constructor(forceLogoutOnAuthError=true) {
+        this.forceLogoutOnAuthError = forceLogoutOnAuthError
         this.requestLimit = 0
         this.requestCount = 0
 
@@ -89,6 +92,13 @@ export class Request {
             if (this.requestCount > this.requestLimit) {
                 console.info('Request limit reached. Returning the response...')
                 this.fsm.responsereceived(req, err)
+
+                // force logout
+                if (this.forceLogoutOnAuthError) {
+                    localStorage.removeItem('user')
+                    history.push('/')
+                }
+
             } else {
                 switch (err.status) {
                     // threat 401 as unauthorized
