@@ -8,17 +8,9 @@ const { Token } = require('../models')
 const { SuccessResponse, ErrorResponse } = require('./responses')
 
 function storeTokens(u, accessKey, refreshKey) {
-    // store access token
     let accessToken = new Token({ user: u._id, type: 'access', value: accessKey, })
-    accessToken.save()
-    .then(result => logger.info(`Access token saved for user ${u._id}`))
-    .catch(err => logger.warn(`Error saving access token for user ${u._id}: ${err.message}`))
-
-    // store refresh token
     let refreshToken = new Token({ user: u._id, type: 'refresh', value: refreshKey, })
-    refreshToken.save()
-    .then(result => logger.info(`Refresh token saved for user ${u._id}`))
-    .catch(err => logger.warn(`Error saving refresh token for user ${u._id}: ${err.message}`))
+    return Promise.all([accessToken.save(), refreshToken.save()])
 }
 
 function createToken(payload) {
@@ -43,10 +35,13 @@ module.exports = {
         let accessTokenValue = createToken({ key: accessKey, type: 'access', accessLevel: user.accessLevel, id: user._id })
         let refreshTokenValue = createToken({ key: refreshKey, type: 'refresh', accessLevel: user.accessLevel, id: user._id })
         storeTokens(user, accessKey, refreshKey)
-        return {
-            accessToken: accessTokenValue,
-            refreshToken: refreshTokenValue,
-        }
+        .then(() => {
+            logger.info(`Tokens stored for user ${user._id}`)
+        })
+        .catch(err => {
+            logger.error(`Error storing tokens for user ${user._id}: ${err.message}`)
+        })
+        return { accessToken: accessTokenValue, refreshToken: refreshTokenValue, }
     },
 
     protect: (requiredLevel) => {
@@ -63,21 +58,27 @@ module.exports = {
             }
 
             let parts = req.headers.authorization.split(' ')
-            let token = parts[1]
+            let rawToken = parts[1]
 
             // verify token
-            verifyToken(token)
+            verifyToken(rawToken)
             .then(data => {
-                logger.debug(`Received ${data.type} token for user ${data.id}`)
+                logger.debug(`Received ${data.type} token on endpoint ${req.path} for user ${data.id}: ${rawToken.split('.')[2]}`)
                 Token.findOne({ user: data.id, type: data.type, value: data.key })
                 .sort({created: 'desc'})
+                .populate('user')
                 .then(token => {
                     if (token) {
                         let diff = moment().diff(moment(token.created), 'seconds')
-                        logger.info(`Time difference: ${diff} seconds`)
-                        if (diff > 10) {
-                            return res.status(401).json(new ErrorResponse('Token expired'))
+                        logger.info(`Time difference: ${diff} seconds for ${token.type} token`)
+                        if ('access' === token.type && diff > nconf.get('ACCESS_TOKEN_EXPIRATION_TIME')) {
+                            logger.info('Rejecting with 401')
+                            return res.status(401).json(new ErrorResponse('Access token expired'))
+                        } else if  ('refresh' === token.type && diff > nconf.get('REFRESH_TOKEN_EXPIRATION_TIME')) {
+                            logger.info('Rejecting with 403')
+                            return res.status(403).json(new ErrorResponse('Refresh token expired'))
                         }
+                        req.user = token.user
                         next()
                     } else {
                         return res.status(403).json(new ErrorResponse('Token does not exist'))

@@ -1,4 +1,5 @@
 import { authHeader, jsonHeader } from '../_helpers'
+import { Request } from '../_helpers'
 
 export const userService = {
     login,
@@ -16,8 +17,7 @@ function register(user) {
         headers: jsonHeader(),
         body: JSON.stringify(user)
     }
-    return fetch('/api/passport/register', requestOptions)
-    .then(handleResponse)
+    return new Request().send('/api/passport/register', requestOptions)
 }
 
 function login(email, password) {
@@ -27,9 +27,8 @@ function login(email, password) {
         body: JSON.stringify({ email, password }),
     }
 
-    return fetch('/api/passport/auth', requestOptions)
-    .then(handleResponse)
-    .then((user) => {
+    return new Request().send('/api/passport/auth', requestOptions)
+    .then(user => {
         if (user && user.accessToken && user.refreshToken) {
             localStorage.setItem('user', JSON.stringify(user))
         }
@@ -46,8 +45,7 @@ function getAll() {
         method: 'GET',
         headers: authHeader()
     }
-    return fetch('/api/users', requestOptions)
-    .then(handleResponse)
+    return new Request().send('/api/users', requestOptions)
 }
 
 function getById(id) {
@@ -55,8 +53,7 @@ function getById(id) {
         method: 'GET',
         headers: authHeader()
     }
-    return fetch('/api/users/' + id, requestOptions)
-    .then(handleResponse)
+    return new Request().send('/api/users/' + id, requestOptions)
 }
 
 function update(user) {
@@ -65,8 +62,7 @@ function update(user) {
         headers: { ...authHeader(), ...jsonHeader() },
         body: JSON.stringify(user)
     }
-    return fetch('/users/' + user.id, requestOptions)
-    .then(handleResponse)
+    return new Request().send('/api/users/' + user.id, requestOptions)
 }
 
 function _delete(id) {
@@ -74,50 +70,5 @@ function _delete(id) {
         method: 'DELETE',
         headers: authHeader()
     }
-    return fetch('/users/' + id, requestOptions)
-    .then(handleResponse)
-}
-
-function refreshTokens() {
-    const requestOptions = {
-        method: 'GET',
-        headers: refreshHeader()
-    }
-    return fetch('/api/passport/refresh', requestOptions)
-    .then(handleResponse)
-    .then((tokens) => {
-        let user = JSON.parse(localStorage.getItem('user'))
-        let { accessToken, refreshToken } = tokens
-        user = {...user, accessToken, refreshToken}
-        localStorage.setItem('user', JSON.stringify(user))
-    })
-}
-
-/**
- * Generic handler for API protocol
- * { status: 'ok', data: {...}|[...] }
- * { status: 'error', errorMessage='...', data: {...}|[...] }
- * @param  {Response} response
- * @return {Promise}
- */
-function handleResponse(response) {
-    return new Promise((fulfill, reject) => {
-        if (!response.ok) {
-            response.json()
-            .then((res) => {
-                reject(res.errorMessage || response.statusText)
-            })
-            .catch((err) => {
-                reject(err.message)
-            })
-        } else {
-            response.json()
-            .then((res) => {
-                fulfill(res.data)
-            })
-            .catch((err) => {
-                reject(err.message)
-            })
-        }
-    })
+    return new Request().send('/api/users/' + id, requestOptions)
 }

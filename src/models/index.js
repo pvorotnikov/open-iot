@@ -63,7 +63,7 @@ const tokenSchema = mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     type: String,   // access, refresh
     value: String,
-    created: { type: Date, default: Date.now, expires: 3600 }, // expire in 1 hour
+    created: { type: Date, default: Date.now, expires: nconf.get('REFRESH_TOKEN_EXPIRATION_TIME') * 2 }, // expire in 2 * REFRESH_TOKEN_EXPIRATION_TIME
     updated: { type: Date, default: Date.now },
 })
 

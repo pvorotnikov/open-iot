@@ -11,9 +11,7 @@ router.post('/passport/auth', (req, res, next) => {
     User.findOne({ email: req.body.email })
     .then((u) => {
         if (u) {
-
             if (bcrypt.compareSync(req.body.password, u.password)) {
-                // prepare user
                 const { accessToken, refreshToken } = auth.createTokens(u)
                 let user =  {
                     firstName: u.firstName,
@@ -38,7 +36,7 @@ router.post('/passport/auth', (req, res, next) => {
 })
 
 router.get('/passport/refresh', auth.protect(), (req, res, next) => {
-    res.json(new SuccessResponse(auth.createTokens(u)))
+    res.json(new SuccessResponse(auth.createTokens(req.user)))
 })
 
 router.get('/users', auth.protect(), (req, res, next) => {

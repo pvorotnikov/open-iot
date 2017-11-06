@@ -1,24 +1,22 @@
-'use strict';
-
 import StateMachine from 'javascript-state-machine'
 
 export class Request {
 
     constructor() {
-        this.requestLimit = 0;
-        this.requestCount = 0;
+        this.requestLimit = 0
+        this.requestCount = 0
 
         this.fsm = StateMachine.create({
             initial: 'initial',
             events: [
-                { name: 'makerequest',           from: 'initial',      to: 'requesting' },
-                { name: 'makerequest',           from: 'refreshing',   to: 'requesting' },
-                { name: 'responsereceived',      from: 'requesting',   to: 'ok' },
+                { name: 'makerequest',           from: 'initial',      to: 'requesting'   },
+                { name: 'makerequest',           from: 'refreshing',   to: 'requesting'   },
+                { name: 'responsereceived',      from: 'requesting',   to: 'ok'           },
                 { name: 'forbiddenreceived',     from: 'requesting',   to: 'forbidden'    },
                 { name: 'unauthorizedreceived',  from: 'requesting',   to: 'unauthorized' },
-                { name: 'refreshtoken',          from: 'forbidden',    to: 'refreshing'  },
-                { name: 'refreshtoken',          from: 'unauthorized', to: 'refreshing'  },
-                { name: 'reset',                 from: 'ok',           to: 'initial' }
+                { name: 'refreshtoken',          from: 'forbidden',    to: 'refreshing'   },
+                { name: 'refreshtoken',          from: 'unauthorized', to: 'refreshing'   },
+                { name: 'reset',                 from: 'ok',           to: 'initial'      }
             ],
             callbacks: {
                 onenterinitial: this.onEnterInitial.bind(this),
@@ -26,93 +24,123 @@ export class Request {
                 onenterforbidden: this.onEnterForbidden.bind(this),
                 onenterunauthorized: this.onEnterUnauthorized.bind(this),
                 onenterrefreshing: this.onEnterRefreshing.bind(this),
-                onenterok: this.onEnterOk.bind(this),
+                onenterok: this.onEnterOk.bind(this)
             }
         })
     }
 
-    sendRequest(url, requestOptions) {
+    send(url, requestOptions) {
         return new Promise((fulfill, reject) => {
             try {
                 let req = {
                     url,
                     requestOptions,
                     callback: (err, res) => {
-                        if (err) reject(err)
-                        else fulfill(res)
+                        if (err) reject(err.message)
+                        else fulfill(res.data)
                     },
                 }
-                this.fsm.makerequest(req);
-
+                this.fsm.makerequest(req)
             } catch(err) {
-                reject(err);
+                reject(err.message)
             }
-        });
+        })
     }
 
+    getAccessToken() {
+        let user = JSON.parse(localStorage.getItem('user'))
+        if (user && user.accessToken) {
+            return user.accessToken
+        } else {
+            return null
+        }
+    }
+
+    getRefreshToken() {
+        let user = JSON.parse(localStorage.getItem('user'))
+        if (user && user.refreshToken) {
+            return user.refreshToken
+        } else {
+            return null
+        }
+    }
 
     onEnterInitial(event, from, to) {
-        // console.info(`${from} -> ${to}`);
-        this.requestLimit = Request.DEFAULT_REQUEST_LIMIT;
-        this.requestCount = 0;
+        // console.warn(`${from} -> ${to}`)
+        this.requestLimit = Request.DEFAULT_REQUEST_LIMIT
+        this.requestCount = 0
     }
 
     onEnterRequesting(event, from, to, req) {
-        // console.info(`${from} -> ${to}`);
+        // console.warn(`${from} -> ${to}`)
 
-        // call the api
-        this.callApi(req)
-        .then((res) => {
+        // send the request
+        this.sendRequest(req)
+
+        // handle success
+        .then(res => {
             this.fsm.responsereceived(req, res);
         })
-        .catch((err) => {
+
+        // handle error
+        .catch(err => {
+
+            // on limit reached, process the response
             if (this.requestCount > this.requestLimit) {
-                console.info('Request limit reached. Returning the response...');
-                this.fsm.responsereceived(req, err);
+                console.info('Request limit reached. Returning the response...')
+                this.fsm.responsereceived(req, err)
             } else {
                 switch (err.status) {
+                    // threat 401 as unauthorized
                     case 401:
-                        this.fsm.unauthorizedreceived(req);
-                        break;
+                        this.fsm.unauthorizedreceived(req)
+                        break
+                    // treat 403 as forbidden
                     case 403:
-                        this.fsm.forbiddenreceived(req);
-                        break;
+                        this.fsm.forbiddenreceived(req)
+                        break
+                    // treat everything else as response
                     default:
-                        this.fsm.responsereceived(req, err);
+                        this.fsm.responsereceived(req, err)
                 }
             }
         })
 
         // increment the request count
-        this.requestCount++;
+        this.requestCount++
 
-        return StateMachine.ASYNC;
+        return StateMachine.ASYNC
     }
 
     onEnterForbidden(event, from, to, req) {
-        // console.info(`${from} -> ${to}`);
-        this.requestLimit = Request.FORBIDDEN_REQUEST_LIMIT;
-        this.fsm.refreshtokens(req);
+        // console.warn(`${from} -> ${to}`)
+        this.requestLimit = Request.FORBIDDEN_REQUEST_LIMIT
+        this.fsm.refreshtoken(req)
     }
 
     onEnterUnauthorized(event, from, to, req) {
-        // console.info(`${from} -> ${to}`);
-        this.requestLimit = Request.UNAUTHORIZED_REQUEST_LIMIT;
-        this.fsm.refreshtokens(req);
+        // console.warn(`${from} -> ${to}`)
+        this.requestLimit = Request.UNAUTHORIZED_REQUEST_LIMIT
+        this.fsm.refreshtoken(req)
     }
 
     onEnterRefreshing(event, from, to, req) {
-        // console.info(`${from} -> ${to}`);
+        // console.warn(`${from} -> ${to}`)
 
         // attempt refreshing the token
-        this.refreshTokens(req)
+        this.refreshTokens()
         .then((res) => {
-            req.token = res.data.token;
-            // TODO: store tokens
-            this.fsm.makerequest(req);
+
+            // store new set of tokens
+            let user = JSON.parse(localStorage.getItem('user'))
+            user = {...user, accessToken: res.accessToken, refreshToken: res.refreshToken }
+            localStorage.setItem('user', JSON.stringify(user))
+
+            // repeat the request
+            this.fsm.makerequest(req)
         })
         .catch((err) => {
-            logger.error(`Error obtaining token: ${err.message}`)
+            console.warn(`Error refreshing token: ${err.message}`)
             this.fsm.makerequest(req);
         });
 
@@ -120,9 +148,8 @@ export class Request {
     }
 
     onEnterOk(event, from, to, req, res) {
-        // console.info(`${from} -> ${to}`);
-
-        if (res.status === 200 || res.status === 302) {
+        // console.warn(`${from} -> ${to}`);
+        if (res.ok) {
             req.callback(null, res.body);
         } else {
             req.callback(new Error(res.body));
@@ -130,70 +157,74 @@ export class Request {
         this.fsm.reset();
     }
 
-    callApi(req) {
+    sendRequest(req) {
         return new Promise((fulfill, reject) => {
 
-            let uri = req.url;
-
-            logger.info(`Calling ${req.method} ${uri}. Token: ${req.token ? 'yes' : 'no'}`);
-
-            let config = {
-                method: req.method,
-                uri: uri,
-                json: true,
-                headers: {
-                    'Authorization': `Bearer ${req.token}`
-                }
+            let token = this.getAccessToken()
+            if (token) {
+                req.requestOptions.headers = { ...req.requestOptions.headers, Authorization: 'Bearer ' + token }
             }
 
-            if (req.method !== 'GET') {
-                config.body = req.payload;
-            }
+            console.debug(`Calling ${req.requestOptions.method} ${req.url}`);
+            console.debug('Request options', req.requestOptions)
 
-            request(config, (err, response, body) => {
-
-                if (err) {
-                    reject({ status: null, body: err.message })
+            fetch(req.url, req.requestOptions)
+            .then(response => {
+                if (!response.ok) {
+                    response.json()
+                    .then(res => {
+                        reject({ ok: response.ok, status: response.status, body: res.errorMessage || response.statusText })
+                    })
+                    .catch(err => {
+                        reject({ ok: response.ok, status: response.status, body: err.message })
+                    })
                 } else {
-                    let statusCode = response.statusCode;
-                    if (200 === statusCode || 302 === statusCode) {
-                        fulfill({ status: statusCode, body: body });
-                    } else {
-                        let errorMessage = body.message || body.errorMessage || 'Unknown error';
-                        reject({ status: statusCode, body: errorMessage });
-                    }
+                    response.json()
+                    .then(res => {
+                        fulfill({ ok: response.ok, status: response.status, body: res })
+                    })
+                    .catch(err => {
+                        reject({ ok: response.ok, status: response.status, body: err.message })
+                    })
                 }
-
             })
         })
     }
 
-    refreshTokens(refreshToken) {
+    refreshTokens() {
         return new Promise((fulfill, reject) => {
 
-            let uri = '/api/passport/refresh';
+            const token = this.getRefreshToken()
+            const url = '/api/passport/refresh'
+            const requestOptions = {
+                method: 'GET',
+                headers: { Authorization: 'Bearer ' + token },
+            }
 
-            logger.info('Refreshing tokens');
+            console.debug(`Calling ${requestOptions.method} ${url}`);
+            console.debug('Request options', requestOptions)
 
-            // TODO
-            request(uri)
-            }, (err, response, body) => {
-
-                if (err) {
-                    reject(err)
+            fetch(url, requestOptions)
+            .then(response => {
+                if (!response.ok) {
+                    response.json()
+                    .then(res => {
+                        reject(new Error(res.errorMessage || response.statusText))
+                    })
+                    .catch(err => {
+                        reject(new Error(err.message))
+                    })
                 } else {
-                    let statusCode = response.statusCode;
-                    if (200 === statusCode || 302 === statusCode) {
-                        fulfill(body);
-                    } else {
-                        let errorMessage = body.message || body.errorMessage || body;
-                        reject(new Error(errorMessage));
-                    }
+                    response.json()
+                    .then(res => {
+                        fulfill(res.data)
+                    })
+                    .catch(err => {
+                        reject(new Error(err.message))
+                    })
                 }
-
-            });
-
-        });
+            })
+        })
     }
 
 } // Request
