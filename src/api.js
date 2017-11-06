@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const bcrypt = require('bcrypt')
 const { logger, responses, auth } = require('./lib')
-const { User, Token } = require('./models')
+const { ACCESS_LEVEL, User, Token } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
 
 // perform login
@@ -35,11 +35,13 @@ router.post('/passport/auth', (req, res, next) => {
     })
 })
 
+// refresh token
 router.get('/passport/refresh', auth.protect(), (req, res, next) => {
     res.json(new SuccessResponse(auth.createTokens(req.user)))
 })
 
-router.get('/users', auth.protect(), (req, res, next) => {
+// fetch all users
+router.get('/users', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
 
     User.find()
     .then((users) => {

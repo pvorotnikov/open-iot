@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken')
 const uuidv4 = require('uuid/v4')
 
 const logger = require('./logger')
-const { Token } = require('../models')
+const { ACCESS_LEVEL, Token } = require('../models')
 const { SuccessResponse, ErrorResponse } = require('./responses')
 
 function storeTokens(u, accessKey, refreshKey) {
@@ -44,7 +44,7 @@ module.exports = {
         return { accessToken: accessTokenValue, refreshToken: refreshTokenValue, }
     },
 
-    protect: (requiredLevel) => {
+    protect: (requiredLevel=ACCESS_LEVEL.USER) => {
         return (req, res, next) => {
 
             // verify header
@@ -63,23 +63,37 @@ module.exports = {
             // verify token
             verifyToken(rawToken)
             .then(data => {
-                logger.debug(`Received ${data.type} token on endpoint ${req.path} for user ${data.id}: ${rawToken.split('.')[2]}`)
+
+                logger.debug(`Received ${data.type} token on endpoint ${req.path} for user ${data.id}`)
+
                 Token.findOne({ user: data.id, type: data.type, value: data.key })
                 .sort({created: 'desc'})
                 .populate('user')
                 .then(token => {
                     if (token) {
+
+                        // check token's access level and required access level
+                        if (data.accessLevel < requiredLevel) {
+                            logger.warn(`Token with access level ${data.accessLevel} received whereas min lvel ${requiredLevel} is required`)
+                            return res.status(403).json(new ErrorResponse('Insufficient access level'))
+                        }
+
+                        // determine token expiration
                         let diff = moment().diff(moment(token.created), 'seconds')
-                        logger.info(`Time difference: ${diff} seconds for ${token.type} token`)
+
                         if ('access' === token.type && diff > nconf.get('ACCESS_TOKEN_EXPIRATION_TIME')) {
-                            logger.info('Rejecting with 401')
+                            logger.info(`Time difference: ${diff} seconds for ${token.type} token -> rejecting with 401`)
                             return res.status(401).json(new ErrorResponse('Access token expired'))
+
                         } else if  ('refresh' === token.type && diff > nconf.get('REFRESH_TOKEN_EXPIRATION_TIME')) {
-                            logger.info('Rejecting with 403')
+                            logger.info(`Time difference: ${diff} seconds for ${token.type} token -> rejecting with 403`)
                             return res.status(403).json(new ErrorResponse('Refresh token expired'))
                         }
+
+                        // store user model in request
                         req.user = token.user
                         next()
+
                     } else {
                         return res.status(403).json(new ErrorResponse('Token does not exist'))
                     }
