@@ -94,6 +94,7 @@ router.get('/users', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
     User.find()
     .then((users) => {
         let data = users.map(u => ({
+            email: u.email,
             firstName: u.firstName,
             lastName: u.lastName,
             accessLevel: u.accessLevel,
