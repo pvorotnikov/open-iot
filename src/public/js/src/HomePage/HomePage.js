@@ -36,7 +36,7 @@ class HomePage extends Component {
             ? users.items.map((user, index) => (<Segment key={user.id}>{`${user.firstName} ${user.lastName}`}</Segment>))
             : users.loading
                 ? <Segment>Loading</Segment>
-                : null
+                : <Segment>No data</Segment>
 
         return (
             <Container>

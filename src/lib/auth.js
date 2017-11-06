@@ -73,6 +73,11 @@ module.exports = {
                 .sort({created: 'desc'})
                 .then(token => {
                     if (token) {
+                        let diff = moment().diff(moment(token.created), 'seconds')
+                        logger.info(`Time difference: ${diff} seconds`)
+                        if (diff > 10) {
+                            return res.status(401).json(new ErrorResponse('Token expired'))
+                        }
                         next()
                     } else {
                         return res.status(403).json(new ErrorResponse('Token does not exist'))
