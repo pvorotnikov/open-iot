@@ -115,6 +115,7 @@ function _delete(id) {
         userService.delete(id)
         .then(() => {
             dispatch(success(id))
+            dispatch(alertActions.success('User deleted'))
         })
         .catch(error => {
             dispatch(failure(id, error))
@@ -125,4 +126,24 @@ function _delete(id) {
     function request(id) { return { type: userConstants.DELETE_REQUEST, id } }
     function success(id) { return { type: userConstants.DELETE_SUCCESS, id } }
     function failure(id, error) { return { type: userConstants.DELETE_FAILURE, id, error } }
+}
+
+function update(id, user) {
+    return dispatch => {
+        dispatch(request(id))
+
+        // perform async operation
+        userService.update(id, user)
+        .then(() => {
+            dispatch(success(id, user))
+        })
+        .catch(error => {
+            dispatch(failure(id, error))
+            dispatch(alertActions.error(error))
+        })
+    }
+
+    function request(id) { return { type: userConstants.UPDATE_REQUEST, id } }
+    function success(id, user) { return { type: userConstants.UPDATE_SUCCESS, id, user } }
+    function failure(id, error) { return { type: userConstants.UPDATE_FAILURE, id, error } }
 }

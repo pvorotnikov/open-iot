@@ -54,7 +54,7 @@ function getById(id) {
     return new Request().send('/api/users/' + id, requestOptions)
 }
 
-function update(user) {
+function update(id, user) {
     const requestOptions = {
         method: 'PUT',
         headers: jsonHeader(),

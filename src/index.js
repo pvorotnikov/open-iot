@@ -5,8 +5,9 @@ const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser')
 
 const { logger } = require('./lib')
-const DB = require('./models');
-const api = require('./api')
+const DB = require('./models')
+const users = require('./users')
+const passport = require('./passport')
 
 /* ================================
  * Database
@@ -31,7 +32,8 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
-app.use('/api', api);
+app.use('/api/users', users)
+app.use('/api/passport', passport)
 
 // catch 404 and forward it to error handler
 app.use((req, res, next) => {

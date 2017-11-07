@@ -48,6 +48,7 @@ export function users(state = {}, action) {
         case userConstants.DELETE_SUCCESS:
             // remove the user
             return {
+                ...state,
                 items: state.items.filter(user => user.id !== action.id)
             }
             break
@@ -67,6 +68,50 @@ export function users(state = {}, action) {
 
                     return user
 
+                })
+            }
+            break
+
+        case userConstants.UPDATE_REQUEST:
+            // mark the user as being updated
+            return {
+                ...state,
+                items: state.items.map(user =>
+                    user.id === action.id
+                        ? { ...user, updating: true }
+                        : user
+                )
+            }
+            break
+
+        case userConstants.UPDATE_SUCCESS:
+            // update the values of the user
+            return {
+                ...state,
+                items: state.items.map(user => {
+                    if (user.id !== action.id) {
+                        // copy user without the updating flag
+                        const { updating, ...userCopy } = user
+                        const { firstName, lastName, email } = action.user
+                        // return the copied user with the new values
+                        return { ...userCopy, email, firstName, lastName }
+                    }
+                })
+            }
+            break
+
+        case userConstants.UPDATE_FAILURE:
+            // remove the deleting:true flag and add error
+            return {
+                ...state,
+                items: state.items.map(user => {
+                    if (user.id === action.id) {
+                        // copy user (without the updating flag)
+                        const { deleting, ...userCopy } = user
+                        // return the copied user with update error
+                        return { ...userCopy, updateError: action.error }
+                    }
+                    return user
                 })
             }
             break
