@@ -38,7 +38,7 @@ router.delete('/:id', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
         res.json(new SuccessResponse())
     })
     .catch(err => {
-        return res.status(500).json(new ErrorResponse(err.message))
+        res.status(500).json(new ErrorResponse(err.message))
     })
 
 })
@@ -46,7 +46,37 @@ router.delete('/:id', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
 // update user
 router.put('/:id', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
 
-    return res.status(501).json(new ErrorResponse('Not implemented yet'))
+    const { firstName, lastName, email, password } = req.body
+    let updateParams = { firstName, lastName, email }
+
+    if (validator.isEmpty(email)) {
+        return res.status(400).json(new ErrorResponse('Please, enter an email'))
+    }
+
+    if (validator.isEmpty(firstName)) {
+        return res.status(400).json(new ErrorResponse('Please, enter a first name'))
+    }
+
+    if (validator.isEmpty(lastName)) {
+        return res.status(400).json(new ErrorResponse('Please, enter a last name'))
+    }
+
+    if (!validator.isEmpty(password)) {
+
+        if (!validator.isLength(password, {min:6, max:36})) {
+            return res.status(400).json(new ErrorResponse('Please, enter a password between 6 and 36 symbols'))
+        }
+
+        updateParams.password = generatePassword(password)
+    }
+
+    User.findByIdAndUpdate(req.params.id, updateParams)
+    .then(user => {
+        res.json(new SuccessResponse(user))
+    })
+    .catch(err => {
+        res.status(500).json(new ErrorResponse(err.message))
+    })
 
 })
 

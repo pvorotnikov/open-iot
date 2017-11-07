@@ -64,7 +64,7 @@ module.exports = {
             verifyToken(rawToken)
             .then(data => {
 
-                logger.debug(`Received ${data.type} token on endpoint ${req.path} for user ${data.id}`)
+                logger.debug(`Received ${data.type} token on endpoint ${req.originalUrl} for user ${data.id}`)
 
                 Token.findOne({ user: data.id, type: data.type, value: data.key })
                 .sort({created: 'desc'})

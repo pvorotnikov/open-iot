@@ -48,28 +48,33 @@ class HomePage extends Component {
     }
 
     handleUserFormSubmit(e) {
-        const { email, password, firstName, lastName } = this.state.userValues
-        console.log(email, firstName, lastName, password)
+        const { activeUser, userValues } = this.state;
+        if (userValues.firstName && userValues.lastName && userValues.email) {
+            this.props.dispatch(userActions.update(activeUser, userValues));
+        }
     }
 
     handleValueChange(e, data) {
+        let { name, value } = data
+        if (name != 'password') value = value.trim()
         const newState = {
             ...this.state.userValues,
-            [data.name]: data.value
+            [name]: value
         }
         this.setState({ userValues: newState })
     }
 
     render() {
         const { user, users } = this.props
+        const { userValues } = this.state
 
         let userItems = users.items
-            ? users.items.map((user, index) => (
+            ? users.items.map((user) => (
                 <div key={user.id}>
                     <Accordion.Title active={this.state.activeUser === user.id} user={user} onClick={this.handleUserClick.bind(this)}>
                     <Icon name='dropdown' />{`${user.firstName} ${user.lastName}`}</Accordion.Title>
                     <Accordion.Content active={this.state.activeUser === user.id}>
-                        <Form loading={this.props.loggingIn}>
+                        <Form loading={user.updating || user.deleting}>
                             <Form.Input onChange={(e, d)=>this.handleValueChange(e, d)} name="email" label='Email' defaultValue={user.email} />
                             <Form.Input onChange={(e, d)=>this.handleValueChange(e, d)} name="password" label='Password' type='password' />
                             <Form.Input onChange={(e, d)=>this.handleValueChange(e, d)} name="firstName" label='First Name' defaultValue={user.firstName} />
@@ -81,8 +86,8 @@ class HomePage extends Component {
                 </div>
             ))
             : users.loading
-                ? <Accordion.Title active={false} index={0}>Loading</Accordion.Title>
-                : <Accordion.Title active={false} index={0}>No data</Accordion.Title>
+                ? <Accordion.Title active={false}>Loading</Accordion.Title>
+                : <Accordion.Title active={false}>No data</Accordion.Title>
 
 
 

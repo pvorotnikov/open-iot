@@ -10,6 +10,7 @@ export const userActions = {
     register,
     getAll,
     delete: _delete,
+    update,
 }
 
 /**
@@ -136,6 +137,7 @@ function update(id, user) {
         userService.update(id, user)
         .then(() => {
             dispatch(success(id, user))
+            dispatch(alertActions.success('User updated'))
         })
         .catch(error => {
             dispatch(failure(id, error))

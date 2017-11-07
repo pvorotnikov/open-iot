@@ -89,7 +89,7 @@ export function users(state = {}, action) {
             return {
                 ...state,
                 items: state.items.map(user => {
-                    if (user.id !== action.id) {
+                    if (user.id === action.id) {
                         // copy user without the updating flag
                         const { updating, ...userCopy } = user
                         const { firstName, lastName, email } = action.user
@@ -101,13 +101,13 @@ export function users(state = {}, action) {
             break
 
         case userConstants.UPDATE_FAILURE:
-            // remove the deleting:true flag and add error
+            // remove the updating:true flag and add error
             return {
                 ...state,
                 items: state.items.map(user => {
                     if (user.id === action.id) {
                         // copy user (without the updating flag)
-                        const { deleting, ...userCopy } = user
+                        const { updating, ...userCopy } = user
                         // return the copied user with update error
                         return { ...userCopy, updateError: action.error }
                     }

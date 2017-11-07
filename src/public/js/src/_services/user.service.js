@@ -60,7 +60,7 @@ function update(id, user) {
         headers: jsonHeader(),
         body: JSON.stringify(user)
     }
-    return new Request().send('/api/users/' + user.id, requestOptions)
+    return new Request().send('/api/users/' + id, requestOptions)
 }
 
 function _delete(id) {
