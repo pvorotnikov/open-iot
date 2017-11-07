@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
-import { Header, Container, Button, Accordion, Icon, Form, Divider } from 'semantic-ui-react'
+import { Header, Container, Icon } from 'semantic-ui-react'
 
 import { userActions } from '../_actions'
 
@@ -13,7 +13,10 @@ class HomePage extends Component {
 
         return (
             <Container>
-                <Header as='h1'>Hi {user.firstName} {user.lastName}!</Header>
+                <Header as='h1'>
+                    <Icon name='home' circular />
+                    <Header.Content>Hi {user.firstName} {user.lastName}!</Header.Content>
+                </Header>
             </Container>
         )
     }

@@ -27,7 +27,7 @@ class Sidebar extends Component {
 
     renderPublicMenu(currentPath) {
         return (
-            <Menu fluid vertical tabular icon='labeled'>
+            <Menu fluid vertical pointing icon='labeled'>
                 <Menu.Item active={currentPath === '/login' || currentPath === '/register'} as={Link} to='/'>
                     <Icon name='home' /> Home
                 </Menu.Item>
@@ -37,12 +37,12 @@ class Sidebar extends Component {
 
     renderPrivateMenu(currentPath) {
         return (
-            <Menu fluid vertical tabular icon='labeled'>
+            <Menu fluid vertical pointing icon='labeled'>
                 <Menu.Item active={currentPath === '/'} as={Link} to='/'>
                     <Icon name='home' /> Home
                 </Menu.Item>
                 <Menu.Item active={currentPath === '/users'} as={Link} to='/users'>
-                    <Icon name='user' /> Users
+                    <Icon name='users' /> Users
                 </Menu.Item>
                 <Menu.Item active={currentPath === '/todo'} as={Link} to='/todo'>
                     <Icon name='tasks' /> Todo

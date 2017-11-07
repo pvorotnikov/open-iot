@@ -87,7 +87,10 @@ class UsersPage extends Component {
 
         return (
             <Container>
-                <Header as='h1'>Registered users</Header>
+                <Header as='h1'>
+                    <Icon name='users' circular />
+                    <Header.Content>Registered Users</Header.Content>
+                </Header>
                 <Accordion fluid styled>
                     {userItems}
                 </Accordion>
