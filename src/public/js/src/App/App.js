@@ -15,6 +15,8 @@ import { RegisterPage } from '../RegisterPage'
 import { HomePage } from '../HomePage'
 import { UsersPage } from '../UsersPage'
 import { TodoPage } from '../TodoPage'
+import { ApplicationsPage } from '../ApplicationsPage'
+import { NewApplicationPage } from '../NewApplicationPage'
 
 class App extends Component {
     constructor(props) {
@@ -58,10 +60,12 @@ class App extends Component {
                             <Grid.Column width={13}>
                                 { message }
                                 <PrivateRoute exact path="/" component={HomePage} />
-                                <PrivateRoute path="/todo" component={TodoPage} />
-                                <PrivateRoute path="/users" component={UsersPage} />
-                                <Route path="/login" component={LoginPage} />
-                                <Route path="/register" component={RegisterPage} />
+                                <PrivateRoute exact path="/todo" component={TodoPage} />
+                                <PrivateRoute exact path="/users" component={UsersPage} />
+                                <PrivateRoute exact path="/apps" component={ApplicationsPage} />
+                                <PrivateRoute exact path="/apps/new" component={NewApplicationPage} />
+                                <Route exact path="/login" component={LoginPage} />
+                                <Route exact path="/register" component={RegisterPage} />
                             </Grid.Column>
                         </Grid.Row>
                     </Grid>

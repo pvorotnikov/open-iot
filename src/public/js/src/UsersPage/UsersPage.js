@@ -76,7 +76,7 @@ class UsersPage extends Component {
                             <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="firstName" label='First Name' defaultValue={user.firstName} />
                             <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="lastName" label='Last Name' defaultValue={user.lastName} />
                             <Button circular icon='save' label='Save' color='green' onClick={ e => this.handleUserFormSubmit(e) } />
-                            <Button circular icon='delete' label='Delete' color='red' onClick={ e => this.handleDeleteUser(user.id) } />
+                            <Button floated='right' circular icon='delete' label='Delete' color='red' onClick={ e => this.handleDeleteUser(user.id) } />
                         </Form>
                     </Accordion.Content>
                 </div>
