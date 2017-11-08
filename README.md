@@ -20,7 +20,7 @@ npm run watch
 docker logs -f openhomeui_ui_1
 
 # To run tests
-npm tset
+npm test
 ```
 
 ## Configuration

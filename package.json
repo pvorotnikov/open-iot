@@ -4,7 +4,7 @@
   "description": "UI to Open Home project",
   "main": "index.js",
   "scripts": {
-    "postinstall": "mkdir -p src/public/js/dist && mkdir -p src/public/css && cp node_modules/semantic-ui-css/semantic.min.css src/public/css/",
+    "postinstall": "mkdir -p src/public/css && cp node_modules/semantic-ui-css/semantic.min.css src/public/css/",
     "start": "nodemon src/bin/www",
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -Rf src/public/js/dist && mkdir -p src/public/js/dist",
