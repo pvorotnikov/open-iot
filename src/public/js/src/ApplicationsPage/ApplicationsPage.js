@@ -16,12 +16,12 @@ class ApplicationsPage extends Component {
 
     renderNewAppCard() {
         return (
-            <Card>
+            <Card key={'new-app'}>
                 <Card.Content>
-                    <Card.Header>My application</Card.Header>
-                    <Card.Meta>My first app</Card.Meta>
+                    <Card.Header>New application</Card.Header>
+                    <Card.Meta>My app</Card.Meta>
                     <Card.Description>
-                        Create your first application.
+                        Create a new first application.
                         Applications allow your gateways to connect to the cloud.
                         You can add one or more gateways to your application.
                     </Card.Description>
@@ -35,7 +35,26 @@ class ApplicationsPage extends Component {
 
     renderAppCards() {
         const { apps } = this.props
-        return (<div>Application list comes here</div>)
+        const cards = apps.items.map(app => (
+            <Card key={app.id}>
+                <Card.Content>
+                    <Card.Header>{app.name}</Card.Header>
+                    <Card.Meta>ID: {app.id}</Card.Meta>
+                    <Card.Description>
+                        {app.description}
+                    </Card.Description>
+                </Card.Content>
+                <Card.Content extra>
+                    <Card.Description>Access key: {app.key}</Card.Description>
+                    <Card.Description>Secret key: {app.secret}</Card.Description>
+                </Card.Content>
+                <Card.Content extra>
+                    <Button circular icon='edit' label='Modify' color='green' onClick={e => history.push('/apps/' + app.id) } />
+                </Card.Content>
+            </Card>
+        ))
+        cards.push(this.renderNewAppCard())
+        return cards
     }
 
     render() {
@@ -48,7 +67,9 @@ class ApplicationsPage extends Component {
                     <Header.Content>My Apps</Header.Content>
                 </Header>
                 <Card.Group>
-                    { apps.items && apps.items.length ? this.renderAppCards() : this.renderNewAppCard() }
+                    { apps.items && apps.items.length
+                        ? this.renderAppCards()
+                        : this.renderNewAppCard() }
                 </Card.Group>
             </Container>
         )

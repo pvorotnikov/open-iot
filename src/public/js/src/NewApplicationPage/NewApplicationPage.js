@@ -28,6 +28,13 @@ class NewApplicationPage extends Component {
         }})
     }
 
+    onSubmit(e) {
+        const { name, description } = this.state.values;
+        if (name && description) {
+            this.props.dispatch(appActions.create({ name, description }));
+        }
+    }
+
     render() {
         return (
             <Container>
@@ -39,7 +46,7 @@ class NewApplicationPage extends Component {
                     <Form>
                         <Form.Input label="Application name" name="name" onChange={(e, d) => this.onChange(e, d)} />
                         <Form.TextArea label="Application description" name="description" onChange={(e, d) => this.onChange(e, d)} />
-                        <Button circular icon='plus' label='Create' color='green' onClick={ e => history.goBack() } />
+                        <Button circular icon='plus' label='Create' color='green' onClick={ e => this.onSubmit(e) } />
                         <Button circular floated='right' icon='chevron left' label='Cancel' color='orange' onClick={ e => history.goBack() } />
                     </Form>
 
