@@ -31,4 +31,53 @@ router.get('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
 })
 
+// create new gateway
+router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+
+    const { application, name, description } = req.body
+
+    if (validator.isEmpty(application)) {
+        return res.status(400).json(new ErrorResponse('You need to specify a parent application'))
+    }
+
+    if (validator.isEmpty(name)) {
+        return res.status(400).json(new ErrorResponse('Please, enter gateway name'))
+    }
+
+    if (validator.isEmpty(description)) {
+        return res.status(400).json(new ErrorResponse('Please, enter gateway description'))
+    }
+
+    // TODO: check the owner of the application
+
+    let gateway = new Gateway({
+        user: req.user._id,
+        application,
+        name,
+        description,
+    })
+    gateway.save()
+    .then(gateway => {
+        res.json({ status: 'ok', data: gateway })
+    })
+    .catch(err => {
+        res.status(500).json(new ErrorResponse(err.message))
+    })
+
+})
+
+// delete gateway
+router.delete('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+
+    Gateway.findByIdAndRemove(req.params.id)
+    .where('user').eq(req.user._id)
+    .then(() => {
+        res.json(new SuccessResponse())
+    })
+    .catch(err => {
+        res.status(500).json(new ErrorResponse(err.message))
+    })
+
+})
+
 module.exports = router

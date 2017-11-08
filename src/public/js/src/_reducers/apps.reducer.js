@@ -15,6 +15,18 @@ export function apps(state = {}, action) {
 
     switch (action.type) {
 
+        case appConstants.CREATE_REQUEST:
+            return { loading: true, }
+            break
+
+        case appConstants.CREATE_SUCCESS:
+            return {}
+            break
+
+        case appConstants.CREATE_FAILURE:
+            return {}
+            break
+
         case appConstants.GETALL_REQUEST:
             return { loading: true, }
             break

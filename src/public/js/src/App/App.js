@@ -18,6 +18,7 @@ import { TodoPage } from '../TodoPage'
 import { ApplicationsPage } from '../ApplicationsPage'
 import { NewApplicationPage } from '../NewApplicationPage'
 import { ApplicationPage } from '../ApplicationPage'
+import { NewGatewayPage } from '../NewGatewayPage'
 
 class App extends Component {
     constructor(props) {
@@ -66,6 +67,7 @@ class App extends Component {
                                 <PrivateRoute exact path="/apps" component={ApplicationsPage} />
                                 <PrivateRoute exact path="/apps/i/:id" component={ApplicationPage} />
                                 <PrivateRoute exact path="/apps/new" component={NewApplicationPage} />
+                                <PrivateRoute exact path="/apps/i/:id/newgw" component={NewGatewayPage} />
                                 <Route exact path="/login" component={LoginPage} />
                                 <Route exact path="/register" component={RegisterPage} />
                             </Grid.Column>

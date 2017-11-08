@@ -3,7 +3,18 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
-import { Header, Container, Icon, Button, Loader, Segment, Label, List } from 'semantic-ui-react'
+import {
+    Header,
+    Container,
+    Icon,
+    Button,
+    Loader,
+    Segment,
+    Label,
+    List,
+    Card,
+    Dimmer,
+} from 'semantic-ui-react'
 
 import { appActions, gatewayActions } from '../_actions'
 import { history } from '../_helpers'
@@ -33,8 +44,57 @@ class ApplicationPage extends Component {
         this.props.dispatch(appActions.refreshSecret(this.props.app.id))
     }
 
+    handleDeleteGateway(id) {
+        this.props.dispatch(gatewayActions.delete(id))
+    }
+
+    renderNewGatewayCard() {
+        const appId = this.props.match.params.id
+        return (
+            <Card key={'new-gateway'}>
+                <Card.Content>
+                    <Card.Header>New gateway</Card.Header>
+                    <Card.Meta>My gateway</Card.Meta>
+                    <Card.Description>
+                        Create a new gateway.
+                        Gateways establish connection to the cloud.
+                        You can connect your end-devices to gateways
+                        allowing them to send and receive information
+                        or gateway can act as end devices.
+                    </Card.Description>
+                </Card.Content>
+                <Card.Content extra>
+                    <Button circular icon='plus' label='Create' color='green' onClick={e => history.push(`/apps/i/${appId}/newgw`) } />
+                </Card.Content>
+            </Card>
+        )
+    }
+
+    renderGatewaysCards() {
+        const { gateways } = this.props
+        const cards = gateways.items.map(gateway => (
+            <Card key={gateway.id}>
+                <Dimmer active={gateway.deleting} inverted>
+                    <Loader inverted />
+                </Dimmer>
+                <Card.Content>
+                    <Card.Header>{gateway.name}</Card.Header>
+                    <Card.Meta>ID: {gateway.id}</Card.Meta>
+                    <Card.Description>
+                        {gateway.description}
+                    </Card.Description>
+                </Card.Content>
+                <Card.Content extra>
+                    <Button circular icon='delete' label='Delete' color='red' onClick={ e => this.handleDeleteGateway(gateway.id) } />
+                </Card.Content>
+            </Card>
+        ))
+        cards.push(this.renderNewGatewayCard())
+        return cards
+    }
+
     render() {
-        const { app } = this.props
+        const { app, gateways } = this.props
         return (
             <Container>
                 <Header as='h1'>
@@ -69,11 +129,11 @@ class ApplicationPage extends Component {
                 </Segment>
                 <Segment raised>
                     <Label color='blue' ribbon>Gateways</Label>
-                    <List>
-                        <List.Item>
-
-                        </List.Item>
-                    </List>
+                    <Card.Group style={{ marginTop: '5px' }}>
+                        { gateways.items && gateways.items.length
+                            ? this.renderGatewaysCards()
+                            : this.renderNewGatewayCard() }
+                    </Card.Group>
                 </Segment>
             </Container>
         )

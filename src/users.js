@@ -34,7 +34,7 @@ router.delete('/:id', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
     }
 
     User.findByIdAndRemove(req.params.id)
-    .then(user => {
+    .then(() => {
         res.json(new SuccessResponse())
     })
     .catch(err => {

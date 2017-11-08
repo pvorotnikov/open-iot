@@ -16,21 +16,15 @@ export function users(state = {}, action) {
     switch (action.type) {
 
         case userConstants.GETALL_REQUEST:
-            return {
-                loading: true,
-            }
+            return { loading: true, }
             break
 
         case userConstants.GETALL_SUCCESS:
-            return {
-                items: action.users,
-            }
+            return { items: action.users, }
             break
 
         case userConstants.GETALL_FAILURE:
-            return {
-                error: action.error
-            }
+            return { error: action.error }
             break
 
         case userConstants.DELETE_REQUEST:
