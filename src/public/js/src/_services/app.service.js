@@ -6,6 +6,8 @@ export const appService = {
     create,
     getById,
     update,
+    refreshKey,
+    refreshSecret,
 }
 
 /**
@@ -45,8 +47,8 @@ function getById(id) {
 }
 
 /**
- * Updaet application
- * @param  {String} id  application id
+ * Update application
+ * @param  {String} id application id
  * @param  {Object} app application update
  * @return {Promise} response promise
  */
@@ -57,4 +59,28 @@ function update(id, app) {
         body: JSON.stringify(app),
     }
     return new Request().send('/api/apps/' + id, requestOptions)
+}
+
+/**
+ * Refresh application key
+ * @param  {String} id application id
+ * @return {Promise} response promise
+ */
+function refreshKey(id) {
+    const requestOptions = {
+        method: 'PUT',
+    }
+    return new Request().send('/api/apps/' + id + '/key', requestOptions)
+}
+
+/**
+ * Refresh application secret
+ * @param  {String} id application id
+ * @return {Promise} response promise
+ */
+function refreshSecret(id) {
+    const requestOptions = {
+        method: 'PUT',
+    }
+    return new Request().send('/api/apps/' + id + '/secret', requestOptions)
 }

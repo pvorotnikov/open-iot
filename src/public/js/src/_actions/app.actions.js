@@ -9,6 +9,8 @@ export const appActions = {
     create,
     getSingle,
     update,
+    refreshKey,
+    refreshSecret,
 }
 
 /**
@@ -110,4 +112,54 @@ function update(id, app) {
     function request() { return { type: appConstants.UPDATE_REQUEST } }
     function success(id, app) { return { type: appConstants.UPDATE_SUCCESS, id, app } }
     function failure(error) { return { type: appConstants.UPDATE_FAILURE, error } }
+}
+
+/**
+ * Refresh application key
+ * @param  {String} id  application id
+ * @return {Function} update async action
+ */
+function refreshKey(id) {
+    return dispatch => {
+        dispatch(request())
+
+        // perform async operation
+        appService.refreshKey(id)
+        .then((data) => {
+            dispatch(success(data.key))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
+    }
+
+    function request() { return { type: appConstants.REFRESH_KEY_REQUEST } }
+    function success(key) { return { type: appConstants.REFRESH_KEY_SUCCESS, key } }
+    function failure(error) { return { type: appConstants.REFRESH_KEY_FAILURE, error } }
+}
+
+/**
+ * Refresh application secret
+ * @param  {String} id  application id
+ * @return {Function} update async action
+ */
+function refreshSecret(id) {
+    return dispatch => {
+        dispatch(request())
+
+        // perform async operation
+        appService.refreshSecret(id)
+        .then((data) => {
+            dispatch(success(data.secret))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
+    }
+
+    function request() { return { type: appConstants.REFRESH_SECRET_REQUEST } }
+    function success(secret) { return { type: appConstants.REFRESH_SECRET_SUCCESS, secret } }
+    function failure(error) { return { type: appConstants.REFRESH_SECRET_FAILURE, error } }
 }

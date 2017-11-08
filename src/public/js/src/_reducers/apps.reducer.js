@@ -52,26 +52,39 @@ export function apps(state = {}, action) {
             break
 
         case appConstants.UPDATE_REQUEST:
-            return {
-                ...state,
-                loading: true,
-            }
+            return { ...state, loading: true, }
             break
 
         case appConstants.UPDATE_SUCCESS:
-            return {
-                app: {
-                    ...state.app,
-                    ...action.app,
-                }
-            }
+            return { app: { ...state.app, ...action.app, } }
             break
 
         case appConstants.UPDATE_FAILURE:
-            return {
-                ...state,
-                error: action.error
-            }
+            return { ...state, error: action.error }
+            break
+
+        case appConstants.REFRESH_KEY_REQUEST:
+            return { ...state, loading: true, }
+            break
+
+        case appConstants.REFRESH_KEY_SUCCESS:
+            return { app: { ...state.app, key: action.key, } }
+            break
+
+        case appConstants.REFRESH_KEY_FAILURE:
+            return { ...state, error: action.error }
+            break
+
+        case appConstants.REFRESH_SECRET_REQUEST:
+            return { ...state, loading: true, }
+            break
+
+        case appConstants.REFRESH_SECRET_SUCCESS:
+            return { app: { ...state.app, secret: action.secret, } }
+            break
+
+        case appConstants.REFRESH_SECRET_FAILURE:
+            return { ...state, error: action.error }
             break
 
         default:

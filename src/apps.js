@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const validator = require('validator')
+const hat = require('hat')
 const { logger, responses, auth } = require('./lib')
 const { ACCESS_LEVEL, Application } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
@@ -48,8 +49,8 @@ router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
         user: req.user._id,
         name,
         description,
-        key: 'dummy-key',
-        secret: 'dummy-secret',
+        key: generateAccessKey(),
+        secret: generateSecretKey(),
     })
     app.save()
     .then(app => {
@@ -114,5 +115,41 @@ router.put('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
     })
 
 })
+
+// update access key
+router.put('/:id/key', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+
+    let newKey = generateAccessKey()
+    Application.findByIdAndUpdate(req.params.id, {key: newKey})
+    .where('user').eq(req.user._id)
+    .then(a => {
+        res.json(new SuccessResponse({ key: newKey }))
+    })
+    .catch(err => {
+        res.status(500).json(new ErrorResponse(err.message))
+    })
+})
+
+// update secret key
+router.put('/:id/secret', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+
+    let newKey = generateSecretKey()
+    Application.findByIdAndUpdate(req.params.id, {secret: newKey})
+    .where('user').eq(req.user._id)
+    .then(a => {
+        res.json(new SuccessResponse({ secret: newKey }))
+    })
+    .catch(err => {
+        res.status(500).json(new ErrorResponse(err.message))
+    })
+})
+
+function generateAccessKey() {
+    return hat(32, 16)
+}
+
+function generateSecretKey() {
+    return hat(64, 16)
+}
 
 module.exports = router

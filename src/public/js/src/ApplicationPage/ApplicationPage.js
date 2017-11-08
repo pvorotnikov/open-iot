@@ -24,6 +24,14 @@ class ApplicationPage extends Component {
         this.props.dispatch(appActions.update(app.id, updatedApp))
     }
 
+    refreshKey() {
+        this.props.dispatch(appActions.refreshKey(this.props.app.id))
+    }
+
+    refreshSecret() {
+        this.props.dispatch(appActions.refreshSecret(this.props.app.id))
+    }
+
     render() {
         const { app } = this.props
         return (
@@ -46,14 +54,14 @@ class ApplicationPage extends Component {
                             <Label horizontal>Access key</Label>
                             <span>
                                 {app.key}
-                                <Icon link name='refresh' style={{marginLeft: '10px'}} />
+                                <Icon link name='refresh' style={{marginLeft: '10px'}} onClick={this.refreshKey.bind(this)} />
                             </span>
                         </List.Item>
                         <List.Item>
                             <Label horizontal>Secret key</Label>
                             <span>
                                 {app.secret}
-                                <Icon link name='refresh' style={{marginLeft: '10px'}} />
+                                <Icon link name='refresh' style={{marginLeft: '10px'}} onClick={this.refreshSecret.bind(this)} />
                             </span>
                         </List.Item>
                     </List>
