@@ -141,7 +141,7 @@ function refreshKey(id) {
 
 /**
  * Refresh application secret
- * @param  {String} id  application id
+ * @param  {String} id application id
  * @return {Function} update async action
  */
 function refreshSecret(id) {

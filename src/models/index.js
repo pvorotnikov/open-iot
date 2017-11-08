@@ -44,6 +44,7 @@ const applicationSchema = mongoose.Schema({
 })
 
 const gatewaySchema = mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     application: { type: mongoose.Schema.Types.ObjectId, ref: 'Application' },
     name: String,
     description: String,

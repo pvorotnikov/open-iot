@@ -16,39 +16,27 @@ export function apps(state = {}, action) {
     switch (action.type) {
 
         case appConstants.GETALL_REQUEST:
-            return {
-                loading: true,
-            }
+            return { loading: true, }
             break
 
         case appConstants.GETALL_SUCCESS:
-            return {
-                items: action.apps,
-            }
+            return { items: action.apps, }
             break
 
         case appConstants.GETALL_FAILURE:
-            return {
-                error: action.error
-            }
+            return { error: action.error, }
             break
 
         case appConstants.GET_SINGLE_REQUEST:
-            return {
-                loading: true,
-            }
+            return { loading: true, }
             break
 
         case appConstants.GET_SINGLE_SUCCESS:
-            return {
-                app: action.app,
-            }
+            return { app: action.app, }
             break
 
         case appConstants.GET_SINGLE_FAILURE:
-            return {
-                error: action.error
-            }
+            return { error: action.error }
             break
 
         case appConstants.UPDATE_REQUEST:

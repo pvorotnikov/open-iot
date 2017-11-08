@@ -5,7 +5,7 @@ import { connect } from 'react-redux'
 
 import { Header, Container, Icon, Button, Loader, Segment, Label, List } from 'semantic-ui-react'
 
-import { appActions } from '../_actions'
+import { appActions, gatewayActions } from '../_actions'
 import { history } from '../_helpers'
 import { EditableText } from '../_components'
 
@@ -13,6 +13,7 @@ class ApplicationPage extends Component {
 
     componentDidMount() {
         this.props.dispatch(appActions.getSingle(this.props.match.params.id))
+        this.props.dispatch(gatewayActions.getAll(this.props.match.params.id))
     }
 
     onFieldUpdate(name, value) {
@@ -66,6 +67,14 @@ class ApplicationPage extends Component {
                         </List.Item>
                     </List>
                 </Segment>
+                <Segment raised>
+                    <Label color='blue' ribbon>Gateways</Label>
+                    <List>
+                        <List.Item>
+
+                        </List.Item>
+                    </List>
+                </Segment>
             </Container>
         )
     }
@@ -74,20 +83,23 @@ class ApplicationPage extends Component {
 ApplicationPage.propTypes = {
     loading: PropTypes.bool,
     app: PropTypes.object.isRequired,
+    gateways: PropTypes.object.isRequired,
     match: PropTypes.object.isRequired,
     dispatch: PropTypes.func.isRequired,
 }
 
 ApplicationPage.defaultProps = {
-  app: {}
+    app: {},
+    gateways: {},
 }
 
 function mapStateToProps(state) {
-    const { apps } = state
+    const { apps, gateways } = state
     const { app, loading } = apps
     return {
         app,
         loading,
+        gateways,
     }
 }
 

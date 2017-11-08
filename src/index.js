@@ -8,6 +8,7 @@ const { logger } = require('./lib')
 const DB = require('./models')
 const users = require('./users')
 const apps = require('./apps')
+const gateways = require('./gateways')
 const passport = require('./passport')
 
 /* ================================
@@ -36,6 +37,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.use('/api/passport', passport)
 app.use('/api/users', users)
 app.use('/api/apps', apps)
+app.use('/api/gateways', gateways)
 
 // catch 404 and forward it to error handler
 app.use((req, res, next) => {

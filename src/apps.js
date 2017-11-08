@@ -3,7 +3,7 @@ const router = express.Router()
 const validator = require('validator')
 const hat = require('hat')
 const { logger, responses, auth } = require('./lib')
-const { ACCESS_LEVEL, Application } = require('./models')
+const { ACCESS_LEVEL, Application, Gateway } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
 
 // fetch all apps that belong to the user
@@ -90,6 +90,30 @@ router.get('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
 })
 
+// get all gateways that belong to this app
+router.get('/:id/gateways', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+
+    Gateway
+    .where('application').eq(req.params.id)
+    .where('user').eq(req.user._id)
+    .then(gateways => {
+        let data = gateways.map(g => {
+            return {
+                id: g.id,
+                name: g.name,
+                description: g.description,
+                created: g.created,
+                updated: g.updated,
+            }
+        })
+        res.json({ status: 'ok', data })
+    })
+    .catch((err) => {
+        res.status(500).json(new ErrorResponse(err.message))
+    })
+
+})
+
 // update app
 router.put('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
@@ -107,7 +131,7 @@ router.put('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
     Application.findByIdAndUpdate(req.params.id, updateDefintion)
     .where('user').eq(req.user._id)
-    .then(a => {
+    .then(() => {
         res.json(new SuccessResponse())
     })
     .catch(err => {
