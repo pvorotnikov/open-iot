@@ -8,7 +8,9 @@ const { SuccessResponse, ErrorResponse } = responses
 // fetch all apps that belong to the user
 router.get('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
-    Application.find().where({ user: req.user._id })
+    Application
+    .find()
+    .where('user').eq(req.user._id)
     .then((apps) => {
         let data = apps.map(a => {
             return {
@@ -52,6 +54,60 @@ router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
     app.save()
     .then(app => {
         res.json({ status: 'ok', data: app })
+    })
+    .catch(err => {
+        res.status(500).json(new ErrorResponse(err.message))
+    })
+
+})
+
+// get single app
+router.get('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+
+    Application
+    .findById(req.params.id)
+    .where('user').eq(req.user._id)
+    .then(a => {
+        if (a) {
+            let data = {
+                id: a.id,
+                name: a.name,
+                description: a.description,
+                key: a.key,
+                secret: a.secret,
+                created: a.created,
+                updated: a.updated,
+            }
+            res.json({ status: 'ok', data })
+        } else {
+            res.status(400).json(new ErrorResponse('Application not found'))
+        }
+    })
+    .catch((err) => {
+        res.status(500).json(new ErrorResponse(err.message))
+    })
+
+})
+
+// update app
+router.put('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+
+    const { name, description } = req.body
+
+    const updateDefintion = {}
+
+    if (name && !validator.isEmpty(name)) {
+        updateDefintion.name = name
+    }
+
+    if (description && !validator.isEmpty(description)) {
+        updateDefintion.description = description
+    }
+
+    Application.findByIdAndUpdate(req.params.id, updateDefintion)
+    .where('user').eq(req.user._id)
+    .then(a => {
+        res.json(new SuccessResponse())
     })
     .catch(err => {
         res.status(500).json(new ErrorResponse(err.message))

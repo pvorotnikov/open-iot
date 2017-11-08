@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
-import { Header, Container, Button, Accordion, Icon, Form } from 'semantic-ui-react'
+import { Header, Container, Button, Accordion, Icon, Form, Loader } from 'semantic-ui-react'
 
 import { userActions } from '../_actions'
 
@@ -60,40 +60,43 @@ class UsersPage extends Component {
         this.setState({ userValues: newState })
     }
 
+    renderUsers() {
+        const { users } = this.props
+
+        const userItems = users.items.map((user) => (
+            <div key={user.id}>
+                <Accordion.Title active={this.state.activeUser === user.id} user={user} onClick={this.handleUserClick.bind(this)}>
+                <Icon name='dropdown' />{`${user.firstName} ${user.lastName}`}</Accordion.Title>
+                <Accordion.Content active={this.state.activeUser === user.id}>
+                    <Form loading={user.updating || user.deleting}>
+                        <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="email" label='Email' defaultValue={user.email} />
+                        <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="password" label='Password' type='password' />
+                        <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="firstName" label='First Name' defaultValue={user.firstName} />
+                        <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="lastName" label='Last Name' defaultValue={user.lastName} />
+                        <Button circular icon='save' label='Save' color='green' onClick={ e => this.handleUserFormSubmit(e) } />
+                        <Button floated='right' circular icon='delete' label='Delete' color='red' onClick={ e => this.handleDeleteUser(user.id) } />
+                    </Form>
+                </Accordion.Content>
+            </div>
+        ))
+
+        return (
+            <Accordion fluid styled>
+                {userItems}
+            </Accordion>
+        )
+    }
+
     render() {
         const { users } = this.props
-        const { userValues } = this.state
-
-        let userItems = users.items
-            ? users.items.map((user) => (
-                <div key={user.id}>
-                    <Accordion.Title active={this.state.activeUser === user.id} user={user} onClick={this.handleUserClick.bind(this)}>
-                    <Icon name='dropdown' />{`${user.firstName} ${user.lastName}`}</Accordion.Title>
-                    <Accordion.Content active={this.state.activeUser === user.id}>
-                        <Form loading={user.updating || user.deleting}>
-                            <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="email" label='Email' defaultValue={user.email} />
-                            <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="password" label='Password' type='password' />
-                            <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="firstName" label='First Name' defaultValue={user.firstName} />
-                            <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="lastName" label='Last Name' defaultValue={user.lastName} />
-                            <Button circular icon='save' label='Save' color='green' onClick={ e => this.handleUserFormSubmit(e) } />
-                            <Button floated='right' circular icon='delete' label='Delete' color='red' onClick={ e => this.handleDeleteUser(user.id) } />
-                        </Form>
-                    </Accordion.Content>
-                </div>
-            ))
-            : users.loading
-                ? <Accordion.Title active={false}>Loading</Accordion.Title>
-                : <Accordion.Title active={false}>No data</Accordion.Title>
 
         return (
             <Container>
                 <Header as='h1'>
                     <Icon name='users' circular />
-                    <Header.Content>Registered Users</Header.Content>
+                    <Header.Content>Registered Users <Loader active={users.loading} inline size='small' /></Header.Content>
                 </Header>
-                <Accordion fluid styled>
-                    {userItems}
-                </Accordion>
+                { users.items && this.renderUsers() }
             </Container>
         )
     }

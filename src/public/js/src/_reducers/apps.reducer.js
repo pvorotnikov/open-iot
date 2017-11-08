@@ -33,6 +33,47 @@ export function apps(state = {}, action) {
             }
             break
 
+        case appConstants.GET_SINGLE_REQUEST:
+            return {
+                loading: true,
+            }
+            break
+
+        case appConstants.GET_SINGLE_SUCCESS:
+            return {
+                app: action.app,
+            }
+            break
+
+        case appConstants.GET_SINGLE_FAILURE:
+            return {
+                error: action.error
+            }
+            break
+
+        case appConstants.UPDATE_REQUEST:
+            return {
+                ...state,
+                loading: true,
+            }
+            break
+
+        case appConstants.UPDATE_SUCCESS:
+            return {
+                app: {
+                    ...state.app,
+                    ...action.app,
+                }
+            }
+            break
+
+        case appConstants.UPDATE_FAILURE:
+            return {
+                ...state,
+                error: action.error
+            }
+            break
+
         default:
             return state
     }

@@ -7,6 +7,8 @@ import { alertActions } from './'
 export const appActions = {
     getAll,
     create,
+    getSingle,
+    update,
 }
 
 /**
@@ -57,4 +59,55 @@ function create(app) {
     function request() { return { type: appConstants.CREATE_REQUEST } }
     function success(app) { return { type: appConstants.CREATE_SUCCESS, app } }
     function failure(error) { return { type: appConstants.CREATE_FAILURE, error } }
+}
+
+/**
+ * Get single app  by id
+ * @param {String} id application id
+ * @return {Function} get all async action
+ */
+function getSingle(id) {
+    return dispatch => {
+        dispatch(request())
+
+        // perform async operation
+        appService.getById(id)
+        .then(app => {
+            dispatch(success(app))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
+    }
+
+    function request() { return { type: appConstants.GET_SINGLE_REQUEST } }
+    function success(app) { return { type: appConstants.GET_SINGLE_SUCCESS, app } }
+    function failure(error) { return { type: appConstants.GET_SINGLE_FAILURE, error } }
+}
+
+/**
+ * Update application by id
+ * @param  {String} id  application id
+ * @param  {Object} app application update
+ * @return {Function} update async action
+ */
+function update(id, app) {
+    return dispatch => {
+        dispatch(request())
+
+        // perform async operation
+        appService.update(id, app)
+        .then(() => {
+            dispatch(success(id, app))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
+    }
+
+    function request() { return { type: appConstants.UPDATE_REQUEST } }
+    function success(id, app) { return { type: appConstants.UPDATE_SUCCESS, id, app } }
+    function failure(error) { return { type: appConstants.UPDATE_FAILURE, error } }
 }
