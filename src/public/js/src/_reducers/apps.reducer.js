@@ -39,6 +39,18 @@ export function apps(state = {}, action) {
             return { error: action.error, }
             break
 
+        case appConstants.DELETE_REQUEST:
+            return { ...state, loading: true, }
+            break
+
+        case appConstants.DELETE_SUCCESS:
+            return {}
+            break
+
+        case appConstants.DELETE_FAILURE:
+            return { ...state, loading: false, }
+            break
+
         case appConstants.GET_SINGLE_REQUEST:
             return { loading: true, }
             break

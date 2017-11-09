@@ -8,6 +8,7 @@ export const appService = {
     update,
     refreshKey,
     refreshSecret,
+    delete: _delete,
 }
 
 /**
@@ -83,4 +84,16 @@ function refreshSecret(id) {
         method: 'PUT',
     }
     return new Request().send('/api/apps/' + id + '/secret', requestOptions)
+}
+
+/**
+ * Delete application
+ * @param  {String} id application id
+ * @return {Promise} response promise
+ */
+function _delete(id) {
+    const requestOptions = {
+        method: 'DELETE',
+    }
+    return new Request().send('/api/apps/' + id, requestOptions)
 }

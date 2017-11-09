@@ -43,6 +43,12 @@ const applicationSchema = mongoose.Schema({
     updated: { type: Date, default: Date.now },
 })
 
+applicationSchema.pre('remove', function(next) {
+    console.log('Cascade removing gateways attached to application ' + this._id)
+    Gateway.remove({application: this._id}).exec()
+    next()
+})
+
 const gatewaySchema = mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     application: { type: mongoose.Schema.Types.ObjectId, ref: 'Application' },

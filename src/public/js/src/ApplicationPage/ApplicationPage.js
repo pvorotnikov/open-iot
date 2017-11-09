@@ -48,6 +48,62 @@ class ApplicationPage extends Component {
         this.props.dispatch(gatewayActions.delete(id))
     }
 
+    handleDeleteApp() {
+        this.props.dispatch(appActions.delete(this.props.match.params.id))
+    }
+
+    renderHeader() {
+        const { app } = this.props
+        return (
+            <Header as='h1'>
+                <Icon name='lab' circular />
+                <Header.Content>
+                    <EditableText text={app.name || ''} onUpdate={(value) => this.onFieldUpdate('name', value)} />
+                    <Loader active={this.props.loading} inline size='small' />
+                    <Header.Subheader>{app.id && `ID: ${app.id}`}</Header.Subheader>
+                </Header.Content>
+            </Header>
+        )
+    }
+
+    renderCredentials() {
+        const { app } = this.props
+        return (
+            <Segment raised>
+                <Label color='blue' ribbon>Credentials</Label>
+                <List>
+                    <List.Item>
+                        <Label horizontal>Access key</Label>
+                        <span>
+                            {app.key}
+                            <Icon link name='refresh' style={{marginLeft: '10px'}} onClick={this.refreshKey.bind(this)} />
+                        </span>
+                    </List.Item>
+                    <List.Item>
+                        <Label horizontal>Secret key</Label>
+                        <span>
+                            {app.secret}
+                            <Icon link name='refresh' style={{marginLeft: '10px'}} onClick={this.refreshSecret.bind(this)} />
+                        </span>
+                    </List.Item>
+                </List>
+            </Segment>
+        )
+    }
+
+    renderSettings() {
+        return (
+            <Segment raised>
+                <Label color='blue' ribbon>Settings</Label>
+                <List>
+                    <List.Item>
+                        <Button circular icon='delete' label='Delete app' color='red' onClick={ e => this.handleDeleteApp() } />
+                    </List.Item>
+                </List>
+            </Segment>
+        )
+    }
+
     renderNewGatewayCard() {
         const appId = this.props.match.params.id
         return (
@@ -97,36 +153,11 @@ class ApplicationPage extends Component {
         const { app, gateways } = this.props
         return (
             <Container>
-                <Header as='h1'>
-                    <Icon name='lab' circular />
-                    <Header.Content>
-                        <EditableText text={app.name || ''} onUpdate={(value) => this.onFieldUpdate('name', value)} />
-                        <Loader active={this.props.loading} inline size='small' />
-                        <Header.Subheader>{app.id && `ID: ${app.id}`}</Header.Subheader>
-                    </Header.Content>
-                </Header>
+                { this.renderHeader() }
                 <Container>
                     <EditableText text={app.description || ''} onUpdate={(value) => this.onFieldUpdate('description', value)} />
                 </Container>
-                <Segment raised>
-                    <Label color='blue' ribbon>Credentials</Label>
-                    <List>
-                        <List.Item>
-                            <Label horizontal>Access key</Label>
-                            <span>
-                                {app.key}
-                                <Icon link name='refresh' style={{marginLeft: '10px'}} onClick={this.refreshKey.bind(this)} />
-                            </span>
-                        </List.Item>
-                        <List.Item>
-                            <Label horizontal>Secret key</Label>
-                            <span>
-                                {app.secret}
-                                <Icon link name='refresh' style={{marginLeft: '10px'}} onClick={this.refreshSecret.bind(this)} />
-                            </span>
-                        </List.Item>
-                    </List>
-                </Segment>
+                { this.renderCredentials() }
                 <Segment raised>
                     <Label color='blue' ribbon>Gateways</Label>
                     <Card.Group style={{ marginTop: '5px' }}>
@@ -135,6 +166,7 @@ class ApplicationPage extends Component {
                             : this.renderNewGatewayCard() }
                     </Card.Group>
                 </Segment>
+                { this.renderSettings() }
             </Container>
         )
     }

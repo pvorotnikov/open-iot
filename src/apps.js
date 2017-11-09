@@ -168,6 +168,22 @@ router.put('/:id/secret', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
     })
 })
 
+// delete app
+router.delete('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+
+    let app = null
+
+    Application.findByIdAndRemove(req.params.id)
+    .where('user').eq(req.user._id)
+    .then(() => {
+        res.json(new SuccessResponse())
+    })
+    .catch(err => {
+        res.status(500).json(new ErrorResponse(err.message))
+    })
+
+})
+
 function generateAccessKey() {
     return hat(32, 16)
 }

@@ -11,6 +11,7 @@ export const appActions = {
     update,
     refreshKey,
     refreshSecret,
+    delete: _delete,
 }
 
 /**
@@ -162,4 +163,30 @@ function refreshSecret(id) {
     function request() { return { type: appConstants.REFRESH_SECRET_REQUEST } }
     function success(secret) { return { type: appConstants.REFRESH_SECRET_SUCCESS, secret } }
     function failure(error) { return { type: appConstants.REFRESH_SECRET_FAILURE, error } }
+}
+
+/**
+ * Delete application
+ * @param {Object} id application id
+ * @return {Function} delete async action
+ */
+function _delete(id) {
+    return dispatch => {
+        dispatch(request())
+
+        // perform async operation
+        appService.delete(id)
+        .then(() => {
+            dispatch(success())
+            history.goBack()
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
+    }
+
+    function request(id) { return { type: appConstants.DELETE_REQUEST } }
+    function success(id) { return { type: appConstants.DELETE_SUCCESS } }
+    function failure(error) { return { type: appConstants.DELETE_FAILURE, id, error } }
 }
