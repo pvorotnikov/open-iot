@@ -2,20 +2,33 @@ version: '2'
 
 services:
 
-  ui:
-    build:
-      context: ./
-      dockerfile: ./helpers/Dockerfile
-    image: open-home-ui:latest
-    ports:
-      - 127.0.0.1:8080:8080
-    depends_on:
-      - db
-    links:
-      - "db"
-    volumes: # for development purposes
-      - ./src:/usr/app/src
+    broker:
+        build:
+            context: ./
+            dockerfile: ./helpers/Dockerfile-broker
+        hostname: broker
+        links:
+            - "ui"
+        ports:
+            - 0.0.0.0:1883:1883   # mqtt port
+            - 0.0.0.0:15675:15675 # web mqtt port
+        environment:
+            RABBITMQ_ERLANG_COOKIE: <erlang-cookie>
 
-  db:
-    image: mongo:latest
+    ui:
+        build:
+            context: ./
+            dockerfile: ./helpers/Dockerfile-ui
+        image: open-home-ui:latest
+        ports:
+            - 127.0.0.1:8080:8080
+        depends_on:
+            - db
+        links:
+            - "db"
+        volumes: # for development purposes
+            - ./src:/usr/app/src
+
+    db:
+        image: mongo:latest
 

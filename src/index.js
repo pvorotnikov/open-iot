@@ -10,6 +10,7 @@ const users = require('./users')
 const apps = require('./apps')
 const gateways = require('./gateways')
 const passport = require('./passport')
+const broker = require('./broker')
 
 /* ================================
  * Database
@@ -28,7 +29,7 @@ DB.connection()
 const app = express()
 
 // setup middleware
-app.use(morgan('combined', { 'stream': logger.stream, skip: (req, res) => { return res.statusCode < 200 } }))
+app.use(morgan('combined', { 'stream': logger.stream, skip: (req, res) => { return res.statusCode < 400 } }))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser())
@@ -38,6 +39,7 @@ app.use('/api/passport', passport)
 app.use('/api/users', users)
 app.use('/api/apps', apps)
 app.use('/api/gateways', gateways)
+app.use('/api/broker', broker)
 
 // catch 404 and forward it to error handler
 app.use((req, res, next) => {
