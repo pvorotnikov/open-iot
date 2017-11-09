@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const validator = require('validator')
 const { logger, responses, auth } = require('./lib')
-const { ACCESS_LEVEL, Gateway } = require('./models')
+const { ACCESS_LEVEL, Gateway, Application } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
 
 // fetch gateway by id that belongs to a particular user
@@ -48,15 +48,23 @@ router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
         return res.status(400).json(new ErrorResponse('Please, enter gateway description'))
     }
 
-    // TODO: check the owner of the application
+    // check the owner of the application
+    Application.findById(application)
+    .where('user').eq(req.user._id)
+    .then(app => {
 
-    let gateway = new Gateway({
-        user: req.user._id,
-        application,
-        name,
-        description,
+        if (!app) {
+            throw new Error('This application belongs to somebody else')
+        }
+
+        let gateway = new Gateway({
+            user: req.user._id,
+            application,
+            name,
+            description,
+        })
+        return gateway.save()
     })
-    gateway.save()
     .then(gateway => {
         res.json({ status: 'ok', data: gateway })
     })
@@ -69,8 +77,9 @@ router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 // delete gateway
 router.delete('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
-    Gateway.findByIdAndRemove(req.params.id)
+    Gateway.findById(req.params.id)
     .where('user').eq(req.user._id)
+    .then(gateway => gateway.remove())
     .then(() => {
         res.json(new SuccessResponse())
     })

@@ -33,7 +33,8 @@ router.delete('/:id', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
         return res.status(400).json(new ErrorResponse('You can\'t delete yourself!'))
     }
 
-    User.findByIdAndRemove(req.params.id)
+    User.findById(req.params.id)
+    .then(user => user.remove())
     .then(() => {
         res.json(new SuccessResponse())
     })

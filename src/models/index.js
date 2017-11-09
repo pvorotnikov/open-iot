@@ -5,6 +5,8 @@ const uuidv4 = require('uuid/v4')
 const mongoose = require('mongoose')
 mongoose.Promise = require('bluebird')
 
+const { Schema } = mongoose
+
 /* ================================
  * Constants
  * ================================
@@ -22,7 +24,7 @@ const ACCESS_LEVEL = {
  * ================================
  */
 
-const userSchema = mongoose.Schema({
+const userSchema = new Schema({
     email: { type: String, unique : true },
     password: String,
     firstName: String,
@@ -32,9 +34,14 @@ const userSchema = mongoose.Schema({
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
 })
+userSchema.pre('remove', function(next) {
+    logger.info('Cascade removing applications attached to user ' + this._id)
+    Application.remove({user: this._id}).exec()
+    next()
+})
 
-const applicationSchema = mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+const applicationSchema = new Schema({
+    user: { type: Schema.Types.ObjectId, ref: 'User' },
     name: String,
     description: String,
     key: String,
@@ -42,36 +49,39 @@ const applicationSchema = mongoose.Schema({
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
 })
-
 applicationSchema.pre('remove', function(next) {
-    console.log('Cascade removing gateways attached to application ' + this._id)
+    logger.info('Cascade removing gateways attached to application ' + this._id)
     Gateway.remove({application: this._id}).exec()
     next()
 })
 
-const gatewaySchema = mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    application: { type: mongoose.Schema.Types.ObjectId, ref: 'Application' },
+const gatewaySchema = new Schema({
+    user: { type: Schema.Types.ObjectId, ref: 'User' },
+    application: { type: Schema.Types.ObjectId, ref: 'Application' },
     name: String,
     description: String,
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
 })
 
-const deviceSchema = mongoose.Schema({
-    gateway: { type: mongoose.Schema.Types.ObjectId, ref: 'Gateway' },
+const deviceSchema = new Schema({
+    gateway: { type: Schema.Types.ObjectId, ref: 'Gateway' },
     name: String,
     description: String,
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
 })
 
-const tokenSchema = mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+const tokenSchema = new Schema({
+    user: { type: Schema.Types.ObjectId, ref: 'User' },
     type: String,   // access, refresh
     value: String,
     created: { type: Date, default: Date.now, expires: nconf.get('REFRESH_TOKEN_EXPIRATION_TIME') * 2 }, // expire in 2 * REFRESH_TOKEN_EXPIRATION_TIME
     updated: { type: Date, default: Date.now },
+})
+tokenSchema.pre('remove', function(next) {
+    logger.debug(`Removing ${this.type} token: ${this._id}`)
+    next()
 })
 
 /* ================================

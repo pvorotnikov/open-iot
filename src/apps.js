@@ -171,10 +171,9 @@ router.put('/:id/secret', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 // delete app
 router.delete('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
-    let app = null
-
-    Application.findByIdAndRemove(req.params.id)
+    Application.findById(req.params.id)
     .where('user').eq(req.user._id)
+    .then(app => app.remove())
     .then(() => {
         res.json(new SuccessResponse())
     })
