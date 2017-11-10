@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
+import { Rules } from './'
 
 import {
     Header,
@@ -166,19 +167,6 @@ class ApplicationPage extends Component {
         return cards
     }
 
-    renderRules() {
-        return (
-            <Segment raised>
-                <Label color='blue' ribbon>Rules</Label>
-                <List>
-                    <List.Item>
-
-                    </List.Item>
-                </List>
-            </Segment>
-        )
-    }
-
     render() {
         const { app } = this.props
         return (
@@ -186,7 +174,7 @@ class ApplicationPage extends Component {
                 { this.renderHeader() }
                 { this.renderCredentials() }
                 { this.renderGateways() }
-                { this.renderRules() }
+                <Rules app={this.props.app} />
                 { this.renderSettings() }
             </Container>
         )
