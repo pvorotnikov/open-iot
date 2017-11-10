@@ -27,7 +27,7 @@ class ApplicationPage extends Component {
         this.props.dispatch(gatewayActions.getAll(this.props.match.params.id))
     }
 
-    onFieldUpdate(name, value) {
+    onEditableTextUpdate(name, value) {
         const { app } = this.props
         value = value.trim()
         let updatedApp = {
@@ -55,14 +55,17 @@ class ApplicationPage extends Component {
     renderHeader() {
         const { app } = this.props
         return (
-            <Header as='h1'>
-                <Icon name='lab' circular />
-                <Header.Content>
-                    <EditableText text={app.name || ''} onUpdate={(value) => this.onFieldUpdate('name', value)} />
-                    <Loader active={this.props.loading} inline size='small' />
-                    <Header.Subheader>{app.id && `ID: ${app.id}`}</Header.Subheader>
-                </Header.Content>
-            </Header>
+            <Container>
+                <Header as='h1'>
+                    <Icon name='lab' circular />
+                    <Header.Content>
+                        <EditableText text={app.name || ''} onUpdate={(value) => this.onEditableTextUpdate('name', value)} />
+                        <Loader active={this.props.loading} inline size='small' />
+                        <Header.Subheader>{app.id && `ID: ${app.id}`}</Header.Subheader>
+                    </Header.Content>
+                </Header>
+                <EditableText text={app.description || ''} onUpdate={(value) => this.onEditableTextUpdate('description', value)} />
+            </Container>
         )
     }
 
@@ -87,6 +90,20 @@ class ApplicationPage extends Component {
                         </span>
                     </List.Item>
                 </List>
+            </Segment>
+        )
+    }
+
+    renderGateways() {
+        const { gateways } = this.props
+        return (
+            <Segment raised>
+                <Label color='blue' ribbon>Gateways</Label>
+                <Card.Group style={{ marginTop: '5px' }}>
+                    { gateways.items && gateways.items.length
+                        ? this.renderGatewaysCards()
+                        : this.renderNewGatewayCard() }
+                </Card.Group>
             </Segment>
         )
     }
@@ -149,23 +166,27 @@ class ApplicationPage extends Component {
         return cards
     }
 
+    renderRules() {
+        return (
+            <Segment raised>
+                <Label color='blue' ribbon>Rules</Label>
+                <List>
+                    <List.Item>
+
+                    </List.Item>
+                </List>
+            </Segment>
+        )
+    }
+
     render() {
-        const { app, gateways } = this.props
+        const { app } = this.props
         return (
             <Container>
                 { this.renderHeader() }
-                <Container>
-                    <EditableText text={app.description || ''} onUpdate={(value) => this.onFieldUpdate('description', value)} />
-                </Container>
                 { this.renderCredentials() }
-                <Segment raised>
-                    <Label color='blue' ribbon>Gateways</Label>
-                    <Card.Group style={{ marginTop: '5px' }}>
-                        { gateways.items && gateways.items.length
-                            ? this.renderGatewaysCards()
-                            : this.renderNewGatewayCard() }
-                    </Card.Group>
-                </Segment>
+                { this.renderGateways() }
+                { this.renderRules() }
                 { this.renderSettings() }
             </Container>
         )
