@@ -100,6 +100,9 @@ class ApplicationPage extends Component {
         const { gateways } = this.props
         return (
             <Segment raised>
+                <Dimmer active={gateways.loading} inverted>
+                    <Loader inverted />
+                </Dimmer>
                 <Label color='blue' ribbon>Gateways</Label>
                 <Card.Group style={{ marginTop: '5px' }}>
                     { gateways.items && gateways.items.length
@@ -175,7 +178,7 @@ class ApplicationPage extends Component {
                 { this.renderHeader() }
                 { this.renderCredentials() }
                 { this.renderGateways() }
-                <Rules app={this.props.app} />
+                <Rules rules={this.props.rules} />
                 { this.renderSettings() }
             </Container>
         )
@@ -196,12 +199,13 @@ ApplicationPage.defaultProps = {
 }
 
 function mapStateToProps(state) {
-    const { apps, gateways } = state
+    const { apps, gateways, rules } = state
     const { app, loading } = apps
     return {
         app,
         loading,
         gateways,
+        rules,
     }
 }
 

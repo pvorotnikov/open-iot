@@ -11,7 +11,7 @@ import { ruleConstants } from '../_constants'
  * @param  {Object} action reducer action
  * @return {Object}        new state
  */
-export function rules(state = {}, action) {
+export function rules(state = {items: [], loading: false}, action) {
 
     switch (action.type) {
 
