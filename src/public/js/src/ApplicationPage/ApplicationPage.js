@@ -17,7 +17,7 @@ import {
     Dimmer,
 } from 'semantic-ui-react'
 
-import { appActions, gatewayActions } from '../_actions'
+import { appActions, gatewayActions, ruleActions } from '../_actions'
 import { history } from '../_helpers'
 import { EditableText } from '../_components'
 
@@ -26,6 +26,7 @@ class ApplicationPage extends Component {
     componentDidMount() {
         this.props.dispatch(appActions.getSingle(this.props.match.params.id))
         this.props.dispatch(gatewayActions.getAll(this.props.match.params.id))
+        this.props.dispatch(ruleActions.getAll(this.props.match.params.id))
     }
 
     onEditableTextUpdate(name, value) {

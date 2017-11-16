@@ -6,6 +6,7 @@ import { users } from './users.reducer'
 import { alert } from './alert.reducer'
 import { apps } from './apps.reducer'
 import { gateways } from './gateways.reducer'
+import { rules } from './rules.reducer'
 
 import { todos, visibilityFilter } from './todo.reducer'
 
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
     alert,          // state.alert
     apps,           // state.apps
     gateways,       // state.gateways
+    rules,          // state.rules
 
     todos,              // TODO: remove this eventually
     visibilityFilter,   // TODO: remove this eventually

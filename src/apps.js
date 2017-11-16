@@ -3,7 +3,7 @@ const router = express.Router()
 const validator = require('validator')
 const hat = require('hat')
 const { logger, responses, auth } = require('./lib')
-const { ACCESS_LEVEL, Application, Gateway } = require('./models')
+const { ACCESS_LEVEL, Application, Gateway, Rule } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
 
 // fetch all apps that belong to the user
@@ -90,30 +90,6 @@ router.get('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
 })
 
-// get all gateways that belong to this app
-router.get('/:id/gateways', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
-
-    Gateway
-    .where('application').eq(req.params.id)
-    .where('user').eq(req.user._id)
-    .then(gateways => {
-        let data = gateways.map(g => {
-            return {
-                id: g.id,
-                name: g.name,
-                description: g.description,
-                created: g.created,
-                updated: g.updated,
-            }
-        })
-        res.json({ status: 'ok', data })
-    })
-    .catch((err) => {
-        res.status(500).json(new ErrorResponse(err.message))
-    })
-
-})
-
 // update app
 router.put('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
@@ -178,6 +154,55 @@ router.delete('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
         res.json(new SuccessResponse())
     })
     .catch(err => {
+        res.status(500).json(new ErrorResponse(err.message))
+    })
+
+})
+
+// get all gateways that belong to this app
+router.get('/:id/gateways', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+
+    Gateway
+    .where('application').eq(req.params.id)
+    .where('user').eq(req.user._id)
+    .then(gateways => {
+        let data = gateways.map(g => {
+            return {
+                id: g.id,
+                name: g.name,
+                description: g.description,
+                created: g.created,
+                updated: g.updated,
+            }
+        })
+        res.json({ status: 'ok', data })
+    })
+    .catch((err) => {
+        res.status(500).json(new ErrorResponse(err.message))
+    })
+
+})
+
+// get all rules that belong to this app
+router.get('/:id/rules', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+
+    Rule
+    .where('application').eq(req.params.id)
+    .where('user').eq(req.user._id)
+    .then(rules => {
+        let data = rules.map(r => {
+            return {
+                id: r.id,
+                topic: r.topic,
+                transformation: r.transformation,
+                output: r.output,
+                created: r.created,
+                updated: r.updated,
+            }
+        })
+        res.json({ status: 'ok', data })
+    })
+    .catch((err) => {
         res.status(500).json(new ErrorResponse(err.message))
     })
 

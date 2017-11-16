@@ -52,6 +52,8 @@ const applicationSchema = new Schema({
 applicationSchema.pre('remove', function(next) {
     logger.info('Cascade removing gateways attached to application ' + this._id)
     Gateway.remove({application: this._id}).exec()
+    logger.info('Cascade removing rules attached to application ' + this._id)
+    Rule.remove({application: this._id}).exec()
     next()
 })
 
@@ -84,6 +86,17 @@ tokenSchema.pre('remove', function(next) {
     next()
 })
 
+const ruleSchema = new Schema({
+    user: { type: Schema.Types.ObjectId, ref: 'User' },
+    application: { type: Schema.Types.ObjectId, ref: 'Application' },
+    topic: String,
+    transformation: String,
+    output: String,
+    created: { type: Date, default: Date.now },
+    updated: { type: Date, default: Date.now },
+
+})
+
 /* ================================
  * Models
  * ================================
@@ -93,6 +106,7 @@ const Application = mongoose.model('Application', applicationSchema)
 const Gateway = mongoose.model('Gateway', gatewaySchema)
 const Device = mongoose.model('Device', deviceSchema)
 const Token = mongoose.model('Token', tokenSchema)
+const Rule = mongoose.model('Rule', ruleSchema)
 
 /* ================================
  * Database
@@ -156,5 +170,6 @@ module.exports = {
     Gateway,
     Device,
     Token,
+    Rule,
     generatePassword,
 }
