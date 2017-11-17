@@ -54,6 +54,14 @@ class ApplicationPage extends Component {
         this.props.dispatch(appActions.delete(this.props.match.params.id))
     }
 
+    handleRuleSubmit(rule) {
+        this.props.dispatch(ruleActions.create({...rule, application: this.props.match.params.id}))
+    }
+
+    handleRuleDelete(id) {
+        this.props.dispatch(ruleActions.delete(id))
+    }
+
     renderHeader() {
         const { app } = this.props
         return (
@@ -178,7 +186,7 @@ class ApplicationPage extends Component {
                 { this.renderHeader() }
                 { this.renderCredentials() }
                 { this.renderGateways() }
-                <Rules rules={this.props.rules} />
+                <Rules rules={this.props.rules} onDelete={id => this.handleRuleDelete(id)} onSubmit={rule => this.handleRuleSubmit(rule)} />
                 { this.renderSettings() }
             </Container>
         )

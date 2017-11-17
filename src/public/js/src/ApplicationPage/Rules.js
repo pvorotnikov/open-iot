@@ -10,6 +10,9 @@ import {
     Dimmer,
     Loader,
     Button,
+    Step,
+    Icon,
+    Popup,
 } from 'semantic-ui-react'
 
 export class Rules extends Component {
@@ -40,17 +43,39 @@ export class Rules extends Component {
         value = value.trim()
         this.setState({ values: {
             ...this.state.values,
-            [name]: value
+            [name]: value.trim()
         }})
     }
 
     onFormSubmit() {
+        let {topic, transformation, action, output} = this.state.values
+        let rule = null
+
+        // validate values
+        if ('discard' !== action) {
+            if ('' !== topic && '' !== action && '' !== output) rule = { topic, transformation, action, output }
+            else return
+        } else {
+            if ('' !== topic && '' !== action) rule = { topic, transformation, action }
+            else return
+        }
+
+        // notify parent
+        if (rule) {
+            this.props.onSubmit(rule)
+        }
+
+        // reset state
         this.setState({ values: {
             topic: '',
             transformation: '',
             action: null,
             output: ''
         }})
+    }
+
+    onDeleteRile(id) {
+        this.props.onDelete(id)
     }
 
     renderNewRule() {
@@ -63,7 +88,7 @@ export class Rules extends Component {
         }
 
         return (
-            <Form>
+            <Form size='small'>
                 <Form.Group widths='equal'>
                     <Form.Input name='topic'
                         label='Topic'
@@ -88,15 +113,91 @@ export class Rules extends Component {
         )
     }
 
-    render() {
+    renderRules() {
         const { rules } = this.props
-        const { loading } = rules
+        const items = rules.items.map(r => {
 
-        let items = rules.items.map(r => {
+            let actionStep = null
+
+            switch (r.action) {
+                case 'discard':
+                    actionStep = (
+                        <Step>
+                            <Icon name='dont' />
+                            <Step.Content>
+                                <Step.Title>No action</Step.Title>
+                                <Step.Description>The message will be discarded</Step.Description>
+                            </Step.Content>
+                        </Step>
+                    )
+                    break
+
+                case 'republish':
+                    actionStep = (
+                        <Step>
+                            <Icon name='reply' />
+                            <Step.Content>
+                                <Step.Title>Republish on topic</Step.Title>
+                                <Step.Description>{r.output}</Step.Description>
+                            </Step.Content>
+                        </Step>
+                    )
+                    break
+
+                case 'enqueue':
+                    actionStep = (
+                        <Step>
+                            <Icon name='angle double right' />
+                            <Step.Content>
+                                <Step.Title>Enqueue</Step.Title>
+                                <Step.Description>{r.output}</Step.Description>
+                            </Step.Content>
+                        </Step>
+                    )
+                    break
+            }
+
+            const shortTopic = r.topic.split('/').slice(1).join('/')
+            const topicStep = (
+                <Step>
+                    <Icon name='announcement' />
+                    <Step.Content>
+                        <Step.Title>Topic</Step.Title>
+                        <Step.Description>{shortTopic}</Step.Description>
+                    </Step.Content>
+                </Step>
+            )
+
             return (
-                <List.Item key={r.id}>{r.id}</List.Item>
+                <List.Item key={r.id}>
+                    <Step.Group size='mini' fluid widths={4}>
+                        <Popup trigger={topicStep} content={'Full topic: ' + r.topic} />
+                        <Step disabled={'' === r.transformation}>
+                            <Icon name='settings' />
+                            <Step.Content>
+                                <Step.Title>Transformation</Step.Title>
+                                <Step.Description>No transformation</Step.Description>
+                            </Step.Content>
+                        </Step>
+                        { actionStep }
+                        <Step>
+                            <Step.Content>
+                                <Label as='a' color='red' size='tiny' onClick={() => this.onDeleteRile(r.id)}>Delete</Label>
+                            </Step.Content>
+                        </Step>
+                    </Step.Group>
+                </List.Item>
             )
         })
+
+        return <List divided relaxed>{items}</List>
+    }
+
+    render() {
+
+        const { loading } = this.props.rules
+
+
 
         return (
             <Segment raised>
@@ -104,7 +205,7 @@ export class Rules extends Component {
                     <Loader inverted />
                 </Dimmer>
                 <Label color='blue' ribbon>Rules</Label>
-                <List>{items}</List>
+                { this.renderRules() }
                 { this.renderNewRule() }
             </Segment>
         )
@@ -114,5 +215,7 @@ export class Rules extends Component {
 
 Rules.propTypes = {
     rules: PropTypes.object.isRequired,
+    onSubmit: PropTypes.func.isRequired,
+    onDelete: PropTypes.func.isRequired,
 }
 

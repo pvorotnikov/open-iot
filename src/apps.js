@@ -195,6 +195,7 @@ router.get('/:id/rules', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
                 id: r.id,
                 topic: r.topic,
                 transformation: r.transformation,
+                action: r.action,
                 output: r.output,
                 created: r.created,
                 updated: r.updated,

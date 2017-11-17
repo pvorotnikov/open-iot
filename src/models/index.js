@@ -91,6 +91,7 @@ const ruleSchema = new Schema({
     application: { type: Schema.Types.ObjectId, ref: 'Application' },
     topic: String,
     transformation: String,
+    action: { type: String, enum: ['discard', 'republish', 'enqueue'] },
     output: String,
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },

@@ -41,5 +41,5 @@ function _delete(id) {
     const requestOptions = {
         method: 'DELETE',
     }
-    return new Request().send('/api/rule/' + id, requestOptions)
+    return new Request().send('/api/rules/' + id, requestOptions)
 }

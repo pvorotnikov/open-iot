@@ -66,7 +66,14 @@ router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
         return gateway.save()
     })
     .then(gateway => {
-        res.json({ status: 'ok', data: gateway })
+        let data = {
+            id: gateway.id,
+            name: gateway.name,
+            description: gateway.description,
+            created: gateway.created,
+            updated: gateway.updated,
+        }
+        res.json({ status: 'ok', data })
     })
     .catch(err => {
         res.status(500).json(new ErrorResponse(err.message))
