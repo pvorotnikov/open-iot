@@ -15,15 +15,19 @@ router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
     }
 
     if (validator.isEmpty(topic)) {
-        return res.status(400).json(new ErrorResponse('Please, enter ingress topic'))
+        return res.status(400).json(new ErrorResponse('Please, enter topic'))
     }
 
     if (validator.isEmpty(action)) {
-        return res.status(400).json(new ErrorResponse('Please, enter ingress action'))
+        return res.status(400).json(new ErrorResponse('Please, enter action'))
     }
 
     if ('discard' != action && validator.isEmpty(output)) {
-        return res.status(400).json(new ErrorResponse('Please, enter ingress output'))
+        return res.status(400).json(new ErrorResponse('Please, enter output'))
+    }
+
+    if ('republish' === action && topic === output) {
+        return res.status(400).json(new ErrorResponse('Output must be different from topic'))
     }
 
     // check the owner of the application
@@ -38,7 +42,7 @@ router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
         let rule = new Rule({
             user: req.user._id,
             application,
-            topic: `${application}/${topic}`,
+            topic,
             transformation,
             action,
             output,

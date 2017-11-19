@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const { logger } = require('./lib')
-const { Application, Gateway } = require('./models')
+const { Application, Gateway, Rule, ObjectId } = require('./models')
 
 /* ================================
  * App middleware
@@ -16,7 +16,7 @@ router.post('/user', (req, res, next) => {
 
     authenticateApp(username, password)
     .then(appName => {
-        logger.info(`Connection allowed for app ${appName} (${username})`)
+        logger.debug(`Connection allowed for app ${appName} (${username})`)
         res.send('allow')
     })
     .catch((err) => {
@@ -48,39 +48,40 @@ router.post('/resource', (req, res, next) => {
 
     if ('topic' === resource) {
 
-        // TODO: by default allow everything
-        return res.send('allow')
-
         switch (permission) {
 
             case 'write':
                 authorizeTopicPublish(username, name)
                 .then(() => {
+                    logger.debug('...allowed')
                     res.send('allow')
                 })
                 .catch(err => {
-                    logger.error(err.message)
+                    logger.error('...denied:', err.message)
                     res.send('deny')
                 })
                 break
 
             case 'read':
                 authorizeTopicSubscribe(username, name)
-                .then(() => {
+                .then(reason => {
+                    logger.debug('...allowed:', reason)
                     res.send('allow')
                 })
                 .catch(err => {
-                    logger.error(err.message)
+                    logger.error('...denied:', err.message)
                     res.send('deny')
                 })
                 break
 
             default:
+                logger.error('...denied')
                 res.send('deny')
                 break
         }
 
     } else {
+        logger.debug('...allowed')
         res.send('allow')
     }
 
@@ -113,7 +114,9 @@ router.post('/topic', (req, res, next) => {
  */
 function authenticateApp(key, secret) {
     return new Promise((fulfill, reject) => {
-        Application.findOne({ key, secret })
+        Application.findOne()
+        .where('key').eq(key)
+        .where('secret').eq(secret)
         .then(app => {
             if (!app) reject(new Error(`Invalid key or secret: ${key}`))
             else fulfill(app.name)
@@ -132,8 +135,33 @@ function authenticateApp(key, secret) {
  */
 function authorizeTopicPublish(key, topic) {
     return new Promise((fulfill, reject) => {
-        // always allow
-        fulfill()
+        // analyze topic
+        const [ appId, gwId, ...topicParts ] = topic.split('/')
+        const topicName = topicParts.join('/')
+
+        // allow publishing only on registered topics
+        Application.findById(appId)
+        .where('key').eq(key)
+        .then(app => {
+            if (!app) {
+                reject(new Error('Application id and key do not match'))
+            } else {
+                // verify that the topic is registered within the application
+                Rule.findOne()
+                .where('application').eq(app._id)
+                .where('topic').eq(topicName)
+                .then(rule => {
+                    if (rule) {
+                        fulfill()
+                    } else {
+                        reject(new Error(`Topic ${topicName} is not registered within app ${appId}`))
+                    }
+                })
+            }
+        })
+        .catch(err => {
+            reject(err)
+        })
     })
 }
 
@@ -145,8 +173,24 @@ function authorizeTopicPublish(key, topic) {
  */
 function authorizeTopicSubscribe(key, topic) {
     return new Promise((fulfill, reject) => {
-        // always allow
-        fulfill()
+        // analyze topic
+        const [ appId, gwId, ...topicParts ] = topic.split('/')
+        const topicName = topicParts.join('/')
+
+        // allow subscription to own topics
+        Application.findById(appId)
+        .where('key').eq(key)
+        .then(app => {
+            if (!app) {
+                // TODO: in sharing scenario this should branch in permissions evaluation
+                reject(new Error('Application id and key do not match'))
+            } else {
+                fulfill('own topic')
+            }
+        })
+        .catch(err => {
+            reject(err)
+        })
     })
 }
 

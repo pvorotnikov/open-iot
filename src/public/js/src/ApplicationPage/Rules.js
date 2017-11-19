@@ -157,13 +157,13 @@ export class Rules extends Component {
                     break
             }
 
-            const shortTopic = r.topic.split('/').slice(1).join('/')
+            const fullTopic = `:appId/:gatewayId/${r.topic}`
             const topicStep = (
                 <Step>
                     <Icon name='announcement' />
                     <Step.Content>
                         <Step.Title>Topic</Step.Title>
-                        <Step.Description>{shortTopic}</Step.Description>
+                        <Step.Description>{r.topic}</Step.Description>
                     </Step.Content>
                 </Step>
             )
@@ -171,7 +171,20 @@ export class Rules extends Component {
             return (
                 <List.Item key={r.id}>
                     <Step.Group size='mini' fluid widths={4}>
-                        <Popup trigger={topicStep} content={'Full topic: ' + r.topic} />
+                        <Popup trigger={topicStep} flowing hoverable>
+                            <Popup.Content>
+                                <List>
+                                    <List.Item>
+                                        <Label horizontal>MQTT</Label>
+                                        {fullTopic}
+                                    </List.Item>
+                                    <List.Item>
+                                        <Label horizontal>HTTP</Label>
+                                        POST /publish/{fullTopic}
+                                    </List.Item>
+                                </List>
+                            </Popup.Content>
+                        </Popup>
                         <Step disabled={'' === r.transformation}>
                             <Icon name='settings' />
                             <Step.Content>
@@ -196,8 +209,6 @@ export class Rules extends Component {
     render() {
 
         const { loading } = this.props.rules
-
-
 
         return (
             <Segment raised>
