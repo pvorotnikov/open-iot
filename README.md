@@ -1,5 +1,10 @@
-# Open Home UI
-UI to Open Home project
+# Open IoT
+Open IoT is intended to be a flexible IoT backend and gateway management system, offering:
+* easy and secure data ingestion
+* device registry
+* data flow management
+* simple data transformations
+* MQTT and HTTP transports
 
 ## How to install
 
@@ -17,7 +22,7 @@ npm run build
 npm run watch
 
 # To follow the logs of the backend
-docker logs -f openhomeui_ui_1
+docker logs -f openiot_ui_1
 
 # To run tests
 npm test
