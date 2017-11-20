@@ -1,3 +1,4 @@
+const nconf = require('nconf')
 const Promise = require('bluebird')
 const { Application, Gateway, Rule } = require('../models')
 
@@ -14,6 +15,11 @@ const { Application, Gateway, Rule } = require('../models')
  */
 function authenticateApp(key, secret) {
     return new Promise((fulfill, reject) => {
+
+        if (key === nconf.get('HANDLER_KEY') && secret === nconf.get('HANDLER_SECRET')) {
+            return fulfill('Message Handler')
+        }
+
         Application.findOne()
         .where('key').eq(key)
         .where('secret').eq(secret)
@@ -35,6 +41,11 @@ function authenticateApp(key, secret) {
  */
 function authorizeTopicPublish(key, topic) {
     return new Promise((fulfill, reject) => {
+
+        if (key === nconf.get('HANDLER_KEY')) {
+            return fulfill()
+        }
+
         // analyze topic
         const [ appId, gwId, ...topicParts ] = topic.split('/')
         const topicName = topicParts.join('/')
@@ -73,6 +84,11 @@ function authorizeTopicPublish(key, topic) {
  */
 function authorizeTopicSubscribe(key, topic) {
     return new Promise((fulfill, reject) => {
+
+        if (key === nconf.get('HANDLER_KEY')) {
+            return fulfill()
+        }
+
         // analyze topic
         const [ appId, gwId, ...topicParts ] = topic.split('/')
         const topicName = topicParts.join('/')

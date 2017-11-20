@@ -13,6 +13,17 @@ const passport = require('./passport')
 const broker = require('./broker')
 const rules = require('./rules')
 const publish = require('./publish')
+const MessageHandler = require('./message-handler')
+
+/* ================================
+ * MESSAGE HANDLER
+ * ================================
+ */
+let mh = new MessageHandler()
+function setupServer() {
+    mh.run()
+}
+
 
 /* ================================
  * Database
