@@ -1,7 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { logger } = require('./lib')
-const { Application, Gateway, Rule, ObjectId } = require('./models')
+const { logger, exchange } = require('./lib')
 
 /* ================================
  * App middleware
@@ -14,7 +13,7 @@ router.post('/user', (req, res, next) => {
     // password - app secret
     const { username, password } = req.body
 
-    authenticateApp(username, password)
+    exchange.authenticateApp(username, password)
     .then(appName => {
         logger.debug(`Connection allowed for app ${appName} (${username})`)
         res.send('allow')
@@ -51,7 +50,7 @@ router.post('/resource', (req, res, next) => {
         switch (permission) {
 
             case 'write':
-                authorizeTopicPublish(username, name)
+                exchange.authorizeTopicPublish(username, name)
                 .then(() => {
                     logger.debug('...allowed')
                     res.send('allow')
@@ -63,7 +62,7 @@ router.post('/resource', (req, res, next) => {
                 break
 
             case 'read':
-                authorizeTopicSubscribe(username, name)
+                exchange.authorizeTopicSubscribe(username, name)
                 .then(reason => {
                     logger.debug('...allowed:', reason)
                     res.send('allow')
@@ -99,99 +98,5 @@ router.post('/topic', (req, res, next) => {
 
     res.send('allow')
 })
-
-
-/* ================================
- * Authorization and authentication
- * ================================
- */
-
-/**
- * Authenticate connecting user
- * @param  {String} key
- * @param  {String} secret
- * @return {Promise}
- */
-function authenticateApp(key, secret) {
-    return new Promise((fulfill, reject) => {
-        Application.findOne()
-        .where('key').eq(key)
-        .where('secret').eq(secret)
-        .then(app => {
-            if (!app) reject(new Error(`Invalid key or secret: ${key}`))
-            else fulfill(app.name)
-        })
-        .catch(err => {
-            reject(err)
-        })
-    })
-}
-
-/**
- * Authorize publish on a topic
- * @param  {String} key
- * @param  {String} topic
- * @return {Promise}
- */
-function authorizeTopicPublish(key, topic) {
-    return new Promise((fulfill, reject) => {
-        // analyze topic
-        const [ appId, gwId, ...topicParts ] = topic.split('/')
-        const topicName = topicParts.join('/')
-
-        // allow publishing only on registered topics
-        Application.findById(appId)
-        .where('key').eq(key)
-        .then(app => {
-            if (!app) {
-                reject(new Error('Application id and key do not match'))
-            } else {
-                // verify that the topic is registered within the application
-                Rule.findOne()
-                .where('application').eq(app._id)
-                .where('topic').eq(topicName)
-                .then(rule => {
-                    if (rule) {
-                        fulfill()
-                    } else {
-                        reject(new Error(`Topic ${topicName} is not registered within app ${appId}`))
-                    }
-                })
-            }
-        })
-        .catch(err => {
-            reject(err)
-        })
-    })
-}
-
-/**
- * Authorize subscription to a topic
- * @param  {String} key
- * @param  {String} topic
- * @return {Promise}
- */
-function authorizeTopicSubscribe(key, topic) {
-    return new Promise((fulfill, reject) => {
-        // analyze topic
-        const [ appId, gwId, ...topicParts ] = topic.split('/')
-        const topicName = topicParts.join('/')
-
-        // allow subscription to own topics
-        Application.findById(appId)
-        .where('key').eq(key)
-        .then(app => {
-            if (!app) {
-                // TODO: in sharing scenario this should branch in permissions evaluation
-                reject(new Error('Application id and key do not match'))
-            } else {
-                fulfill('own topic')
-            }
-        })
-        .catch(err => {
-            reject(err)
-        })
-    })
-}
 
 module.exports = router

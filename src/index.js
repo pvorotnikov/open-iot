@@ -12,6 +12,7 @@ const gateways = require('./gateways')
 const passport = require('./passport')
 const broker = require('./broker')
 const rules = require('./rules')
+const publish = require('./publish')
 
 /* ================================
  * Database
@@ -42,6 +43,7 @@ app.use('/api/apps', apps)
 app.use('/api/gateways', gateways)
 app.use('/api/broker', broker)
 app.use('/api/rules', rules)
+app.use('/api/publish', publish)
 
 // catch 404 and forward it to error handler
 app.use((req, res, next) => {
