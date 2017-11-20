@@ -7,8 +7,6 @@ services:
             context: ./
             dockerfile: ./helpers/Dockerfile-broker
         hostname: broker
-        links:
-            - "ui"
         ports:
             - 0.0.0.0:1883:1883   # mqtt port
             - 0.0.0.0:15675:15675 # web mqtt port
@@ -20,17 +18,17 @@ services:
             context: ./
             dockerfile: ./helpers/Dockerfile-ui
         image: open-home-ui:latest
+        hostname: ui
         ports:
             - 0.0.0.0:8080:8080
         depends_on:
             - db
-        links:
-            - "db"
         volumes: # for development purposes
             - ./src:/usr/app/src
 
     db:
         image: mongo:latest
+        hostname: db
         ports:
-            - 127.0.0.1:27017:27017
+            - 127.0.0.1:27017:27017 # expose for debugging
 
