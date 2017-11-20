@@ -13,6 +13,7 @@ import {
     Step,
     Icon,
     Popup,
+    Divider,
 } from 'semantic-ui-react'
 
 export class Rules extends Component {
@@ -25,7 +26,8 @@ export class Rules extends Component {
                 topic: '',
                 transformation: '',
                 action: null,
-                output: ''
+                output: '',
+                scope: '',
             }
         }
     }
@@ -38,6 +40,11 @@ export class Rules extends Component {
         ]
     }
 
+    scopeOptions() {
+        const { id, name } = this.props.application
+        return [{text: `${name} (this app)`, value: id}]
+    }
+
     onChange(e, data) {
         let { name, value } = data
         value = value.trim()
@@ -48,16 +55,21 @@ export class Rules extends Component {
     }
 
     onFormSubmit() {
-        let {topic, transformation, action, output} = this.state.values
+        let { topic, transformation, action, output, scope } = this.state.values
         let rule = null
 
         // validate values
-        if ('discard' !== action) {
-            if ('' !== topic && '' !== action && '' !== output) rule = { topic, transformation, action, output }
-            else return
-        } else {
-            if ('' !== topic && '' !== action) rule = { topic, transformation, action }
-            else return
+        switch (action) {
+            case 'discard':
+                if ('' !== topic) rule = { topic, transformation, action }
+                else return
+                break
+
+            case 'enqueue':
+            case 'republish':
+                if ('' !== topic && '' !== output && '' != scope) rule = { topic, transformation, action, output, scope }
+                else return
+                break
         }
 
         // notify parent
@@ -70,7 +82,8 @@ export class Rules extends Component {
             topic: '',
             transformation: '',
             action: null,
-            output: ''
+            output: '',
+            scope: '',
         }})
     }
 
@@ -82,32 +95,53 @@ export class Rules extends Component {
         let complement = null
 
         if (this.state.values.action === 'republish') {
-            complement = <Form.Input name='output' label='Republish topic' value={ this.state.values.output } onChange={ this.onChange.bind(this) } />
+            complement = (
+                <Form.Group widths='equal'>
+                    <Form.Dropdown name='scope'
+                    label='Republish scope'
+                    placeholder='Republish scope'
+                    selection
+                    value={ this.state.values.scope }
+                    options={ this.scopeOptions() }
+                    onChange={ this.onChange.bind(this) } />
+                    <Form.Input name='output' label='Republish topic' value={ this.state.values.output } onChange={ this.onChange.bind(this) } />
+                </Form.Group>
+            )
         } else if (this.state.values.action === 'enqueue') {
-            complement = <Form.Input name='output' label='Queue name' value={ this.state.values.output } onChange={ this.onChange.bind(this) } />
+            complement = (
+                <Form.Group widths='equal'>
+                    <Form.Dropdown name='scope'
+                    label='Queue scope'
+                    placeholder='Queue scope'
+                    selection
+                    value={ this.state.values.scope }
+                    options={ this.scopeOptions() }
+                    onChange={ this.onChange.bind(this) } />
+                    <Form.Input name='output' label='Queue name' value={ this.state.values.output } onChange={ this.onChange.bind(this) } />
+                </Form.Group>
+            )
         }
 
         return (
             <Form size='small'>
-                <Form.Group widths='equal'>
-                    <Form.Input name='topic'
-                        label='Topic'
-                        value={ this.state.values.topic }
-                        onChange={ this.onChange.bind(this) } />
-                    <Form.Input name='transformation'
-                        label='Transformation'
-                        value={ this.state.values.transformation }
-                        disabled
-                        onChange={ this.onChange.bind(this) } />
-                    <Form.Dropdown name='action'
-                        label='Action'
-                        placeholder='Select an action'
-                        selection
-                        value={ this.state.values.action }
-                        options={ this.actionOptions() }
-                        onChange={ this.onChange.bind(this) } />
-                    { complement }
-                </Form.Group>
+
+                <Form.Input name='topic'
+                    label='Topic'
+                    value={ this.state.values.topic }
+                    onChange={ this.onChange.bind(this) } />
+                <Form.Input name='transformation'
+                    label='Transformation'
+                    value={ this.state.values.transformation }
+                    disabled
+                    onChange={ this.onChange.bind(this) } />
+                <Form.Dropdown name='action'
+                    label='Action'
+                    placeholder='Select an action'
+                    selection
+                    value={ this.state.values.action }
+                    options={ this.actionOptions() }
+                    onChange={ this.onChange.bind(this) } />
+                { complement }
                 <Button circular icon='plus' label='Add' color='green' onClick={ this.onFormSubmit.bind(this) } />
             </Form>
         )
@@ -138,7 +172,10 @@ export class Rules extends Component {
                             <Icon name='reply' />
                             <Step.Content>
                                 <Step.Title>Republish on topic</Step.Title>
-                                <Step.Description>{r.output}</Step.Description>
+                                <Step.Description>
+                                    <div>{r.output}</div>
+                                    <div>({r.scope})</div>
+                                </Step.Description>
                             </Step.Content>
                         </Step>
                     )
@@ -150,7 +187,10 @@ export class Rules extends Component {
                             <Icon name='angle double right' />
                             <Step.Content>
                                 <Step.Title>Enqueue</Step.Title>
-                                <Step.Description>{r.output}</Step.Description>
+                                <Step.Description>
+                                    <div>{r.output}</div>
+                                    <div>({r.scope})</div>
+                                </Step.Description>
                             </Step.Content>
                         </Step>
                     )
@@ -217,6 +257,7 @@ export class Rules extends Component {
                 </Dimmer>
                 <Label color='blue' ribbon>Rules</Label>
                 { this.renderRules() }
+                <Divider horizontal>Create rule</Divider>
                 { this.renderNewRule() }
             </Segment>
         )
@@ -225,8 +266,12 @@ export class Rules extends Component {
 }
 
 Rules.propTypes = {
+    application: PropTypes.object.isRequired,
     rules: PropTypes.object.isRequired,
     onSubmit: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
 }
 
+Rules.defaultProps = {
+    application: {},
+}

@@ -186,7 +186,10 @@ class ApplicationPage extends Component {
                 { this.renderHeader() }
                 { this.renderCredentials() }
                 { this.renderGateways() }
-                <Rules rules={this.props.rules} onDelete={id => this.handleRuleDelete(id)} onSubmit={rule => this.handleRuleSubmit(rule)} />
+                <Rules rules={this.props.rules}
+                    application={this.props.app}
+                    onDelete={id => this.handleRuleDelete(id)}
+                    onSubmit={rule => this.handleRuleSubmit(rule)} />
                 { this.renderSettings() }
             </Container>
         )

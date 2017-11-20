@@ -52,8 +52,9 @@ const applicationSchema = new Schema({
 applicationSchema.pre('remove', function(next) {
     logger.info('Cascade removing gateways attached to application ' + this._id)
     Gateway.remove({application: this._id}).exec()
-    logger.info('Cascade removing rules attached to application ' + this._id)
+    logger.info('Cascade removing rules attached to or associated with application ' + this._id)
     Rule.remove({application: this._id}).exec()
+    Rule.remove({scope: this._id}).exec()
     next()
 })
 
@@ -93,6 +94,7 @@ const ruleSchema = new Schema({
     transformation: String,
     action: { type: String, enum: ['discard', 'republish', 'enqueue'] },
     output: String,
+    scope: { type: Schema.Types.ObjectId, ref: 'Application' },
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
 
