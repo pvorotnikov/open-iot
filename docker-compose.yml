@@ -22,9 +22,10 @@ services:
         ports:
             - 0.0.0.0:8080:8080
         depends_on:
+            - broker
             - db
-        volumes: # for development purposes
-            - ./src:/usr/app/src
+        #volumes: # for development purposes
+        #    - ./src:/usr/app/src
 
     db:
         image: mongo:latest
