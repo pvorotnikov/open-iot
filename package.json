@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/pvorotnikov/open-home-ui#readme",
   "dependencies": {
+    "amqplib": "^0.5.2",
     "bcrypt": "^1.0.3",
     "bluebird": "^3.5.1",
     "body-parser": "^1.18.2",

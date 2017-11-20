@@ -43,7 +43,7 @@ function sendMessage(key, secret, topic, message) {
 
         const client = mqtt.connect({
             host: nconf.get('BROKER_HOST'),
-            port: nconf.get('BROKER_PORT'),
+            port: nconf.get('BROKER_MQTT_PORT'),
             username: key,
             password: secret,
         })
