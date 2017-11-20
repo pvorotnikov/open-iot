@@ -17,7 +17,7 @@ services:
         build:
             context: ./
             dockerfile: ./helpers/Dockerfile-ui
-        image: open-home-ui:latest
+        image: open-iot-ui:latest
         hostname: ui
         ports:
             - 0.0.0.0:8080:8080

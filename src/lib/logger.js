@@ -7,7 +7,7 @@ const logger = new winston.Logger({
             level: 'debug',
             prettyPrint: true,
         }),
-        new winston.transports.File({ filename: 'open-home.log' })
+        new winston.transports.File({ filename: 'open-iot.log' })
     ]
 })
 

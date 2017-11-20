@@ -1,7 +1,7 @@
 {
-  "name": "open-home-ui",
+  "name": "open-ui",
   "version": "1.0.0",
-  "description": "UI to Open Home project",
+  "description": "Open IoT project",
   "main": "index.js",
   "scripts": {
     "postinstall": "mkdir -p src/public/css && cp node_modules/semantic-ui-css/semantic.min.css src/public/css/",
@@ -15,14 +15,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pvorotnikov/open-home-ui.git"
+    "url": "git+https://github.com/pvorotnikov/open-ui.git"
   },
   "author": "Petar Vorotnikov (petar@vorotnikov.net)",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/pvorotnikov/open-home-ui/issues"
+    "url": "https://github.com/pvorotnikov/open-ui/issues"
   },
-  "homepage": "https://github.com/pvorotnikov/open-home-ui#readme",
+  "homepage": "https://github.com/pvorotnikov/open-ui#readme",
   "dependencies": {
     "amqplib": "^0.5.2",
     "bcrypt": "^1.0.3",

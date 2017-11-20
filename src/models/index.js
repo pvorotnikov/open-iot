@@ -152,7 +152,7 @@ function createDefaultUser() {
 const connection = function() {
     return new Promise((fulfill, reject) => {
         // set up connection
-        mongoose.connect('mongodb://db/openhome', { useMongoClient: true })
+        mongoose.connect('mongodb://db/openiot', { useMongoClient: true })
         .then((instance) => {
             logger.info('Connected to DB')
             createDefaultUser() // create default user for the first time
