@@ -103,5 +103,31 @@ module.exports = {
                 return res.status(403).json(new ErrorResponse('Invalid token'))
             })
         }
+    },
+
+    basic: () => {
+        return (req, res, next) => {
+            // verify header
+            if (!req.headers.authorization) {
+                return res.status(401).json(new ErrorResponse('No authorization header'))
+            }
+
+            // verify schema
+            if (!req.headers.authorization.startsWith('Basic ')) {
+                return res.status(401).json(new ErrorResponse('Unsupported authorization schema'))
+            }
+
+            let parts = req.headers.authorization.split(' ')
+            let rawToken = parts[1]
+
+            try {
+                let values = new Buffer(rawToken, 'base64').toString()
+                let [username, password] = values.split(':')
+                req.user = { username, password }
+                next()
+            } catch(err) {
+                return res.status(403).json(new ErrorResponse('Invalid credentials'))
+            }
+        }
     }
 }
