@@ -6,9 +6,10 @@ Open IoT is intended to be a flexible IoT backend and gateway management system,
 * simple data transformations
 * MQTT and HTTP transports
 
-## How to install
+## How to build and run it locally
 
 ```bash
+# To build all images
 docker-compose up -d --build
 ```
 
