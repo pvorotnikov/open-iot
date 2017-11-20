@@ -33,16 +33,13 @@ class MessageHandler {
     handleMqttMessage(topic, message) {
         let [appId, gatewayId, ...topicParts] = topic.split('/')
         let topicName = topicParts.join('/')
-        logger.info(appId)
-        logger.info(gatewayId)
-        logger.info(topicName)
 
         Rule.find()
         .where('application').eq(appId)
         .where('topic').eq(topicName)
         .then(rules => {
             rules.forEach(r => {
-                this.performTopicAction(appId, gatewayId, r.action, r.output, message)
+                this.performTopicAction(r.action, r.scope, r.output, message)
             })
         })
         .catch(err => {
@@ -50,16 +47,19 @@ class MessageHandler {
         })
     }
 
-    performTopicAction(appId, gatewayId, action, output, payload) {
+    performTopicAction(action, scope, output, payload) {
         switch (action) {
             case 'discard':
                 logger.debug('Discard message')
                 break
+
             case 'republish':
-                logger.debug('Republish message on topic', `${appId}/${gatewayId}/${output}`)
+                logger.debug('Republish message on topic', `${scope}/${output}`)
+                this.client.publish(`${scope}/${output}`, payload)
                 break
+
             case 'enqueue':
-                logger.debug('Enqueue message on queue', output)
+                logger.warn(`Enqueue message on queue: ${scope}/${output}. Not supported yet!`)
                 break
         }
     }
