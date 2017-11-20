@@ -72,16 +72,16 @@ class MessageHandler {
     performTopicAction(action, scope, output, payload) {
         switch (action) {
             case 'discard':
-                logger.debug('Discard message')
+                logger.debug('Action -> discard message')
                 break
 
             case 'republish':
-                logger.debug('Republish message on topic', `${scope}/${output}`)
+                logger.debug(`Action -> republish message on topic: ${scope}/${output}`)
                 this.mqttClient.publish(`${scope}/${output}`, payload)
                 break
 
             case 'enqueue':
-                logger.debug(`Enqueue message on queue: ${scope}/${output}`)
+                logger.debug(`Action -> enqueue message on queue: ${scope}/${output}`)
                 this.amqpChannel.assertQueue(`${scope}/${output}`)
                 .then(ok => {
                     this.amqpChannel.sendToQueue(`${scope}/${output}`, payload)

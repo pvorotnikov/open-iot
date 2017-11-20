@@ -235,6 +235,7 @@ export class Rules extends Component {
                         { actionStep }
                         <Step>
                             <Step.Content>
+                                <Label as='a' color='grey' size='tiny'>Disable</Label>
                                 <Label as='a' color='red' size='tiny' onClick={() => this.onDeleteRile(r.id)}>Delete</Label>
                             </Step.Content>
                         </Step>
@@ -256,6 +257,14 @@ export class Rules extends Component {
                     <Loader inverted />
                 </Dimmer>
                 <Label color='blue' ribbon>Rules</Label>
+                <Container style={{padding: "10px 10px 0 10px"}}>
+                    You can specify rules that can be executed when a message
+                    is received on a given topic. You can transform the JSON
+                    payload of a message and republish it on another topic or
+                    enqueue it within the scope of an application.
+                    Note that in order to publish a message on a given topic,
+                    you need to create a rule for it first.
+                </Container>
                 { this.renderRules() }
                 <Divider horizontal>Create rule</Divider>
                 { this.renderNewRule() }

@@ -26,6 +26,14 @@ router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
         return res.status(400).json(new ErrorResponse('Please, enter output'))
     }
 
+    if ('discard' != action && validator.isEmpty(scope)) {
+        return res.status(400).json(new ErrorResponse('Please, enter output scope'))
+    }
+
+    if ('republish' === action && 'message' === output) {
+        return res.status(400).json(new ErrorResponse('"message" is a reserved topic'))
+    }
+
     // check the owner of the application
     Application.findById(application)
     .where('user').eq(req.user._id)

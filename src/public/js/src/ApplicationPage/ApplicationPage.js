@@ -81,19 +81,28 @@ class ApplicationPage extends Component {
 
     renderCredentials() {
         const { app } = this.props
+
         return (
             <Segment raised>
+                <Dimmer active={!app.key} inverted>
+                    <Loader inverted />
+                </Dimmer>
                 <Label color='blue' ribbon>Credentials</Label>
+                <Container style={{padding: "10px 10px 0 10px"}}>
+                    Use these credentials when establishing connection over MQTT or HTTP.
+                    Using MQTT they need to be provided as 'username' and 'password'.
+                    Using HTTP they should be used as Basic authorization method.
+                </Container>
                 <List>
                     <List.Item>
-                        <Label horizontal>Access key</Label>
+                        <Label color='green' horizontal>Access key</Label>
                         <span>
                             {app.key}
                             <Icon link name='refresh' style={{marginLeft: '10px'}} onClick={this.refreshKey.bind(this)} />
                         </span>
                     </List.Item>
                     <List.Item>
-                        <Label horizontal>Secret key</Label>
+                        <Label color='green' horizontal>Secret key</Label>
                         <span>
                             {app.secret}
                             <Icon link name='refresh' style={{marginLeft: '10px'}} onClick={this.refreshSecret.bind(this)} />
@@ -105,7 +114,12 @@ class ApplicationPage extends Component {
     }
 
     renderGateways() {
-        const { gateways } = this.props
+        const { gateways, app } = this.props
+
+        if (!app) {
+            return
+        }
+
         return (
             <Segment raised>
                 <Dimmer active={gateways.loading} inverted>
@@ -121,21 +135,8 @@ class ApplicationPage extends Component {
         )
     }
 
-    renderSettings() {
-        return (
-            <Segment raised>
-                <Label color='blue' ribbon>Settings</Label>
-                <List>
-                    <List.Item>
-                        <Button circular icon='delete' label='Delete app' color='red' onClick={ e => this.handleDeleteApp() } />
-                    </List.Item>
-                </List>
-            </Segment>
-        )
-    }
-
     renderNewGatewayCard() {
-        const appId = this.props.match.params.id
+        const appId = this.props.app.id
         return (
             <Card key={'new-gateway'}>
                 <Card.Content>
@@ -146,7 +147,7 @@ class ApplicationPage extends Component {
                         Gateways establish connection to the cloud.
                         You can connect your end-devices to gateways
                         allowing them to send and receive information
-                        or gateway can act as end devices.
+                        or a gateway can act as an end device.
                     </Card.Description>
                 </Card.Content>
                 <Card.Content extra>
@@ -166,9 +167,7 @@ class ApplicationPage extends Component {
                 <Card.Content>
                     <Card.Header>{gateway.name}</Card.Header>
                     <Card.Meta>ID: {gateway.id}</Card.Meta>
-                    <Card.Description>
-                        {gateway.description}
-                    </Card.Description>
+                    <Card.Description>{gateway.description}</Card.Description>
                 </Card.Content>
                 <Card.Content extra>
                     <Button circular icon='delete' label='Delete' color='red' onClick={ e => this.handleDeleteGateway(gateway.id) } />
@@ -179,17 +178,67 @@ class ApplicationPage extends Component {
         return cards
     }
 
+    renderFeedbackChannels() {
+        const { gateways, app } = this.props
+
+        if (!gateways.items || !app) {
+            return
+        }
+
+        const channels = gateways.items.map(gateway => (
+            <List.Item key={gateway.id}>
+                <Label color='green' horizontal>{gateway.name}</Label>
+                    <Label>{app.id}</Label>/
+                    <Label>{gateway.id}</Label>/
+                    <Label>message</Label>
+            </List.Item>
+        ))
+
+        return (
+            <Segment raised>
+                <Label color='blue' ribbon>Feedback channels</Label>
+                <Container style={{padding: "10px 10px 0 10px"}}>
+                    You can subscribe to these topics when you want to receive server push messages:
+                </Container>
+                <List>
+                    <List.Item>
+                        <Label color='green' horizontal>Application-wide</Label>
+                        <Label>{app.id}</Label>/<Label>message</Label>
+                    </List.Item>
+                    { channels }
+                </List>
+            </Segment>
+        )
+    }
+
+    renderSettings() {
+        return (
+            <Segment raised>
+                <Label color='blue' ribbon>Settings</Label>
+                <Container style={{padding: "10px 10px 0 10px"}}>
+                    Here be dragons!
+                </Container>
+                <List>
+                    <List.Item>
+                        <Button circular icon='delete' label='Delete app' color='red' onClick={ e => this.handleDeleteApp() } />
+                    </List.Item>
+                </List>
+            </Segment>
+        )
+    }
+
     render() {
         const { app } = this.props
         return (
             <Container>
                 { this.renderHeader() }
                 { this.renderCredentials() }
-                { this.renderGateways() }
                 <Rules rules={this.props.rules}
                     application={this.props.app}
                     onDelete={id => this.handleRuleDelete(id)}
                     onSubmit={rule => this.handleRuleSubmit(rule)} />
+                { this.renderGateways() }
+                { this.renderFeedbackChannels() }
                 { this.renderSettings() }
             </Container>
         )
