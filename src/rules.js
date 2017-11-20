@@ -26,10 +26,6 @@ router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
         return res.status(400).json(new ErrorResponse('Please, enter output'))
     }
 
-    if ('republish' === action && topic === output) {
-        return res.status(400).json(new ErrorResponse('Output must be different from topic'))
-    }
-
     // check the owner of the application
     Application.findById(application)
     .where('user').eq(req.user._id)

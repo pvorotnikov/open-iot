@@ -24,8 +24,8 @@ services:
         depends_on:
             - broker
             - db
-        #volumes: # for development purposes
-        #    - ./src:/usr/app/src
+        volumes: # for development purposes
+            - ./src:/usr/app/src
 
     db:
         image: mongo:latest
