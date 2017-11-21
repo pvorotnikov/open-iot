@@ -66,13 +66,17 @@ class PlaygroundPage extends Component {
     availableGateways() {
         const { gateways } = this.props
         if (gateways.items) {
-            return [{text: 'Application-wide', value: APPLICATION_WIDE_ALIAS}]
+            return gateways.items.map(g => ({ text: g.name, value: g.id }))
             .concat(
-                gateways.items.map(g => ({ text: g.name, value: g.id }))
+                [{text: 'Application-wide', value: APPLICATION_WIDE_ALIAS}]
             )
         } else {
             return []
         }
+    }
+
+    deepUnique(data) {
+        return Object.values(data.reduce((r, e) => (r[e.value] = {text: e.text, value: e.value}, r), {}))
     }
 
     availableTopics() {
@@ -80,23 +84,27 @@ class PlaygroundPage extends Component {
         if (rules.items && this.state.values.gateway != '') {
 
             if (APPLICATION_WIDE_ALIAS === this.state.values.gateway) {
-                return this.state.extraTopics.map(t => ({ text: t, value: t }))
+                return this.deepUnique(
+                    this.state.extraTopics.map(t => ({ text: t, value: t }))
+                    .concat(
+                        rules.items
+                        .filter(r => r.action === ACTION_REPUBLISH)
+                        .map(r => ({ text: r.output, value: r.output }))
+                    )
+                    .concat(
+                        [{text: 'Feedback Channel', value: FEEDBACK_CHANNEL}]
+                    )
+                )
+            }
+
+            return this.deepUnique(
+                this.state.extraTopics.map(t => ({ text: t, value: t }))
                 .concat(
-                    rules.items
-                    .filter(r => r.action === ACTION_REPUBLISH)
-                    .map(r => ({ text: r.output, value: r.output }))
+                    rules.items.map(r => ({ text: r.topic, value: r.topic }))
                 )
                 .concat(
                     [{text: 'Feedback Channel', value: FEEDBACK_CHANNEL}]
                 )
-            }
-
-            return this.state.extraTopics.map(t => ({ text: t, value: t }))
-            .concat(
-                rules.items.map(r => ({ text: r.topic, value: r.topic }))
-            )
-            .concat(
-                [{text: 'Feedback Channel', value: FEEDBACK_CHANNEL}]
             )
 
         } else {
