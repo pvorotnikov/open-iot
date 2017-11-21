@@ -14,7 +14,7 @@ import { LoginPage } from '../LoginPage'
 import { RegisterPage } from '../RegisterPage'
 import { HomePage } from '../HomePage'
 import { UsersPage } from '../UsersPage'
-import { TestPage } from '../TestPage'
+import { PlaygroundPage } from '../PlaygroundPage'
 import { ApplicationsPage } from '../ApplicationsPage'
 import { NewApplicationPage } from '../NewApplicationPage'
 import { ApplicationPage } from '../ApplicationPage'
@@ -62,7 +62,7 @@ class App extends Component {
                             <Grid.Column width={13}>
                                 { message }
                                 <PrivateRoute exact path="/" component={HomePage} />
-                                <PrivateRoute exact path="/test" component={TestPage} />
+                                <PrivateRoute exact path="/playground" component={PlaygroundPage} />
                                 <PrivateRoute exact path="/users" component={UsersPage} />
                                 <PrivateRoute exact path="/apps" component={ApplicationsPage} />
                                 <PrivateRoute exact path="/apps/i/:id" component={ApplicationPage} />

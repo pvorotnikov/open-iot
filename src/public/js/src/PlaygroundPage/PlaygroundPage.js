@@ -23,7 +23,7 @@ import { appActions, gatewayActions, ruleActions, alertActions } from '../_actio
 
 const APPLICATION_WIDE_ALIAS = 'all'
 
-class TestPage extends Component {
+class PlaygroundPage extends Component {
 
     constructor(props) {
         super(props)
@@ -327,7 +327,7 @@ class TestPage extends Component {
     }
 }
 
-TestPage.propTypes = {
+PlaygroundPage.propTypes = {
     apps: PropTypes.object,
     gateways: PropTypes.object,
     dispatch: PropTypes.func.isRequired,
@@ -342,5 +342,5 @@ function mapStateToProps(state) {
     }
 }
 
-const connectedTestPage = connect(mapStateToProps)(TestPage)
-export { connectedTestPage as TestPage }
+const connectedPlaygroundPage = connect(mapStateToProps)(PlaygroundPage)
+export { connectedPlaygroundPage as PlaygroundPage }
