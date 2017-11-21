@@ -77,7 +77,7 @@ class TestPage extends Component {
 
     availableTopics() {
         const { rules } = this.props
-        if (rules.items.length && this.state.values.gateway != '') {
+        if (rules.items && this.state.values.gateway != '') {
 
             if (APPLICATION_WIDE_ALIAS === this.state.values.gateway) {
                 return this.state.extraTopics.map(t => ({ text: t, value: t }))
