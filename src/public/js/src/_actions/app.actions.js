@@ -5,6 +5,7 @@ import { alertActions } from './'
 
 // export actions
 export const appActions = {
+    clear,
     getAll,
     create,
     getSingle,
@@ -12,6 +13,10 @@ export const appActions = {
     refreshKey,
     refreshSecret,
     delete: _delete,
+}
+
+function clear() {
+    return { type: appConstants.CLEAR }
 }
 
 /**

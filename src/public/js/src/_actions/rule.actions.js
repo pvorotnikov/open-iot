@@ -4,9 +4,14 @@ import { alertActions } from './'
 
 // export actions
 export const ruleActions = {
+    clear,
     getAll,
     create,
     delete: _delete,
+}
+
+function clear() {
+    return { type: ruleConstants.CLEAR }
 }
 
 /**

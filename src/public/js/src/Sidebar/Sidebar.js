@@ -44,11 +44,11 @@ class Sidebar extends Component {
                 <Menu.Item active={currentPath.startsWith('/apps')} as={Link} to='/apps'>
                     <Icon name='lab' /> Apps
                 </Menu.Item>
+                <Menu.Item active={currentPath.startsWith('/test')} as={Link} to='/test'>
+                    <Icon name='soccer' /> Playground
+                </Menu.Item>
                 <Menu.Item active={currentPath.startsWith('/users')} as={Link} to='/users'>
                     <Icon name='users' /> Users
-                </Menu.Item>
-                <Menu.Item active={currentPath.startsWith('/todo')} as={Link} to='/todo'>
-                    <Icon name='tasks' /> Todo
                 </Menu.Item>
                 <Menu.Item as={Link} to='/' onClick={e => this.handleLogout(e)}>
                     <Icon name='sign out' /> Logout

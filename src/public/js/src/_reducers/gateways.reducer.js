@@ -11,32 +11,36 @@ import { gatewayConstants } from '../_constants'
  * @param  {Object} action reducer action
  * @return {Object}        new state
  */
-export function gateways(state = {}, action) {
+export function gateways(state = {items: [], loading: false}, action) {
 
     switch (action.type) {
 
+        case gatewayConstants.CLEAR:
+            return { items: [], loading: false, }
+            break
+
         case gatewayConstants.CREATE_REQUEST:
-            return { loading: true, }
+            return { ...state, loading: true, }
             break
 
         case gatewayConstants.CREATE_SUCCESS:
-            return {}
+            return { ...state, loading: false, }
             break
 
         case gatewayConstants.CREATE_FAILURE:
-            return {}
+            return { ...state, loading: false, }
             break
 
         case gatewayConstants.GETALL_REQUEST:
-            return { loading: true, }
+            return { items: [], loading: true, }
             break
 
         case gatewayConstants.GETALL_SUCCESS:
-            return { items: action.gateways, }
+            return { items: action.gateways, loading: false, }
             break
 
         case gatewayConstants.GETALL_FAILURE:
-            return { error: action.error, }
+            return { items: [], loading: false, }
             break
 
         case gatewayConstants.DELETE_REQUEST:
@@ -47,7 +51,8 @@ export function gateways(state = {}, action) {
                     gateway.id === action.id
                         ? { ...gateway, deleting: true }
                         : gateway
-                )
+                ),
+                loading: true,
             }
             break
 
@@ -55,7 +60,8 @@ export function gateways(state = {}, action) {
             // remove the gateway
             return {
                 ...state,
-                items: state.items.filter(gateway => gateway.id !== action.id)
+                items: state.items.filter(gateway => gateway.id !== action.id),
+                loading: false,
             }
             break
 
@@ -71,7 +77,8 @@ export function gateways(state = {}, action) {
                         return { ...gatewayCopy, deleteError: action.error }
                     }
                     return gateway
-                })
+                }),
+                loading: false,
             }
             break
 

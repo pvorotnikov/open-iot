@@ -14,6 +14,10 @@ class ApplicationsPage extends Component {
         this.props.dispatch(appActions.getAll())
     }
 
+    componentWillUnmount() {
+        this.props.dispatch(appActions.clear())
+    }
+
     renderNewAppCard() {
         return (
             <Card key={'new-app'}>

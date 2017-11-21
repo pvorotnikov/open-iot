@@ -29,6 +29,8 @@ class MessageHandler {
         })
         .catch(err => {
             logger.error('AMQP message handler error:', err.message)
+            // try to reconnect
+            setTimeout(() => this.setupAmqp(), 1000)
         })
     }
 

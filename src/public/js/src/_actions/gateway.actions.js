@@ -5,9 +5,14 @@ import { alertActions } from './'
 
 // export actions
 export const gatewayActions = {
+    clear,
     getAll,
     create,
     delete: _delete,
+}
+
+function clear() {
+    return { type: gatewayConstants.CLEAR }
 }
 
 /**

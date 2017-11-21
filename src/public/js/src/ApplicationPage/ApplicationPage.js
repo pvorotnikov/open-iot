@@ -29,6 +29,11 @@ class ApplicationPage extends Component {
         this.props.dispatch(ruleActions.getAll(this.props.match.params.id))
     }
 
+    componentWillUnmount() {
+        this.props.dispatch(gatewayActions.clear())
+        this.props.dispatch(ruleActions.clear())
+    }
+
     onEditableTextUpdate(name, value) {
         const { app } = this.props
         value = value.trim()

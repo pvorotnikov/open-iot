@@ -3,6 +3,8 @@
  * @type {Object}
  */
 export const ruleConstants = {
+    CLEAR: 'RULES_CLEAR',
+
     GETALL_REQUEST: 'RULES_GETALL_REQUEST',
     GETALL_SUCCESS: 'RULES_GETALL_SUCCESS',
     GETALL_FAILURE: 'RULES_GETALL_FAILURE',

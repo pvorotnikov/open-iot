@@ -15,6 +15,10 @@ export function rules(state = {items: [], loading: false}, action) {
 
     switch (action.type) {
 
+        case ruleConstants.CLEAR:
+            return {items: [], loading: false}
+            break
+
         case ruleConstants.CREATE_REQUEST:
             return { ...state, loading: true, }
             break
