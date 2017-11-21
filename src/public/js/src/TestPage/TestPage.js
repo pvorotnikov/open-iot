@@ -2,12 +2,26 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
-import { Header, Container, Icon, List, Button, Loader, Form, Dimmer, Segment, Label } from 'semantic-ui-react'
+import {
+    Header,
+    Container,
+    Icon,
+    List,
+    Button,
+    Loader,
+    Form,
+    Dimmer,
+    Segment,
+    Label
+} from 'semantic-ui-react'
 
 import mqtt from 'mqtt'
 import moment from 'moment'
 
-import { appActions, gatewayActions, ruleActions } from '../_actions'
+import { ACTION_REPUBLISH, FEEDBACK_CHANNEL } from '../_constants'
+import { appActions, gatewayActions, ruleActions, alertActions } from '../_actions'
+
+const APPLICATION_WIDE_ALIAS = 'all'
 
 class TestPage extends Component {
 
@@ -52,7 +66,7 @@ class TestPage extends Component {
     availableGateways() {
         const { gateways } = this.props
         if (gateways.items) {
-            return [{text: 'Application-wide', value: 'all'}]
+            return [{text: 'Application-wide', value: APPLICATION_WIDE_ALIAS}]
             .concat(
                 gateways.items.map(g => ({ text: g.name, value: g.id }))
             )
@@ -63,14 +77,28 @@ class TestPage extends Component {
 
     availableTopics() {
         const { rules } = this.props
-        if (rules.items) {
-            return [{text: 'Feedback Channel', value: 'message'}]
-            .concat(
-                this.state.extraTopics.map(t => ({ text: t, value: t }))
-            )
+        if (rules.items.length && this.state.values.gateway != '') {
+
+            if (APPLICATION_WIDE_ALIAS === this.state.values.gateway) {
+                return this.state.extraTopics.map(t => ({ text: t, value: t }))
+                .concat(
+                    rules.items
+                    .filter(r => r.action === ACTION_REPUBLISH)
+                    .map(r => ({ text: r.output, value: r.output }))
+                )
+                .concat(
+                    [{text: 'Feedback Channel', value: FEEDBACK_CHANNEL}]
+                )
+            }
+
+            return this.state.extraTopics.map(t => ({ text: t, value: t }))
             .concat(
                 rules.items.map(r => ({ text: r.topic, value: r.topic }))
             )
+            .concat(
+                [{text: 'Feedback Channel', value: FEEDBACK_CHANNEL}]
+            )
+
         } else {
             return []
         }
@@ -84,6 +112,8 @@ class TestPage extends Component {
 
         this.setState({ values: {
             ...this.state.values,
+            gateway: '',
+            topic: '',
             [name]: value.trim()
         }})
 
@@ -137,6 +167,8 @@ class TestPage extends Component {
     }
 
     mqttConnect(key, secret) {
+        const { dispatch } = this.props
+
         this.mqttClient = mqtt.connect({
             host: new URL(document.location.origin).hostname,
             port: 15675,
@@ -145,16 +177,15 @@ class TestPage extends Component {
             password: secret,
         })
         this.mqttClient.on('connect', () => {
-            console.info('MQTT client connected')
-        })
-        this.mqttClient.on('reconnect', () => {
-            console.info('MQTT client reconnected')
+            dispatch(alertActions.clear())
         })
         this.mqttClient.on('error', err => {
-            console.warn('MQTT client error', err.message)
+            dispatch(alertActions.error('MQTT client error: ' + err.message))
+            setTimeout(() => dispatch(alertActions.clear()), 3000) // clear alert afet 3s
         })
-        this.mqttClient.on('close', (err) => {
-            console.info('MQTT client disconnected')
+        this.mqttClient.on('close', () => {
+            dispatch(alertActions.error('MQTT client disconnected'))
+            setTimeout(() => dispatch(alertActions.clear()), 3000) // clear alert afet 3s
         })
         this.mqttClient.on('message', (topic, message) => {
             this.setState({ messages: [
@@ -194,9 +225,7 @@ class TestPage extends Component {
         const pubTopic = this.makeTopic()
         if (pubTopic && this.mqttClient) {
             const { message } = this.state.values
-            this.mqttClient.publish(pubTopic, message, err => {
-                console.log(err)
-            })
+            this.mqttClient.publish(pubTopic, message)
         }
     }
 
@@ -218,9 +247,24 @@ class TestPage extends Component {
         )
     }
 
+    canSubscribe() {
+        return null !== this.makeTopic()
+    }
+
+    canPublish() {
+        const { app, gateway, topic } = this.state.values
+        if (null === this.makeTopic()) {
+            return false
+        } else if (APPLICATION_WIDE_ALIAS === gateway && FEEDBACK_CHANNEL !== topic) {
+            return false
+        } else {
+            return true
+        }
+    }
+
     makeTopic() {
         const { app, gateway, topic } = this.state.values
-        if (app && 'all' === gateway && topic) {
+        if (app && APPLICATION_WIDE_ALIAS === gateway && topic) {
             return `${app}/${topic}`
         } else if ('' !== app && '' !== gateway && '' !== topic) {
             return `${app}/${gateway}/${topic}`
@@ -266,13 +310,13 @@ class TestPage extends Component {
                             options={ this.availableTopics() }
                             onAddItem={ this.onAddTopic.bind(this) }
                             onChange={ this.onChange.bind(this) } />
-                        { !this.state.subscribed && <Form.Button color='green' onClick={this.subscribe.bind(this)}>Subscribe</Form.Button> }
+                        { !this.state.subscribed && <Form.Button disabled={!this.canSubscribe()} color='green' onClick={this.subscribe.bind(this)}>Subscribe</Form.Button> }
                         { this.state.subscribed && <Form.Button color='red' onClick={this.unsubscribe.bind(this)}>Unsubscribe</Form.Button> }
                     </Form.Group>
 
                     <Form.Group>
                         <Form.TextArea width={12} name='message' onChange={ this.onMessageChange.bind(this) } placeholder='Enter a message to publish' />
-                        <Form.Button width={4} color='green' onClick={this.publish.bind(this)}>Publish</Form.Button>
+                        <Form.Button disabled={!this.canPublish()} width={4} color='green' onClick={this.publish.bind(this)}>Publish</Form.Button>
                     </Form.Group>
 
                     {this.renderMessages()}

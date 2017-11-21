@@ -20,6 +20,7 @@ import {
 import { appActions, gatewayActions, ruleActions } from '../_actions'
 import { history } from '../_helpers'
 import { EditableText } from '../_components'
+import { FEEDBACK_CHANNEL } from '../_constants'
 
 class ApplicationPage extends Component {
 
@@ -195,7 +196,7 @@ class ApplicationPage extends Component {
                 <Label color='green' horizontal>{gateway.name}</Label>
                     <Label>{app.id}</Label>/
                     <Label>{gateway.id}</Label>/
-                    <Label>message</Label>
+                    <Label>{FEEDBACK_CHANNEL}</Label>
             </List.Item>
         ))
 
@@ -207,8 +208,8 @@ class ApplicationPage extends Component {
                 </Container>
                 <List>
                     <List.Item>
-                        <Label color='green' horizontal>Application-wide</Label>
-                        <Label>{app.id}</Label>/<Label>message</Label>
+                        <Label color='green' horizontal>Application broadcast</Label>
+                        <Label>{app.id}</Label>/<Label>{FEEDBACK_CHANNEL}</Label>
                     </List.Item>
                     { channels }
                 </List>

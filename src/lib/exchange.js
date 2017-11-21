@@ -57,6 +57,15 @@ function authorizeTopicPublish(key, topic) {
             if (!app) {
                 reject(new Error('Application id and key do not match'))
             } else {
+
+                // always allow publishing on the feedback channel
+                // note that when the second segment is 'message' this
+                // means that we are publishing on the app-wide feedback
+                // aka application broadcast
+                if ('message' === topicName || 'message' === gwId) {
+                    return fulfill()
+                }
+
                 // verify that the topic is registered within the application
                 Rule.findOne()
                 .where('application').eq(app._id)

@@ -16,6 +16,8 @@ import {
     Divider,
 } from 'semantic-ui-react'
 
+import { ACTION_REPUBLISH, ACTION_ENQUEUE, ACTION_DISCARD } from '../_constants'
+
 export class Rules extends Component {
 
     constructor(props) {
@@ -34,9 +36,9 @@ export class Rules extends Component {
 
     actionOptions() {
         return [
-            {text: 'Discard (allow publishing)', value: 'discard'},
-            {text: 'Republish', value: 'republish'},
-            {text: 'Enqueue', value: 'enqueue'},
+            {text: 'Discard (allow publishing and subscribing)', value: ACTION_DISCARD},
+            {text: 'Republish', value: ACTION_REPUBLISH},
+            {text: 'Enqueue', value: ACTION_ENQUEUE},
         ]
     }
 
@@ -60,13 +62,13 @@ export class Rules extends Component {
 
         // validate values
         switch (action) {
-            case 'discard':
+            case ACTION_DISCARD:
                 if ('' !== topic) rule = { topic, transformation, action }
                 else return
                 break
 
-            case 'enqueue':
-            case 'republish':
+            case ACTION_ENQUEUE:
+            case ACTION_REPUBLISH:
                 if ('' !== topic && '' !== output && '' != scope) rule = { topic, transformation, action, output, scope }
                 else return
                 break
@@ -94,7 +96,7 @@ export class Rules extends Component {
     renderNewRule() {
         let complement = null
 
-        if (this.state.values.action === 'republish') {
+        if (this.state.values.action === ACTION_REPUBLISH) {
             complement = (
                 <Form.Group widths='equal'>
                     <Form.Dropdown name='scope'
@@ -107,7 +109,7 @@ export class Rules extends Component {
                     <Form.Input name='output' label='Republish topic' value={ this.state.values.output } onChange={ this.onChange.bind(this) } />
                 </Form.Group>
             )
-        } else if (this.state.values.action === 'enqueue') {
+        } else if (this.state.values.action === ACTION_ENQUEUE) {
             complement = (
                 <Form.Group widths='equal'>
                     <Form.Dropdown name='scope'
@@ -154,7 +156,7 @@ export class Rules extends Component {
             let actionStep = null
 
             switch (r.action) {
-                case 'discard':
+                case ACTION_DISCARD:
                     actionStep = (
                         <Step>
                             <Icon name='dont' />
@@ -166,7 +168,7 @@ export class Rules extends Component {
                     )
                     break
 
-                case 'republish':
+                case ACTION_REPUBLISH:
                     actionStep = (
                         <Step>
                             <Icon name='reply' />
@@ -181,7 +183,7 @@ export class Rules extends Component {
                     )
                     break
 
-                case 'enqueue':
+                case ACTION_ENQUEUE:
                     actionStep = (
                         <Step>
                             <Icon name='angle double right' />
