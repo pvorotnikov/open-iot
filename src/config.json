@@ -2,10 +2,6 @@
     "PORT": 8080,
     "ACCESS_TOKEN_EXPIRATION_TIME": 1800,
     "REFRESH_TOKEN_EXPIRATION_TIME": 3600,
-    "ENCRYPTION_SECRET": "my-super-secret-pass",
-    "BROKER_HOST": "broker",
     "BROKER_MQTT_PORT": 1883,
-    "BROKER_AMQP_PORT": 5672,
-    "HANDLER_KEY": "handler-key",
-    "HANDLER_SECRET": "handler-secret"
+    "BROKER_AMQP_PORT": 5672
 }

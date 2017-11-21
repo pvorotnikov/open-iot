@@ -22,8 +22,12 @@ services:
         ports:
             - 0.0.0.0:8080:8080
         depends_on:
-            - broker
             - db
+        environment:
+            ENCRYPTION_SECRET: my-super-secret-pass # JWT signing
+            BROKER_HOST: broker                     # ui-broker connection
+            HANDLER_KEY: handler-key                # ui credentials
+            HANDLER_SECRET: handler-secret          # ui credentials
         volumes: # for development purposes
             - ./src:/usr/app/src
 
