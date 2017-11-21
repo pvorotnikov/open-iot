@@ -21,6 +21,7 @@ class TestPage extends Component {
                 topic: '',
                 message: '',
             },
+            extraTopics: [],
             messages: [],
             subscribed: false,
         }
@@ -64,6 +65,9 @@ class TestPage extends Component {
         const { rules } = this.props
         if (rules.items) {
             return [{text: 'Feedback Channel', value: 'message'}]
+            .concat(
+                this.state.extraTopics.map(t => ({ text: t, value: t }))
+            )
             .concat(
                 rules.items.map(r => ({ text: r.topic, value: r.topic }))
             )
@@ -123,6 +127,15 @@ class TestPage extends Component {
         }})
     }
 
+    onAddTopic(e, data) {
+        this.setState({
+            extraTopics: [
+                ...this.state.extraTopics,
+                data.value
+            ]
+        })
+    }
+
     mqttConnect(key, secret) {
         this.mqttClient = mqtt.connect({
             host: new URL(document.location.origin).hostname,
@@ -140,7 +153,7 @@ class TestPage extends Component {
         this.mqttClient.on('error', err => {
             console.warn('MQTT client error', err.message)
         })
-        this.mqttClient.on('close', () => {
+        this.mqttClient.on('close', (err) => {
             console.info('MQTT client disconnected')
         })
         this.mqttClient.on('message', (topic, message) => {
@@ -181,7 +194,9 @@ class TestPage extends Component {
         const pubTopic = this.makeTopic()
         if (pubTopic && this.mqttClient) {
             const { message } = this.state.values
-            this.mqttClient.publish(pubTopic, message)
+            this.mqttClient.publish(pubTopic, message, err => {
+                console.log(err)
+            })
         }
     }
 
@@ -245,8 +260,11 @@ class TestPage extends Component {
                         <Form.Dropdown name='topic'
                             placeholder='Choose a topic'
                             selection
+                            search
+                            allowAdditions
                             value={ this.state.values.topic }
                             options={ this.availableTopics() }
+                            onAddItem={ this.onAddTopic.bind(this) }
                             onChange={ this.onChange.bind(this) } />
                         { !this.state.subscribed && <Form.Button color='green' onClick={this.subscribe.bind(this)}>Subscribe</Form.Button> }
                         { this.state.subscribed && <Form.Button color='red' onClick={this.unsubscribe.bind(this)}>Unsubscribe</Form.Button> }
