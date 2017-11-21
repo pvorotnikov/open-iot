@@ -19,7 +19,7 @@ import {
 
 import { appActions, gatewayActions, ruleActions } from '../_actions'
 import { history } from '../_helpers'
-import { EditableText } from '../_components'
+import { EditableText, ConfirmModal } from '../_components'
 import { FEEDBACK_CHANNEL } from '../_constants'
 
 class ApplicationPage extends Component {
@@ -104,14 +104,18 @@ class ApplicationPage extends Component {
                         <Label color='green' horizontal>Access key</Label>
                         <span>
                             {app.key}
-                            <Icon link name='refresh' style={{marginLeft: '10px'}} onClick={this.refreshKey.bind(this)} />
+                            <ConfirmModal title='Are you sure you want to refresh this key?'
+                                trigger={<Icon link name='refresh' style={{marginLeft: '10px'}} />}
+                                onConfirm={this.refreshKey.bind(this)} />
                         </span>
                     </List.Item>
                     <List.Item>
                         <Label color='green' horizontal>Secret key</Label>
                         <span>
                             {app.secret}
-                            <Icon link name='refresh' style={{marginLeft: '10px'}} onClick={this.refreshSecret.bind(this)} />
+                            <ConfirmModal title='Are you sure you want to refresh this key?'
+                                trigger={<Icon link name='refresh' style={{marginLeft: '10px'}} />}
+                                onConfirm={this.refreshSecret.bind(this)} />
                         </span>
                     </List.Item>
                 </List>
@@ -176,7 +180,9 @@ class ApplicationPage extends Component {
                     <Card.Description>{gateway.description}</Card.Description>
                 </Card.Content>
                 <Card.Content extra>
-                    <Button circular icon='delete' label='Delete' color='red' onClick={ e => this.handleDeleteGateway(gateway.id) } />
+                    <ConfirmModal title='Are you sure you want to delete this gateway?'
+                            trigger={<Button circular icon='delete' label='Delete' color='red' />}
+                            onConfirm={() => this.handleDeleteGateway(gateway.id)} />
                 </Card.Content>
             </Card>
         ))
@@ -226,7 +232,10 @@ class ApplicationPage extends Component {
                 </Container>
                 <List>
                     <List.Item>
-                        <Button circular icon='delete' label='Delete app' color='red' onClick={ e => this.handleDeleteApp() } />
+                        <ConfirmModal title='Are you sure you want to delete this app?'
+                            text='This action cannot be undone.'
+                            trigger={<Button circular icon='delete' label='Delete app' color='red' />}
+                            onConfirm={this.handleDeleteApp.bind(this)} />
                     </List.Item>
                 </List>
             </Segment>

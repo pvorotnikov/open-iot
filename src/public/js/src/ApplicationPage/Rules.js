@@ -17,6 +17,7 @@ import {
 } from 'semantic-ui-react'
 
 import { ACTION_REPUBLISH, ACTION_ENQUEUE, ACTION_DISCARD } from '../_constants'
+import { ConfirmModal } from '../_components'
 
 export class Rules extends Component {
 
@@ -89,7 +90,7 @@ export class Rules extends Component {
         }})
     }
 
-    onDeleteRile(id) {
+    onDeleteRule(id) {
         this.props.onDelete(id)
     }
 
@@ -238,7 +239,10 @@ export class Rules extends Component {
                         <Step>
                             <Step.Content>
                                 <Label as='a' color='grey' size='tiny'>Disable</Label>
-                                <Label as='a' color='red' size='tiny' onClick={() => this.onDeleteRile(r.id)}>Delete</Label>
+                                <ConfirmModal
+                                    trigger={<Label as='a' color='red' size='tiny'>Delete</Label>}
+                                    title='Are you sure you want to delete this rule?'
+                                    onConfirm={() => this.onDeleteRule(r.id)} />
                             </Step.Content>
                         </Step>
                     </Step.Group>

@@ -5,6 +5,7 @@ import { connect } from 'react-redux'
 import { Header, Container, Button, Accordion, Icon, Form, Loader } from 'semantic-ui-react'
 
 import { userActions } from '../_actions'
+import { ConfirmModal } from '../_components'
 
 class UsersPage extends Component {
 
@@ -74,7 +75,10 @@ class UsersPage extends Component {
                         <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="firstName" label='First Name' defaultValue={user.firstName} />
                         <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="lastName" label='Last Name' defaultValue={user.lastName} />
                         <Button circular icon='save' label='Save' color='green' onClick={ e => this.handleUserFormSubmit(e) } />
-                        <Button floated='right' circular icon='delete' label='Delete' color='red' onClick={ e => this.handleDeleteUser(user.id) } />
+                        <ConfirmModal title='Are you sure you want to delete this user?'
+                                text='The user will no longer be able to log in.'
+                                trigger={<Button floated='right' circular icon='delete' label='Delete' color='red' />}
+                                onConfirm={() => this.handleDeleteUser(user.id)} />
                     </Form>
                 </Accordion.Content>
             </div>
