@@ -6,6 +6,7 @@ services:
         build:
             context: ./
             dockerfile: ./helpers/Dockerfile-broker
+        image: open-iot-broker:latest
         hostname: broker
         ports:
             - 0.0.0.0:1883:1883   # mqtt port
@@ -21,19 +22,19 @@ services:
         hostname: ui
         ports:
             - 0.0.0.0:8080:8080
-        depends_on:
-            - db
+        # depends_on:
+        #     - db
+        # This is development configuration
         environment:
-            ENCRYPTION_SECRET: my-super-secret-pass # JWT signing
-            BROKER_HOST: broker                     # ui-broker connection
-            HANDLER_KEY: handler-key                # ui credentials
-            HANDLER_SECRET: handler-secret          # ui credentials
+            DB_CONNECTION: mongodb://db.iot.vorotnikov.net/dev
+            ENCRYPTION_SECRET: my-super-secret-pass             # JWT signing
+            BROKER_HOST: broker                                 # ui-broker connection
+            HANDLER_KEY: handler-key                            # ui credentials
+            HANDLER_SECRET: handler-secret                      # ui credentials
         volumes: # for development purposes
             - ./src:/usr/app/src
 
-    db:
-        image: mongo:latest
-        hostname: db
-        ports:
-            - 127.0.0.1:27017:27017 # expose for debugging
-
+    # This is local DB service for whenever the remote db is not available
+    # db:
+    #     image: mongo:latest
+    #     hostname: db
