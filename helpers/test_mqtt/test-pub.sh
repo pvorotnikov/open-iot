@@ -11,8 +11,4 @@ mosquitto_pub \
     -P $APP_SECRET \
     -t $APP_ID/message \
     -m "test-message" \
-    --insecure \
     -d
-    # --cafile ../broker/certs/ca_certificate.pem \
-    # --cert ../broker/certs/client_certificate.pem \
-    # --key ../broker/certs/client_key.pem \

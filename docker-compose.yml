@@ -9,8 +9,17 @@ services:
             - 443:443
         volumes:
             - /var/run/docker.sock:/tmp/docker.sock:ro
-            - ./broker/certs/server_key.pem:/etc/nginx/certs/127.0.0.1.key
-            - ./broker/certs/server_certificate.pem:/etc/nginx/certs/127.0.0.1.crt
+            - ./certs/server_key.pem:/etc/nginx/certs/127.0.0.1.key
+            - ./certs/server_certificate.pem:/etc/nginx/certs/127.0.0.1.crt
+
+    haproxy:
+        build:
+            context: ./
+            dockerfile: ./helpers/Dockerfile-haproxy
+        ports:
+            - 0.0.0.0:8883:8883
+        volumes:
+            - ./certs:/certs
 
     broker:
         build:
@@ -19,7 +28,6 @@ services:
         image: open-iot-broker:latest
         hostname: broker
         ports:
-            - 0.0.0.0:1883:1883   # mqtt over tcp
             - 0.0.0.0:15675:15675 # mqtt over ws
         environment:
             RABBITMQ_ERLANG_COOKIE: <erlang-cookie>

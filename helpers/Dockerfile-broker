@@ -12,7 +12,6 @@ RUN wget https://bintray.com/rabbitmq/community-plugins/download_file?file_path=
 # add config file and certificates
 # ----------------------
 COPY ["./broker/rabbitmq.config", "/etc/rabbitmq/rabbitmq.config"]
-COPY ["./broker/certs", "/etc/rabbitmq/certs"]
 
 # ----------------------
 # enable plubins
