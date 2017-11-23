@@ -1,0 +1,56 @@
+version: '2'
+
+services:
+
+    # reverse proxy to backend
+    proxy:
+        image: jwilder/nginx-proxy
+        ports:
+            - 80:80
+            - 443:443
+        volumes:
+            - /etc/nginx/vhost.d
+            - /usr/share/nginx/html
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+            - /etc/nginx/certs
+
+    # let's encrypt auto certificate renewal
+    cert:
+        image: jrcs/letsencrypt-nginx-proxy-companion
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        volumes_from:
+            - proxy
+
+    # broker service
+    broker:
+        build:
+            context: ./
+            dockerfile: ./helpers/Dockerfile-broker
+        image: open-iot-broker:latest
+        hostname: broker
+        ports:
+            - 0.0.0.0:1883:1883
+            - 0.0.0.0:15675:15675
+        environment:
+            RABBITMQ_ERLANG_COOKIE: erlang-cookie                  # change this
+
+    # ui and api service
+    ui:
+        build:
+            context: ./
+            dockerfile: ./helpers/Dockerfile-ui
+        image: open-iot-ui:latest
+        hostname: ui
+        environment:
+            VIRTUAL_HOST: example.com                              # how is the host reached
+            LETSENCRYPT_HOST: example.com                          # host for issuing LE Certificate
+            LETSENCRYPT_EMAIL: admin@example.com                   # valid email owning the host
+
+            DB_CONNECTION: mongodb://db.example.com/prod           # db connection string
+
+            ENCRYPTION_SECRET: my-super-secret-key                 # change this (JWT)
+            HANDLER_KEY: broker-super-secret key                   # change this (broker client)
+            HANDLER_SECRET: broker-super-secret-pass               # change this (broker client)
+
+            BROKER_HOST: broker

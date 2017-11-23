@@ -22,19 +22,17 @@ services:
         hostname: ui
         ports:
             - 0.0.0.0:8080:8080
-        # depends_on:
-        #     - db
-        # This is development configuration
         environment:
-            DB_CONNECTION: mongodb://db.iot.vorotnikov.net/dev
+            DB_CONNECTION: mongodb://db/openiot
             ENCRYPTION_SECRET: my-super-secret-pass             # JWT signing
             BROKER_HOST: broker                                 # ui-broker connection
             HANDLER_KEY: handler-key                            # ui credentials
             HANDLER_SECRET: handler-secret                      # ui credentials
-        volumes: # for development purposes
+        depends_on:
+            - db
+        volumes:
             - ./src:/usr/app/src
 
-    # This is local DB service for whenever the remote db is not available
-    # db:
-    #     image: mongo:latest
-    #     hostname: db
+    db:
+        image: mongo:latest
+        hostname: db
