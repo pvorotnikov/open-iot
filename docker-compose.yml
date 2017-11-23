@@ -9,8 +9,9 @@ services:
         image: open-iot-broker:latest
         hostname: broker
         ports:
-            - 0.0.0.0:1883:1883   # mqtt port
-            - 0.0.0.0:15675:15675 # web mqtt port
+            - 0.0.0.0:5671:5671   # amqp over ssl
+            - 0.0.0.0:8883:8883   # mqtt over ssl
+            - 0.0.0.0:15676:15676 # mqtt over wss
         environment:
             RABBITMQ_ERLANG_COOKIE: <erlang-cookie>
 
