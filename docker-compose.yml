@@ -2,6 +2,16 @@ version: '2'
 
 services:
 
+    proxy:
+        image: jwilder/nginx-proxy
+        ports:
+            - 80:80
+            - 443:443
+        volumes:
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+            - ./broker/certs/server_key.pem:/etc/nginx/certs/127.0.0.1.key
+            - ./broker/certs/server_certificate.pem:/etc/nginx/certs/127.0.0.1.crt
+
     broker:
         build:
             context: ./
@@ -20,9 +30,8 @@ services:
             dockerfile: ./helpers/Dockerfile-ui
         image: open-iot-ui:latest
         hostname: ui
-        ports:
-            - 0.0.0.0:8080:8080
         environment:
+            VIRTUAL_HOST: 127.0.0.1                             # how is the host reached
             DB_CONNECTION: mongodb://db/openiot
             ENCRYPTION_SECRET: my-super-secret-pass             # JWT signing
             BROKER_HOST: broker                                 # ui-broker connection
