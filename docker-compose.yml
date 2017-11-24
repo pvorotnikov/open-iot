@@ -15,8 +15,9 @@ services:
     haproxy:
         build:
             context: ./
-            dockerfile: ./helpers/Dockerfile-haproxy
+            dockerfile: ./haproxy/Dockerfile
         ports:
+            - 0.0.0.0:1883:1883
             - 0.0.0.0:8883:8883
         volumes:
             - ./certs:/certs
@@ -24,7 +25,7 @@ services:
     broker:
         build:
             context: ./
-            dockerfile: ./helpers/Dockerfile-broker
+            dockerfile: ./broker/Dockerfile
         image: open-iot-broker:latest
         hostname: broker
         ports:
@@ -35,7 +36,7 @@ services:
     ui:
         build:
             context: ./
-            dockerfile: ./helpers/Dockerfile-ui
+            dockerfile: ./Dockerfile
         image: open-iot-ui:latest
         hostname: ui
         environment:
