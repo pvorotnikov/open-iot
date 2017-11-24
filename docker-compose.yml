@@ -7,20 +7,23 @@ services:
         ports:
             - 80:80
             - 443:443
+            - 1883:1883
+            - 8883:8883
         volumes:
             - /var/run/docker.sock:/tmp/docker.sock:ro
+            - ./proxy/nginx.tmpl:/app/nginx.tmpl
             - ./certs/server_key.pem:/etc/nginx/certs/127.0.0.1.key
             - ./certs/server_certificate.pem:/etc/nginx/certs/127.0.0.1.crt
 
-    haproxy:
-        build:
-            context: ./
-            dockerfile: ./haproxy/Dockerfile
-        ports:
-            - 0.0.0.0:1883:1883
-            - 0.0.0.0:8883:8883
-        volumes:
-            - ./certs:/certs
+    # haproxy:
+    #     build:
+    #         context: ./
+    #         dockerfile: ./haproxy/Dockerfile
+    #     ports:
+    #         - 0.0.0.0:1883:1883
+    #         - 0.0.0.0:8883:8883
+    #     volumes:
+    #         - ./certs:/certs
 
     broker:
         build:
