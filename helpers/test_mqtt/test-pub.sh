@@ -1,12 +1,12 @@
 #!/bin/bash
 
-APP_ID=5a17d4cc9912b8001e670ca6
-APP_KEY=d976b8d0
-APP_SECRET=409343564cc8b2e0
+APP_ID=5a191aed6c00ae001cf59cfe
+APP_KEY=225a025b
+APP_SECRET=b94f88cb8cff60d8
 
 mosquitto_pub \
     -h 127.0.0.1 \
-    -p 1883 \
+    -p 8883 \
     -u $APP_KEY \
     -P $APP_SECRET \
     -t $APP_ID/message \
