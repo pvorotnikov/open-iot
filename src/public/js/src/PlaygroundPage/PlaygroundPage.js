@@ -4,7 +4,6 @@ import { connect } from 'react-redux'
 
 import {
     Header,
-    Container,
     Icon,
     List,
     Button,
@@ -195,8 +194,15 @@ class PlaygroundPage extends Component {
             setTimeout(() => dispatch(alertActions.clear()), 3000) // clear alert afet 3s
         })
         this.mqttClient.on('message', (topic, message) => {
+            let prettyMessage = message.toString()
+            try {
+                prettyMessage = JSON.stringify(JSON.parse(prettyMessage), null, 2)
+            } catch (err) {
+                console.warn('Message is not JSON')
+            }
+
             this.setState({ messages: [
-                { topic, message: message.toString(), time: moment() },
+                { topic, message: prettyMessage, time: moment() },
                 ...this.state.messages
             ]})
         })
@@ -242,7 +248,9 @@ class PlaygroundPage extends Component {
                 <Icon name='envelope' />
                 <List.Content>
                     <List.Description>{m.time.format('LTS')} - {m.topic}</List.Description>
-                    <List.Description>{m.message}</List.Description>
+                    <List.Description style={{fontFamily: 'monospace; white-space: pre'}}>
+                        {m.message}
+                    </List.Description>
                 </List.Content>
             </List.Item>
         ))
@@ -284,7 +292,7 @@ class PlaygroundPage extends Component {
         const { apps, gateways } = this.props
 
         return (
-            <Container>
+            <div>
                 <Header as='h1'>
                     <Icon name='lab' circular />
                     <Header.Content>Test Playground <Loader active={apps.loading || gateways.loading} inline size='small' /></Header.Content>
@@ -329,7 +337,7 @@ class PlaygroundPage extends Component {
                     {this.renderMessages()}
 
                 </Form>
-            </Container>
+            </div>
         )
     }
 }
