@@ -33,7 +33,7 @@ services:
     broker:
         build:
             context: ./
-            dockerfile: ./helpers/Dockerfile-broker
+            dockerfile: ./Dockerfile
         image: open-iot-broker:latest
         hostname: broker
         environment:
@@ -43,7 +43,7 @@ services:
     ui:
         build:
             context: ./
-            dockerfile: ./helpers/Dockerfile-ui
+            dockerfile: ./Dockerfile
         image: open-iot-ui:latest
         hostname: ui
         environment:
