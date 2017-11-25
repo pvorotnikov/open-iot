@@ -177,10 +177,9 @@ class PlaygroundPage extends Component {
     mqttConnect(key, secret) {
         const { dispatch } = this.props
 
-        this.mqttClient = mqtt.connect({
-            host: new URL(document.location.origin).hostname,
-            port: 15675,
-            path: '/ws',
+        const uri = 'wss://' + new URL(document.location.origin).hostname + ':15676/ws'
+
+        this.mqttClient = mqtt.connect(uri, {
             username: key,
             password: secret,
         })
