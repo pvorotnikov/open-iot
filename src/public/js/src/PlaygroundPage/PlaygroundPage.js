@@ -245,12 +245,12 @@ class PlaygroundPage extends Component {
     renderMessages() {
         const messages = this.state.messages.map((m, i) => (
             <List.Item key={i}>
-                <Icon name='envelope' />
-                <List.Content>
-                    <List.Description>{m.time.format('LTS')} - {m.topic}</List.Description>
-                    <List.Description style={{fontFamily: 'monospace', whiteSpace: 'pre'}}>
-                        {m.message}
-                    </List.Description>
+                <List.Header>
+                    <Icon name='envelope' />
+                    {m.time.format('LTS')} - {m.topic}
+                </List.Header>
+                <List.Content style={{fontFamily: 'monospace', whiteSpace: 'pre'}}>
+                    <div style={{overflow: 'auto'}}>{m.message}</div>
                 </List.Content>
             </List.Item>
         ))
