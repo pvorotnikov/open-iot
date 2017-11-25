@@ -248,7 +248,7 @@ class PlaygroundPage extends Component {
                 <Icon name='envelope' />
                 <List.Content>
                     <List.Description>{m.time.format('LTS')} - {m.topic}</List.Description>
-                    <List.Description style={{fontFamily: 'monospace; white-space: pre'}}>
+                    <List.Description style={{fontFamily: 'monospace', whiteSpace: 'pre'}}>
                         {m.message}
                     </List.Description>
                 </List.Content>
