@@ -16,7 +16,7 @@ services:
             - 15676:15676
         volumes:
             - /var/run/docker.sock:/tmp/docker.sock:ro
-            - ./proxy/dev.conf:/etc/nginx/nginx.conf
+            - ./proxy/nginx.conf:/etc/nginx/nginx.conf
             - ./certs/server_key.pem:/etc/nginx/certs/127.0.0.1.key
             - ./certs/server_certificate.pem:/etc/nginx/certs/127.0.0.1.crt
 

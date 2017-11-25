@@ -2,12 +2,19 @@ version: '2'
 
 services:
 
-    # reverse proxy to backend
+    # reverse proxy to backend doing SSL offloading
     proxy:
-        image: jwilder/nginx-proxy
+        build:
+            context: ./
+            dockerfile: ./proxy/Dockerfile
+        image: open-iot-proxy:latest
         ports:
             - 80:80
             - 443:443
+            - 1883:1883
+            - 8883:8883
+            - 15675:15675
+            - 15676:15676
         volumes:
             - /etc/nginx/vhost.d
             - /usr/share/nginx/html
@@ -29,9 +36,6 @@ services:
             dockerfile: ./helpers/Dockerfile-broker
         image: open-iot-broker:latest
         hostname: broker
-        ports:
-            - 0.0.0.0:1883:1883
-            - 0.0.0.0:15675:15675
         environment:
             RABBITMQ_ERLANG_COOKIE: erlang-cookie                  # change this
 
