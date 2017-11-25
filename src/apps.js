@@ -189,7 +189,6 @@ router.get('/:id/rules', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
     Rule
     .where('application').eq(req.params.id)
     .where('user').eq(req.user._id)
-    .populate('scope')
     .then(rules => {
         let data = rules.map(r => {
             return {
@@ -198,7 +197,7 @@ router.get('/:id/rules', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
                 transformation: r.transformation,
                 action: r.action,
                 output: r.output,
-                scope: r.scope ? r.scope.name : null,
+                scope: r.scope,
                 created: r.created,
                 updated: r.updated,
             }

@@ -35,6 +35,16 @@ export class Rules extends Component {
         }
     }
 
+    getScopeName(scopeId) {
+        let name = scopeId
+        this.props.applications.forEach(a => {
+            if (a.id === scopeId) {
+                name = a.name
+            }
+        })
+        return name
+    }
+
     actionOptions() {
         return [
             {text: 'Discard (allow publishing and subscribing)', value: ACTION_DISCARD},
@@ -45,7 +55,11 @@ export class Rules extends Component {
 
     scopeOptions() {
         const { id, name } = this.props.application
-        return [{text: `${name} (this app)`, value: id}]
+        return this.props.applications.map(a => (
+            id === a.id
+                ? {text: `${a.name} (this app)`, value: a.id}
+                : {text: `${a.name}`, value: a.id}
+        ))
     }
 
     onChange(e, data) {
@@ -177,7 +191,7 @@ export class Rules extends Component {
                                 <Step.Title>Republish on topic</Step.Title>
                                 <Step.Description>
                                     <div>{r.output}</div>
-                                    <div>({r.scope})</div>
+                                    <div>({this.getScopeName(r.scope)})</div>
                                 </Step.Description>
                             </Step.Content>
                         </Step>
@@ -192,7 +206,7 @@ export class Rules extends Component {
                                 <Step.Title>Enqueue</Step.Title>
                                 <Step.Description>
                                     <div>{r.output}</div>
-                                    <div>({r.scope})</div>
+                                    <div>({this.getScopeName(r.scope)})</div>
                                 </Step.Description>
                             </Step.Content>
                         </Step>
@@ -282,6 +296,7 @@ export class Rules extends Component {
 
 Rules.propTypes = {
     application: PropTypes.object.isRequired,
+    applications: PropTypes.array.isRequired,
     rules: PropTypes.object.isRequired,
     onSubmit: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
@@ -289,4 +304,5 @@ Rules.propTypes = {
 
 Rules.defaultProps = {
     application: {},
+    applications: [],
 }

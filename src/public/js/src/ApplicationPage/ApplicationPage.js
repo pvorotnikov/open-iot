@@ -25,12 +25,14 @@ import { FEEDBACK_CHANNEL } from '../_constants'
 class ApplicationPage extends Component {
 
     componentDidMount() {
+        this.props.dispatch(appActions.getAll())
         this.props.dispatch(appActions.getSingle(this.props.match.params.id))
         this.props.dispatch(gatewayActions.getAll(this.props.match.params.id))
         this.props.dispatch(ruleActions.getAll(this.props.match.params.id))
     }
 
     componentWillUnmount() {
+        this.props.dispatch(appActions.clear())
         this.props.dispatch(gatewayActions.clear())
         this.props.dispatch(ruleActions.clear())
     }
@@ -249,6 +251,7 @@ class ApplicationPage extends Component {
                 { this.renderHeader() }
                 { this.renderCredentials() }
                 <Rules rules={this.props.rules}
+                    applications={this.props.apps}
                     application={this.props.app}
                     onDelete={id => this.handleRuleDelete(id)}
                     onSubmit={rule => this.handleRuleSubmit(rule)} />
@@ -275,8 +278,9 @@ ApplicationPage.defaultProps = {
 
 function mapStateToProps(state) {
     const { apps, gateways, rules } = state
-    const { app, loading } = apps
+    const { app, loading, items } = apps
     return {
+        apps: items,
         app,
         loading,
         gateways,

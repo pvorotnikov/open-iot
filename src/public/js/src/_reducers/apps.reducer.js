@@ -20,27 +20,27 @@ export function apps(state = {}, action) {
             break
 
         case appConstants.CREATE_REQUEST:
-            return { loading: true, }
+            return { ...state, loading: true, }
             break
 
         case appConstants.CREATE_SUCCESS:
-            return {}
+            return { ...state, loading: false, }
             break
 
         case appConstants.CREATE_FAILURE:
-            return {}
+            return { ...state, loading: false, }
             break
 
         case appConstants.GETALL_REQUEST:
-            return { loading: true, }
+            return { ...state, loading: true, }
             break
 
         case appConstants.GETALL_SUCCESS:
-            return { items: action.apps, }
+            return { ...state, items: action.apps, loading: false }
             break
 
         case appConstants.GETALL_FAILURE:
-            return { error: action.error, }
+            return { ...state, error: action.error, loading: false }
             break
 
         case appConstants.DELETE_REQUEST:
@@ -48,7 +48,7 @@ export function apps(state = {}, action) {
             break
 
         case appConstants.DELETE_SUCCESS:
-            return {}
+            return { ...state, }
             break
 
         case appConstants.DELETE_FAILURE:
@@ -56,15 +56,15 @@ export function apps(state = {}, action) {
             break
 
         case appConstants.GET_SINGLE_REQUEST:
-            return { loading: true, }
+            return { ...state, loading: true, }
             break
 
         case appConstants.GET_SINGLE_SUCCESS:
-            return { app: action.app, }
+            return { ...state, app: action.app, loading: false }
             break
 
         case appConstants.GET_SINGLE_FAILURE:
-            return { error: action.error }
+            return { ...state, error: action.error }
             break
 
         case appConstants.UPDATE_REQUEST:

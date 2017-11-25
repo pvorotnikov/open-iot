@@ -88,6 +88,7 @@ class PlaygroundPage extends Component {
                     .concat(
                         rules.items
                         .filter(r => r.action === ACTION_REPUBLISH)
+                        .filter(r => r.scope === this.state.values.app)
                         .map(r => ({ text: r.output, value: r.output }))
                     )
                     .concat(
