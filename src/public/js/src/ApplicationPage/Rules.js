@@ -37,9 +37,9 @@ export class Rules extends Component {
 
     getScopeName(scopeId) {
         let name = scopeId
-        this.props.applications.forEach(a => {
-            if (a.id === scopeId) {
-                name = a.name
+        this.props.scopes.forEach(s => {
+            if (s.id === scopeId) {
+                name = s.name
             }
         })
         return name
@@ -55,10 +55,12 @@ export class Rules extends Component {
 
     scopeOptions() {
         const { id, name } = this.props.application
-        return this.props.applications.map(a => (
-            id === a.id
-                ? {text: `${a.name} (this app)`, value: a.id}
-                : {text: `${a.name}`, value: a.id}
+        return this.props.scopes.map(s => (
+            id === s.id
+                ? {text: `${s.name} (this app)`, value: s.id}
+                : s.own
+                    ? {text: s.name, value: s.id}
+                    : {text: `${s.name} (public app)`, value: s.id}
         ))
     }
 
@@ -296,7 +298,7 @@ export class Rules extends Component {
 
 Rules.propTypes = {
     application: PropTypes.object.isRequired,
-    applications: PropTypes.array.isRequired,
+    scopes: PropTypes.array.isRequired,
     rules: PropTypes.object.isRequired,
     onSubmit: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
@@ -304,5 +306,4 @@ Rules.propTypes = {
 
 Rules.defaultProps = {
     application: {},
-    applications: [],
 }

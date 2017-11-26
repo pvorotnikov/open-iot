@@ -50,10 +50,6 @@ router.post('/register', (req, res, next) => {
         return res.status(400).json(new ErrorResponse('Please, enter a valid email'))
     }
 
-    if (!validator.contains(email, '@vorotnikov.net')) {
-        return res.status(400).json(new ErrorResponse('Only emails @ vorotnikov.net are allowed'))
-    }
-
     if (!validator.isLength(password, {min:6, max:36})) {
         return res.status(400).json(new ErrorResponse('Please, enter a password between 6 and 36 symbols'))
     }

@@ -18,7 +18,7 @@ import {
     Checkbox,
 } from 'semantic-ui-react'
 
-import { appActions, gatewayActions, ruleActions } from '../_actions'
+import { appActions, scopeActions, gatewayActions, ruleActions } from '../_actions'
 import { history } from '../_helpers'
 import { EditableText, ConfirmModal } from '../_components'
 import { FEEDBACK_CHANNEL } from '../_constants'
@@ -26,13 +26,14 @@ import { FEEDBACK_CHANNEL } from '../_constants'
 class ApplicationPage extends Component {
 
     componentDidMount() {
-        this.props.dispatch(appActions.getAll())
+        this.props.dispatch(scopeActions.getAll())
         this.props.dispatch(appActions.getSingle(this.props.match.params.id))
         this.props.dispatch(gatewayActions.getAll(this.props.match.params.id))
         this.props.dispatch(ruleActions.getAll(this.props.match.params.id))
     }
 
     componentWillUnmount() {
+        this.props.dispatch(scopeActions.clear())
         this.props.dispatch(appActions.clear())
         this.props.dispatch(gatewayActions.clear())
         this.props.dispatch(ruleActions.clear())
@@ -239,8 +240,6 @@ class ApplicationPage extends Component {
             return
         }
 
-        console.warn(app)
-
         return (
             <Segment raised>
                 <Label color='blue' ribbon>Settings</Label>
@@ -273,7 +272,7 @@ class ApplicationPage extends Component {
                 { this.renderHeader() }
                 { this.renderCredentials() }
                 <Rules rules={this.props.rules}
-                    applications={this.props.apps}
+                    scopes={this.props.scopes}
                     application={this.props.app}
                     onDelete={id => this.handleRuleDelete(id)}
                     onSubmit={rule => this.handleRuleSubmit(rule)} />
@@ -299,10 +298,10 @@ ApplicationPage.defaultProps = {
 }
 
 function mapStateToProps(state) {
-    const { apps, gateways, rules } = state
-    const { app, loading, items } = apps
+    const { apps, gateways, rules, scopes } = state
+    const { app, loading } = apps
     return {
-        apps: items,
+        scopes: scopes.items,
         app,
         loading,
         gateways,

@@ -12,6 +12,7 @@ const gateways = require('./gateways')
 const passport = require('./passport')
 const broker = require('./broker')
 const rules = require('./rules')
+const scopes = require('./scopes')
 const publish = require('./publish')
 const MessageHandler = require('./message-handler')
 
@@ -54,6 +55,7 @@ app.use('/api/apps', apps)
 app.use('/api/gateways', gateways)
 app.use('/api/broker', broker)
 app.use('/api/rules', rules)
+app.use('/api/scopes', scopes)
 app.use('/api/publish', publish)
 
 // catch 404 and forward it to error handler
