@@ -46,6 +46,7 @@ const applicationSchema = new Schema({
     description: String,
     key: String,
     secret: String,
+    public: { type: Boolean, default: false },
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
 })

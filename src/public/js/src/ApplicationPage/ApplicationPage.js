@@ -15,6 +15,7 @@ import {
     List,
     Card,
     Dimmer,
+    Checkbox,
 } from 'semantic-ui-react'
 
 import { appActions, gatewayActions, ruleActions } from '../_actions'
@@ -44,6 +45,11 @@ class ApplicationPage extends Component {
             [name]: value,
         }
         this.props.dispatch(appActions.update(app.id, updatedApp))
+    }
+
+    onPublicUpdate(name, data) {
+        const { app } = this.props
+        this.props.dispatch(appActions.update(app.id, { public: data.checked }))
     }
 
     refreshKey() {
@@ -128,7 +134,7 @@ class ApplicationPage extends Component {
     renderGateways() {
         const { gateways, app } = this.props
 
-        if (!app) {
+        if (!app.hasOwnProperty('id')) {
             return
         }
 
@@ -195,7 +201,7 @@ class ApplicationPage extends Component {
     renderFeedbackChannels() {
         const { gateways, app } = this.props
 
-        if (!gateways.items || !app) {
+        if (!gateways.items || !app.hasOwnProperty('id')) {
             return
         }
 
@@ -226,13 +232,29 @@ class ApplicationPage extends Component {
     }
 
     renderSettings() {
+
+        const { app } = this.props
+
+        if (!app.hasOwnProperty('id')) {
+            return
+        }
+
+        console.warn(app)
+
         return (
             <Segment raised>
                 <Label color='blue' ribbon>Settings</Label>
                 <Container style={{padding: "10px 10px 0 10px"}}>
                     Here be dragons!
                 </Container>
-                <List>
+                <List relaxed>
+                    <List.Item>
+                        <List.Content>
+                            <Checkbox label='Public app'
+                                defaultChecked={this.props.app.public}
+                                onChange={this.onPublicUpdate.bind(this)} />
+                        </List.Content>
+                    </List.Item>
                     <List.Item>
                         <ConfirmModal title='Are you sure you want to delete this app?'
                             text='This action cannot be undone.'

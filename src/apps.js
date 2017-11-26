@@ -20,6 +20,7 @@ router.get('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
                 description: a.description,
                 key: a.key,
                 secret: a.secret,
+                public: a.public,
                 created: a.created,
                 updated: a.updated,
             }
@@ -76,6 +77,7 @@ router.get('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
                 description: a.description,
                 key: a.key,
                 secret: a.secret,
+                public: a.public,
                 created: a.created,
                 updated: a.updated,
             }
@@ -94,6 +96,7 @@ router.get('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 router.put('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
     const { name, description } = req.body
+    const _public = req.body.public
 
     const updateDefintion = {}
 
@@ -103,6 +106,10 @@ router.put('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
     if (description && !validator.isEmpty(description)) {
         updateDefintion.description = description
+    }
+
+    if (true === _public || false === _public) {
+        updateDefintion.public = _public
     }
 
     Application.findByIdAndUpdate(req.params.id, updateDefintion)

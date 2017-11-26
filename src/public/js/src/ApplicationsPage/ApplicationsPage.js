@@ -3,7 +3,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
-import { Header, Container, Icon, Card, Button, Loader } from 'semantic-ui-react'
+import { Header, Container, Icon, Card, Button, Loader, Label } from 'semantic-ui-react'
 
 import { appActions } from '../_actions'
 import { history } from '../_helpers'
@@ -42,7 +42,12 @@ class ApplicationsPage extends Component {
         const cards = apps.items.map(app => (
             <Card key={app.id}>
                 <Card.Content>
-                    <Card.Header>{app.name}</Card.Header>
+                    <Card.Header>
+                        {app.name}
+                        { app.public &&
+                            <Label color='green' horizontal size='tiny' style={{marginLeft: '10px'}}>Public</Label>
+                        }
+                    </Card.Header>
                     <Card.Meta>ID: {app.id}</Card.Meta>
                     <Card.Description>
                         {app.description}
