@@ -306,4 +306,5 @@ Rules.propTypes = {
 
 Rules.defaultProps = {
     application: {},
+    scopes: [],
 }

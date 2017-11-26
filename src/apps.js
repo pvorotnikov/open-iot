@@ -115,6 +115,24 @@ router.put('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
     Application.findByIdAndUpdate(req.params.id, updateDefintion)
     .where('user').eq(req.user._id)
     .then(() => {
+
+        // setting public to false should remove
+        // any rules of other users that have
+        // this app in their scope
+        if (false === updateDefintion.public) {
+            logger.info('Removing rules that have this scope...')
+            Rule.find()
+            .where('scope').eq(req.params.id)
+            .where('user').ne(req.user._id)
+            .remove()
+            .then(deleted => {
+                logger.info(`${deleted.result.n} rules deleted`)
+            })
+            .catch(err => {
+                logger.error(err.message)
+            })
+        }
+
         res.json(new SuccessResponse())
     })
     .catch(err => {
