@@ -18,6 +18,10 @@ class ApplicationsPage extends Component {
         this.props.dispatch(appActions.clear())
     }
 
+    reloadApps() {
+        this.props.dispatch(appActions.getAll())
+    }
+
     renderNewAppCard() {
         return (
             <Card key={'new-app'}>
@@ -83,7 +87,14 @@ class ApplicationsPage extends Component {
             <Container>
                 <Header as='h1'>
                     <Icon name='lab' circular />
-                    <Header.Content>My Apps <Loader active={apps.loading} inline size='small' /></Header.Content>
+                    <Header.Content>
+                        My Apps
+                        <Icon link name='refresh'
+                            size='tiny'
+                            style={{marginLeft: '10px', marginRight: '10px'}}
+                            onClick={this.reloadApps.bind(this)}/>
+                        <Loader active={apps.loading} inline size='small' />
+                    </Header.Content>
                 </Header>
                 <Card.Group>
                     { apps.items && apps.items.length
