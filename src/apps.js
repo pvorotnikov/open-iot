@@ -21,6 +21,8 @@ router.get('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
                 key: a.key,
                 secret: a.secret,
                 public: a.public,
+                statsIn: a.statsIn,
+                statsOut: a.statsOut,
                 created: a.created,
                 updated: a.updated,
             }
@@ -196,6 +198,8 @@ router.get('/:id/gateways', auth.protect(ACCESS_LEVEL.USER), (req, res, next) =>
                 id: g.id,
                 name: g.name,
                 description: g.description,
+                statsIn: g.statsIn,
+                statsOut: g.statsOut,
                 created: g.created,
                 updated: g.updated,
             }

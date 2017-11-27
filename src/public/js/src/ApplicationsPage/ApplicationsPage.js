@@ -58,6 +58,16 @@ class ApplicationsPage extends Component {
                     <Card.Description>Secret key: {app.secret}</Card.Description>
                 </Card.Content>
                 <Card.Content extra>
+                    <Label>
+                        Ingress
+                        <Label.Detail>{app.statsIn}</Label.Detail>
+                    </Label>
+                    <Label>
+                        Egress
+                        <Label.Detail>{app.statsOut}</Label.Detail>
+                    </Label>
+                </Card.Content>
+                <Card.Content extra>
                     <Button circular icon='edit' label='Modify' color='green' onClick={e => history.push('/apps/i/' + app.id) } />
                 </Card.Content>
             </Card>

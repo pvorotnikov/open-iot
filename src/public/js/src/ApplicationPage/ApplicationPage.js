@@ -189,6 +189,16 @@ class ApplicationPage extends Component {
                     <Card.Description>{gateway.description}</Card.Description>
                 </Card.Content>
                 <Card.Content extra>
+                    <Label>
+                        Ingress
+                        <Label.Detail>{gateway.statsIn}</Label.Detail>
+                    </Label>
+                    <Label>
+                        Egress
+                        <Label.Detail>{gateway.statsOut}</Label.Detail>
+                    </Label>
+                </Card.Content>
+                <Card.Content extra>
                     <ConfirmModal title='Are you sure you want to delete this gateway?'
                             trigger={<Button circular icon='delete' label='Delete' color='red' />}
                             onConfirm={() => this.handleDeleteGateway(gateway.id)} />
