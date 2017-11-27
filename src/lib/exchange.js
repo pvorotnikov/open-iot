@@ -40,7 +40,7 @@ function authenticateApp(key, secret) {
  * @param  {String} topic
  * @return {Promise}
  */
-function authorizeTopicPublish(key, topic) {
+function authorizeTopicPublish(key, topic, track=true) {
     return new Promise((fulfill, reject) => {
 
         if (key === nconf.get('HANDLER_KEY')) {
@@ -64,7 +64,9 @@ function authorizeTopicPublish(key, topic) {
                 // means that we are publishing on the app-wide feedback
                 // aka application broadcast
                 if ('message' === topicName || 'message' === gwId) {
-                    storeStats('out', appId, gwId)
+                    if (track) {
+                        storeStats('out', appId, gwId)
+                    }
                     return fulfill()
                 }
 
@@ -74,7 +76,9 @@ function authorizeTopicPublish(key, topic) {
                 .where('topic').eq(topicName)
                 .then(rule => {
                     if (rule) {
-                        storeStats('in', appId, gwId)
+                        if (track) {
+                            storeStats('in', appId, gwId)
+                        }
                         fulfill('in', appId, gwId)
                     } else {
                         reject(new Error(`Topic ${topicName} is not registered within app ${appId}`))

@@ -48,7 +48,7 @@ function sendMessage(key, secret, topic, message) {
             password: secret,
         })
         client.on('connect', () => {
-            exchange.authorizeTopicPublish(key, topic)
+            exchange.authorizeTopicPublish(key, topic, false) // don't track this authorization
             .then(() => {
                 client.publish(topic, message, err => {
                     if (err) reject(err)
