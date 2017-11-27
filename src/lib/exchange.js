@@ -1,6 +1,7 @@
 const nconf = require('nconf')
 const Promise = require('bluebird')
 const { Application, Gateway, Rule } = require('../models')
+const logger = require('./logger')
 
 /* =========================================
  * Exchange authorization and authentication
@@ -63,6 +64,7 @@ function authorizeTopicPublish(key, topic) {
                 // means that we are publishing on the app-wide feedback
                 // aka application broadcast
                 if ('message' === topicName || 'message' === gwId) {
+                    storeStats('out', appId, gwId)
                     return fulfill()
                 }
 
@@ -72,7 +74,8 @@ function authorizeTopicPublish(key, topic) {
                 .where('topic').eq(topicName)
                 .then(rule => {
                     if (rule) {
-                        fulfill()
+                        storeStats('in', appId, gwId)
+                        fulfill('in', appId, gwId)
                     } else {
                         reject(new Error(`Topic ${topicName} is not registered within app ${appId}`))
                     }
@@ -117,6 +120,28 @@ function authorizeTopicSubscribe(key, topic) {
             reject(err)
         })
     })
+}
+
+function storeStats(traffic, appId, gwId) {
+    if ('in' === traffic) {
+
+        Application.findByIdAndUpdate(appId, { $inc: { statsIn: 1 } })
+        .catch(err => logger.error(err.message))
+
+        Gateway.findByIdAndUpdate(gwId, { $inc: { statsIn: 1 } })
+        .catch(err => logger.error(err.message))
+
+    } else if ('out' === traffic) {
+
+        Application.findByIdAndUpdate(appId, { $inc: { statsOut: 1 } })
+        .catch(err => logger.error(err.message))
+
+        if ('message' !== gwId) {
+            Gateway.findByIdAndUpdate(gwId, { $inc: { statsOut: 1 } })
+            .catch(err => logger.error(err.message))
+        }
+
+    }
 }
 
 module.exports = {

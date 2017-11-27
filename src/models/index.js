@@ -47,6 +47,8 @@ const applicationSchema = new Schema({
     key: String,
     secret: String,
     public: { type: Boolean, default: false },
+    statsIn: { type: Number, default: 0 },
+    statsOut: { type: Number, default: 0 },
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
 })
@@ -64,6 +66,8 @@ const gatewaySchema = new Schema({
     application: { type: Schema.Types.ObjectId, ref: 'Application' },
     name: String,
     description: String,
+    statsIn: { type: Number, default: 0 },
+    statsOut: { type: Number, default: 0 },
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
 })
