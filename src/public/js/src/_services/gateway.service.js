@@ -4,6 +4,7 @@ import { Request } from '../_helpers'
 export const gatewayService = {
     getAll,
     create,
+    update,
     delete: _delete,
 }
 
@@ -30,6 +31,21 @@ function create(gateway) {
         body: JSON.stringify(gateway),
     }
     return new Request().send('/api/gateways', requestOptions)
+}
+
+/**
+ * Update gateway
+ * @param  {String} id gateway id
+ * @param  {Object} app gateway update
+ * @return {Promise} response promise
+ */
+function update(id, gateway) {
+    const requestOptions = {
+        method: 'PUT',
+        headers: jsonHeader(),
+        body: JSON.stringify(gateway),
+    }
+    return new Request().send('/api/gateways/' + id, requestOptions)
 }
 
 /**

@@ -81,6 +81,32 @@ router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
 })
 
+// update gateway
+router.put('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+
+    const { name, description } = req.body
+
+    const updateDefintion = {}
+
+    if (name && !validator.isEmpty(name)) {
+        updateDefintion.name = name
+    }
+
+    if (description && !validator.isEmpty(description)) {
+        updateDefintion.description = description
+    }
+
+    Gateway.findByIdAndUpdate(req.params.id, updateDefintion)
+    .where('user').eq(req.user._id)
+    .then(() => {
+        res.json(new SuccessResponse())
+    })
+    .catch(err => {
+        res.status(500).json(new ErrorResponse(err.message))
+    })
+
+})
+
 // delete gateway
 router.delete('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 

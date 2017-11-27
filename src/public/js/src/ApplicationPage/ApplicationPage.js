@@ -48,6 +48,14 @@ class ApplicationPage extends Component {
         this.props.dispatch(appActions.update(app.id, updatedApp))
     }
 
+    onGatewayPropertyUpdate(gatewayId, name, value) {
+        value = value.trim()
+        let updatedGateway = {
+            [name]: value,
+        }
+        this.props.dispatch(gatewayActions.update(gatewayId, updatedGateway))
+    }
+
     onPublicUpdate(name, data) {
         const { app } = this.props
         this.props.dispatch(appActions.update(app.id, { public: data.checked }))
@@ -184,9 +192,13 @@ class ApplicationPage extends Component {
                     <Loader inverted />
                 </Dimmer>
                 <Card.Content>
-                    <Card.Header>{gateway.name}</Card.Header>
+                    <Card.Header>
+                        <EditableText text={gateway.name} onUpdate={(value) => this.onGatewayPropertyUpdate(gateway.id, 'name', value)} />
+                    </Card.Header>
                     <Card.Meta>ID: {gateway.id}</Card.Meta>
-                    <Card.Description>{gateway.description}</Card.Description>
+                    <Card.Description>
+                        <EditableText text={gateway.description} onUpdate={(value) => this.onGatewayPropertyUpdate(gateway.id, 'description', value)} />
+                    </Card.Description>
                 </Card.Content>
                 <Card.Content extra>
                     <Label>

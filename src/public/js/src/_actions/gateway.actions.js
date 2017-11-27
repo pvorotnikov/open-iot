@@ -8,6 +8,7 @@ export const gatewayActions = {
     clear,
     getAll,
     create,
+    update,
     delete: _delete,
 }
 
@@ -64,6 +65,32 @@ function create(gateway) {
     function request() { return { type: gatewayConstants.CREATE_REQUEST } }
     function success(gateway) { return { type: gatewayConstants.CREATE_SUCCESS, gateway } }
     function failure(error) { return { type: gatewayConstants.CREATE_FAILURE, error } }
+}
+
+/**
+ * Update gateway by id
+ * @param  {String} id      gateway id
+ * @param  {Object} gateway gateway update
+ * @return {Function} update async action
+ */
+function update(id, gateway) {
+    return dispatch => {
+        dispatch(request())
+
+        // perform async operation
+        gatewayService.update(id, gateway)
+        .then(() => {
+            dispatch(success(id, gateway))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
+    }
+
+    function request() { return { type: gatewayConstants.UPDATE_REQUEST } }
+    function success(id, gateway) { return { type: gatewayConstants.UPDATE_SUCCESS, id, gateway } }
+    function failure(error) { return { type: gatewayConstants.UPDATE_FAILURE, error } }
 }
 
 /**

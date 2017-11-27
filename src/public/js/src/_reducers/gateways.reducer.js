@@ -43,6 +43,26 @@ export function gateways(state = {items: [], loading: false}, action) {
             return { items: [], loading: false, }
             break
 
+        case gatewayConstants.UPDATE_REQUEST:
+            return { ...state, loading: true, }
+            break
+
+        case gatewayConstants.UPDATE_SUCCESS:
+            return {
+                ...state,
+                items: state.items.map(gateway =>
+                    gateway.id === action.id
+                        ? { ...gateway, ...action.gateway }
+                        : gateway
+                ),
+                loading: false,
+            }
+            break
+
+        case gatewayConstants.UPDATE_FAILURE:
+            return { ...state, loading: false, error: action.error }
+            break
+
         case gatewayConstants.DELETE_REQUEST:
             // mark the gateway as being deleted
             return {
