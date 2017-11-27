@@ -39,13 +39,8 @@ services:
         hostname: ui
         environment:
             VIRTUAL_HOST: example.com                              # how is the host reached
-            LETSENCRYPT_HOST: example.com                          # host for issuing LE Certificate
-            LETSENCRYPT_EMAIL: admin@example.com                   # valid email owning the host
-
             DB_CONNECTION: mongodb://db.example.com/prod           # db connection string
-
             ENCRYPTION_SECRET: my-super-secret-key                 # change this (JWT)
             HANDLER_KEY: broker-super-secret key                   # change this (broker client)
             HANDLER_SECRET: broker-super-secret-pass               # change this (broker client)
-
             BROKER_HOST: broker
