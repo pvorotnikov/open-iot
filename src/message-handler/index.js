@@ -4,6 +4,7 @@ const amqp = require('amqplib')
 const Promise = require('bluebird')
 const { logger } = require('../lib')
 const { Rule } = require('../models')
+const Transformer = require('./transformer')
 
 class MessageHandler {
 

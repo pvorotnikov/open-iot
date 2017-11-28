@@ -148,10 +148,9 @@ export class Rules extends Component {
                     label='Topic'
                     value={ this.state.values.topic }
                     onChange={ this.onChange.bind(this) } />
-                <Form.Input name='transformation'
+                <Form.TextArea name='transformation'
                     label='Transformation'
                     value={ this.state.values.transformation }
-                    disabled
                     onChange={ this.onChange.bind(this) } />
                 <Form.Dropdown name='action'
                     label='Action'
@@ -248,7 +247,6 @@ export class Rules extends Component {
                             <Icon name='settings' />
                             <Step.Content>
                                 <Step.Title>Transformation</Step.Title>
-                                <Step.Description>No transformation</Step.Description>
                             </Step.Content>
                         </Step>
                         { actionStep }
