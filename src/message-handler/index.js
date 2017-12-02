@@ -64,7 +64,10 @@ class MessageHandler {
         .where('topic').eq(topicName)
         .then(rules => {
             rules.forEach(r => {
-                this.performTopicAction(r.action, r.scope, r.output, message)
+                // perform transformation
+                let t = new Transformer(r.transformation, message)
+                let tm = t.getTransformedMessage()
+                this.performTopicAction(r.action, r.scope, r.output, tm)
             })
         })
         .catch(err => {
