@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+import { withRouter } from 'react-router'
 import { Link } from 'react-router-dom'
 import { connect } from 'react-redux'
 
@@ -41,7 +42,7 @@ class RegisterPage extends Component {
         this.setState({ submitted: true });
         const { user } = this.state;
         if (user.firstName && user.lastName && user.email && user.password) {
-            this.props.dispatch(userActions.register(user));
+            this.props.dispatch(userActions.register(user, this.props.history));
         }
     }
 
@@ -91,6 +92,7 @@ class RegisterPage extends Component {
 RegisterPage.propTypes = {
     registering: PropTypes.bool,
     dispatch: PropTypes.func.isRequired,
+    history: PropTypes.object.isRequired,
 }
 
 function mapStateToProps(state) {
@@ -100,5 +102,5 @@ function mapStateToProps(state) {
     }
 }
 
-const connectedRegisterPage = connect(mapStateToProps)(RegisterPage)
+const connectedRegisterPage = connect(mapStateToProps)(withRouter(RegisterPage))
 export { connectedRegisterPage as RegisterPage }

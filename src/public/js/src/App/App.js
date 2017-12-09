@@ -1,13 +1,11 @@
 import React, { Component } from 'react'
-import { Router, Route } from 'react-router-dom'
+import { HashRouter, Route } from 'react-router-dom'
 import { connect } from 'react-redux'
 
 import { Container, Message, Grid } from 'semantic-ui-react'
 
-import { history } from '../_helpers'
 import { alertActions } from '../_actions'
 import { PrivateRoute } from '../_components'
-
 
 import { Sidebar } from '../Sidebar'
 import { LoginPage } from '../LoginPage'
@@ -21,10 +19,11 @@ import { ApplicationPage } from '../ApplicationPage'
 import { NewGatewayPage } from '../NewGatewayPage'
 
 class App extends Component {
-    constructor(props) {
-        super(props)
 
+    componentDidMount() {
+        const { history } = this.refs.router
         const { dispatch } = this.props
+
         history.listen((location, action) => {
             // clear alert on location change
             dispatch(alertActions.clear())
@@ -53,7 +52,7 @@ class App extends Component {
         // define structure
         return (
             <Container style={{ marginTop: '3em' }}>
-                <Router history={history}>
+                <HashRouter ref='router'>
                     <Grid columns={2}>
                         <Grid.Row>
                             <Grid.Column width={3}>
@@ -73,7 +72,7 @@ class App extends Component {
                             </Grid.Column>
                         </Grid.Row>
                     </Grid>
-                </Router>
+                </HashRouter>
             </Container>
         )
     }

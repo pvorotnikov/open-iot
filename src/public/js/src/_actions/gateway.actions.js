@@ -1,6 +1,5 @@
 import { gatewayConstants } from '../_constants'
 import { gatewayService } from '../_services'
-import { history } from '../_helpers'
 import { alertActions } from './'
 
 // export actions
@@ -46,7 +45,7 @@ function getAll(id) {
  * @param {Object} gateway gateway definition
  * @return {Function} create async action
  */
-function create(gateway) {
+function create(gateway, history) {
     return dispatch => {
         dispatch(request())
 

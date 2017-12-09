@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+import { withRouter } from 'react-router'
 import { Link } from 'react-router-dom'
 import { connect } from 'react-redux'
 
@@ -14,7 +15,7 @@ class LoginPage extends Component {
         let email = e.target.email.value
         let password = e.target.password.value
         if (email && password) {
-            this.props.dispatch(userActions.login(email, password))
+            this.props.dispatch(userActions.login(email, password, this.props.history))
         }
     }
 
@@ -36,6 +37,7 @@ class LoginPage extends Component {
 LoginPage.propTypes = {
     loggingIn: PropTypes.bool,
     dispatch: PropTypes.func.isRequired,
+    history: PropTypes.object.isRequired,
 }
 
 function mapStateToProps(state) {
@@ -45,5 +47,5 @@ function mapStateToProps(state) {
     }
 }
 
-const connectedLoginPage = connect(mapStateToProps)(LoginPage)
+const connectedLoginPage = connect(mapStateToProps)(withRouter(LoginPage))
 export { connectedLoginPage as LoginPage }

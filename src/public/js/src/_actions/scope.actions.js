@@ -1,6 +1,5 @@
 import { scopeConstants } from '../_constants'
 import { scopeService } from '../_services'
-import { history } from '../_helpers'
 import { alertActions } from './'
 
 // export actions

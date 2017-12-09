@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
 import { Menu, Icon } from 'semantic-ui-react'
+import { withRouter } from 'react-router'
 import { Link } from 'react-router-dom'
 import { connect } from 'react-redux'
 
-import { history } from '../_helpers'
 import { userActions } from '../_actions'
 
 
@@ -13,16 +13,16 @@ class Sidebar extends Component {
         super(props)
 
         this.state = {
-            pathname: '/'
+            pathname: this.props.history.location.pathname
         }
 
-        history.listen((location, action) => {
+        this.props.history.listen((location, action) => {
             this.setState({ pathname: location.pathname })
         })
     }
 
     handleLogout(e) {
-        this.props.dispatch(userActions.logout())
+        this.props.dispatch(userActions.logout(this.props.history))
     }
 
     renderPublicMenu(currentPath) {
@@ -75,5 +75,5 @@ function mapStateToProps(state) {
     }
 }
 
-const connectedSidebar = connect(mapStateToProps)(Sidebar)
+const connectedSidebar = connect(mapStateToProps)(withRouter(Sidebar))
 export { connectedSidebar as Sidebar }

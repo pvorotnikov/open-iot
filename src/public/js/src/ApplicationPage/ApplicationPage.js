@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-
 import PropTypes from 'prop-types'
+import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import { Rules } from './'
 
@@ -19,7 +19,6 @@ import {
 } from 'semantic-ui-react'
 
 import { appActions, scopeActions, gatewayActions, ruleActions } from '../_actions'
-import { history } from '../_helpers'
 import { EditableText, ConfirmModal } from '../_components'
 import { FEEDBACK_CHANNEL } from '../_constants'
 
@@ -74,7 +73,7 @@ class ApplicationPage extends Component {
     }
 
     handleDeleteApp() {
-        this.props.dispatch(appActions.delete(this.props.match.params.id))
+        this.props.dispatch(appActions.delete(this.props.match.params.id, this.props.history))
     }
 
     handleRuleSubmit(rule) {
@@ -164,6 +163,7 @@ class ApplicationPage extends Component {
 
     renderNewGatewayCard() {
         const appId = this.props.app.id
+        const { history } = this.props
         return (
             <Card key={'new-gateway'}>
                 <Card.Content>
@@ -312,6 +312,7 @@ ApplicationPage.propTypes = {
     gateways: PropTypes.object.isRequired,
     match: PropTypes.object.isRequired,
     dispatch: PropTypes.func.isRequired,
+    history: PropTypes.object.isRequired,
 }
 
 ApplicationPage.defaultProps = {
@@ -331,5 +332,5 @@ function mapStateToProps(state) {
     }
 }
 
-const connectedApplicationPage = connect(mapStateToProps)(ApplicationPage)
+const connectedApplicationPage = connect(mapStateToProps)(withRouter(ApplicationPage))
 export { connectedApplicationPage as ApplicationPage }

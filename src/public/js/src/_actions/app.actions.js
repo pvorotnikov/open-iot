@@ -1,6 +1,5 @@
 import { appConstants } from '../_constants'
 import { appService } from '../_services'
-import { history } from '../_helpers'
 import { alertActions } from './'
 
 // export actions
@@ -48,7 +47,7 @@ function getAll() {
  * @param {Object} app app definition
  * @return {Function} create async action
  */
-function create(app) {
+function create(app, history) {
     return dispatch => {
         dispatch(request())
 
@@ -175,7 +174,7 @@ function refreshSecret(id) {
  * @param {Object} id application id
  * @return {Function} delete async action
  */
-function _delete(id) {
+function _delete(id, history) {
     return dispatch => {
         dispatch(request())
 

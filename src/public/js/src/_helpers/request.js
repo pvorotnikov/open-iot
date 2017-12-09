@@ -1,5 +1,3 @@
-import { history } from './'
-
 import StateMachine from 'javascript-state-machine'
 
 export class Request {
@@ -96,7 +94,6 @@ export class Request {
                 // force logout
                 if (this.forceLogoutOnAuthError) {
                     localStorage.removeItem('user')
-                    history.push('/')
                 }
 
             } else {

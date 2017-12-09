@@ -1,7 +1,6 @@
 import { userConstants } from '../_constants'
 import { userService } from '../_services'
 import { alertActions } from './'
-import { history } from '../_helpers'
 
 // export actions
 export const userActions = {
@@ -19,7 +18,7 @@ export const userActions = {
  * @param  {String} password
  * @return {Function} login async action
  */
-function login(email, password) {
+function login(email, password, history) {
     return dispatch => {
         dispatch(request({ email }))
 
@@ -44,9 +43,9 @@ function login(email, password) {
  * Log out current user
  * @return {Object} logout action
  */
-function logout() {
+function logout(history) {
     userService.logout()
-    history.push('/')
+    history.push('/login')
     return { type: userConstants.LOGOUT }
 }
 
@@ -55,7 +54,7 @@ function logout() {
  * @param  {Object} user user object
  * @return {Function} register async action
  */
-function register(user) {
+function register(user, history) {
     return dispatch => {
         dispatch(request(user))
 

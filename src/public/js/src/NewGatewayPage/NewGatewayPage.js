@@ -1,10 +1,10 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
+import { withRouter } from 'react-router'
 import { Header, Container, Segment, Icon, Button, Form, Dimmer, Loader } from 'semantic-ui-react'
 
 import { gatewayActions } from '../_actions'
-import { history } from '../_helpers'
 
 class NewGatewayPage extends Component {
 
@@ -32,11 +32,12 @@ class NewGatewayPage extends Component {
         const { name, description } = this.state.values
         const application = this.props.match.params.id
         if (name && description) {
-            this.props.dispatch(gatewayActions.create({ application, name, description }))
+            this.props.dispatch(gatewayActions.create({ application, name, description }, this.props.history))
         }
     }
 
     render() {
+        const { history } = this.props
         return (
             <Container>
                 <Header as='h1'>
@@ -63,6 +64,7 @@ class NewGatewayPage extends Component {
 NewGatewayPage.propTypes = {
     loading: PropTypes.bool,
     dispatch: PropTypes.func.isRequired,
+    history: PropTypes.object.isRequired,
 }
 
 function mapStateToProps(state) {
@@ -73,5 +75,5 @@ function mapStateToProps(state) {
     }
 }
 
-const connectedNewGatewayPage = connect(mapStateToProps)(NewGatewayPage)
+const connectedNewGatewayPage = connect(mapStateToProps)(withRouter(NewGatewayPage))
 export { connectedNewGatewayPage as NewGatewayPage }

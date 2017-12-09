@@ -1,10 +1,10 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import { Header, Container, Segment, Icon, Button, Form, Dimmer, Loader } from 'semantic-ui-react'
 
 import { appActions } from '../_actions'
-import { history } from '../_helpers'
 
 class NewApplicationPage extends Component {
 
@@ -31,11 +31,12 @@ class NewApplicationPage extends Component {
     onSubmit(e) {
         const { name, description } = this.state.values
         if (name && description) {
-            this.props.dispatch(appActions.create({ name, description }))
+            this.props.dispatch(appActions.create({ name, description }, this.props.history))
         }
     }
 
     render() {
+        const { history } = this.props
         return (
             <Container>
                 <Header as='h1'>
@@ -62,6 +63,7 @@ class NewApplicationPage extends Component {
 NewApplicationPage.propTypes = {
     loading: PropTypes.bool,
     dispatch: PropTypes.func.isRequired,
+    history: PropTypes.object.isRequired,
 }
 
 function mapStateToProps(state) {
@@ -72,5 +74,5 @@ function mapStateToProps(state) {
     }
 }
 
-const connectedNewApplicationPage = connect(mapStateToProps)(NewApplicationPage)
+const connectedNewApplicationPage = connect(mapStateToProps)(withRouter(NewApplicationPage))
 export { connectedNewApplicationPage as NewApplicationPage }

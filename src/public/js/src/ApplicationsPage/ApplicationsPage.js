@@ -1,12 +1,11 @@
 import React, { Component } from 'react'
-
 import PropTypes from 'prop-types'
+import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 
 import { Header, Container, Icon, Card, Button, Loader, Label } from 'semantic-ui-react'
 
 import { appActions } from '../_actions'
-import { history } from '../_helpers'
 
 class ApplicationsPage extends Component {
 
@@ -23,6 +22,7 @@ class ApplicationsPage extends Component {
     }
 
     renderNewAppCard() {
+        const { history } = this.props
         return (
             <Card key={'new-app'}>
                 <Card.Content>
@@ -43,6 +43,7 @@ class ApplicationsPage extends Component {
 
     renderAppCards() {
         const { apps } = this.props
+        const { history } = this.props
         const cards = apps.items.map(app => (
             <Card key={app.id}>
                 <Card.Content>
@@ -109,6 +110,7 @@ class ApplicationsPage extends Component {
 ApplicationsPage.propTypes = {
     apps: PropTypes.object,
     dispatch: PropTypes.func.isRequired,
+    history: PropTypes.object.isRequired,
 }
 
 function mapStateToProps(state) {
@@ -118,5 +120,5 @@ function mapStateToProps(state) {
     }
 }
 
-const connectedApplicationsPage = connect(mapStateToProps)(ApplicationsPage)
+const connectedApplicationsPage = connect(mapStateToProps)(withRouter(ApplicationsPage))
 export { connectedApplicationsPage as ApplicationsPage }
