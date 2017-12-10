@@ -8,7 +8,7 @@ const { SuccessResponse, ErrorResponse } = responses
 // create new rule
 router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
-    const { application, topic, transformation, action, output, scope } = req.body
+    let { application, topic, transformation, action, output, scope } = req.body
 
     if (validator.isEmpty(application)) {
         return res.status(400).json(new ErrorResponse('You need to specify a parent application'))
@@ -44,6 +44,10 @@ router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
         if (!app) {
             throw new Error('This application belongs to somebody else')
         }
+
+        // trim data
+        topic = topic.trim()
+        transformation = transformation.trim()
 
         let rule = new Rule({
             user: req.user._id,

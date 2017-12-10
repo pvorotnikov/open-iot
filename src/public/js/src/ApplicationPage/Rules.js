@@ -66,10 +66,10 @@ export class Rules extends Component {
 
     onChange(e, data) {
         let { name, value } = data
-        value = value.trim()
+        if ('topic' === name) value = value.trim()
         this.setState({ values: {
             ...this.state.values,
-            [name]: value.trim()
+            [name]: value
         }})
     }
 
@@ -123,7 +123,10 @@ export class Rules extends Component {
                     value={ this.state.values.scope }
                     options={ this.scopeOptions() }
                     onChange={ this.onChange.bind(this) } />
-                    <Form.Input name='output' label='Republish topic' value={ this.state.values.output } onChange={ this.onChange.bind(this) } />
+                    <Form.Input name='output'
+                        label='Republish topic'
+                        value={ this.state.values.output }
+                        onChange={ this.onChange.bind(this) } />
                 </Form.Group>
             )
         } else if (this.state.values.action === ACTION_ENQUEUE) {
@@ -136,7 +139,10 @@ export class Rules extends Component {
                     value={ this.state.values.scope }
                     options={ this.scopeOptions() }
                     onChange={ this.onChange.bind(this) } />
-                    <Form.Input name='output' label='Queue name' value={ this.state.values.output } onChange={ this.onChange.bind(this) } />
+                    <Form.Input name='output'
+                        label='Queue name'
+                        value={ this.state.values.output }
+                        onChange={ this.onChange.bind(this) } />
                 </Form.Group>
             )
         }
@@ -160,7 +166,11 @@ export class Rules extends Component {
                     options={ this.actionOptions() }
                     onChange={ this.onChange.bind(this) } />
                 { complement }
-                <Button circular icon='plus' label='Add' color='green' onClick={ this.onFormSubmit.bind(this) } />
+                <Button circular
+                    icon='plus'
+                    label='Add'
+                    color='green'
+                    onClick={ this.onFormSubmit.bind(this) } />
             </Form>
         )
     }
@@ -226,6 +236,15 @@ export class Rules extends Component {
                 </Step>
             )
 
+            const transformationStep = (
+                <Step disabled={'' === r.transformation}>
+                    <Icon name='settings' />
+                    <Step.Content>
+                        <Step.Title>Transformation</Step.Title>
+                    </Step.Content>
+                </Step>
+            )
+
             return (
                 <List.Item key={r.id}>
                     <Step.Group size='mini' fluid widths={4}>
@@ -243,12 +262,11 @@ export class Rules extends Component {
                                 </List>
                             </Popup.Content>
                         </Popup>
-                        <Step disabled={'' === r.transformation}>
-                            <Icon name='settings' />
-                            <Step.Content>
-                                <Step.Title>Transformation</Step.Title>
-                            </Step.Content>
-                        </Step>
+                        <Popup trigger={transformationStep} flowing hoverable>
+                            <Popup.Content style={{fontFamily: 'monospace', whiteSpace: 'pre'}}>
+                                { '' === r.transformation ? 'No transformation' : r.transformation }
+                            </Popup.Content>
+                        </Popup>
                         { actionStep }
                         <Step>
                             <Step.Content>
