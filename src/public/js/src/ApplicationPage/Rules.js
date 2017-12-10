@@ -17,7 +17,7 @@ import {
 } from 'semantic-ui-react'
 
 import { ACTION_REPUBLISH, ACTION_ENQUEUE, ACTION_DISCARD } from '../_constants'
-import { ConfirmModal } from '../_components'
+import { ConfirmModal, HighlightBlock } from '../_components'
 
 export class Rules extends Component {
 
@@ -263,8 +263,8 @@ export class Rules extends Component {
                             </Popup.Content>
                         </Popup>
                         <Popup trigger={transformationStep} flowing hoverable>
-                            <Popup.Content style={{fontFamily: 'monospace', whiteSpace: 'pre'}}>
-                                { '' === r.transformation ? 'No transformation' : r.transformation }
+                            <Popup.Content as='pre'>
+                                <HighlightBlock language='cson'>{r.transformation}</HighlightBlock>
                             </Popup.Content>
                         </Popup>
                         { actionStep }

@@ -19,6 +19,7 @@ import moment from 'moment'
 
 import { ACTION_REPUBLISH, FEEDBACK_CHANNEL } from '../_constants'
 import { appActions, gatewayActions, ruleActions, alertActions } from '../_actions'
+import { HighlightBlock } from '../_components'
 
 const APPLICATION_WIDE_ALIAS = 'all'
 
@@ -250,8 +251,8 @@ class PlaygroundPage extends Component {
                     <Icon name='envelope' />
                     {m.time.format('LTS')} - {m.topic}
                 </List.Header>
-                <List.Content style={{fontFamily: 'monospace', whiteSpace: 'pre'}}>
-                    <div style={{overflow: 'auto'}}>{m.message}</div>
+                <List.Content as='pre'>
+                    <HighlightBlock>{m.message}</HighlightBlock>
                 </List.Content>
             </List.Item>
         ))
