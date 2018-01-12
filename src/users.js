@@ -2,8 +2,8 @@ const express = require('express')
 const router = express.Router()
 const bcrypt = require('bcrypt')
 const validator = require('validator')
-const { logger, responses, auth } = require('./lib')
-const { ACCESS_LEVEL, User, generatePassword } = require('./models')
+const { logger, responses, auth, utils } = require('./lib')
+const { ACCESS_LEVEL, User } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
 
 // fetch all users
@@ -68,7 +68,7 @@ router.put('/:id', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
             return res.status(400).json(new ErrorResponse('Please, enter a password between 6 and 36 symbols'))
         }
 
-        updateParams.password = generatePassword(password)
+        updateParams.password = utils.generatePassword(password)
     }
 
     User.findByIdAndUpdate(req.params.id, updateParams)

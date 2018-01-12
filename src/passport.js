@@ -2,8 +2,8 @@ const express = require('express')
 const router = express.Router()
 const bcrypt = require('bcrypt')
 const validator = require('validator')
-const { logger, responses, auth } = require('./lib')
-const { User, generatePassword } = require('./models')
+const { logger, responses, auth, utils } = require('./lib')
+const { User } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
 
 // perform login
@@ -66,7 +66,7 @@ router.post('/register', (req, res, next) => {
         firstName,
         lastName,
         email,
-        password: generatePassword(password),
+        password: utils.generatePassword(password),
     })
     newUser.save()
     .then(u => {

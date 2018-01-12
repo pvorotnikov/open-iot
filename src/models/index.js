@@ -1,23 +1,11 @@
 const logger = require('../lib/logger')
 const nconf = require('nconf')
-const bcrypt = require('bcrypt')
-const uuidv4 = require('uuid/v4')
+const { ACCESS_LEVEL } = require('./constants')
+const defaults = require('./defaults')
 const mongoose = require('mongoose')
 mongoose.Promise = require('bluebird')
 
 const { Schema } = mongoose
-
-/* ================================
- * Constants
- * ================================
- */
-const ACCESS_LEVEL = {
-    USER: 10,
-    POWER_USER: 20,
-    SERVICE: 30,
-    MANAGER: 40,
-    ADMIN: 50,
-}
 
 /* ================================
  * Schema
@@ -105,6 +93,14 @@ const ruleSchema = new Schema({
 
 })
 
+const settingSchema = new Schema({
+    key: { type: String, required: true },
+    value: { type: Schema.Types.Mixed, required: true },
+    readOnly: { type: Boolean, default: false },
+    created: { type: Date, default: Date.now },
+    updated: { type: Date, default: Date.now },
+})
+
 /* ================================
  * Models
  * ================================
@@ -115,44 +111,12 @@ const Gateway = mongoose.model('Gateway', gatewaySchema)
 const Device = mongoose.model('Device', deviceSchema)
 const Token = mongoose.model('Token', tokenSchema)
 const Rule = mongoose.model('Rule', ruleSchema)
+const Setting = mongoose.model('Setting', settingSchema)
 
 /* ================================
  * Database
  * ================================
  */
-
-function generatePassword(password) {
-    const saltRounds = 10;
-    const salt = bcrypt.genSaltSync(saltRounds)
-    const hash = bcrypt.hashSync(password, salt)
-    return hash
-}
-
-function createDefaultUser() {
-    User.findOne({ isDefault: true })
-    .then((res) => {
-        if (!res) {
-            // create new user
-            let defaultUser = new User({
-                firstName: 'Default',
-                lastName: 'User',
-                email: 'admin',                      // default email
-                password: generatePassword('admin'), // default password
-                isDefault: true,
-                accessLevel: ACCESS_LEVEL.ADMIN,
-            })
-            defaultUser.save()
-            .then((u) => {
-                logger.info(`Created default user ${u.firstName} ${u.lastName}`)
-            })
-        } else {
-            logger.info(`Default user present`)
-        }
-    })
-    .catch((err) => {
-        logger.error(err.message)
-    })
-}
 
 const connection = function() {
     return new Promise((fulfill, reject) => {
@@ -160,7 +124,8 @@ const connection = function() {
         mongoose.connect(nconf.get('DB_CONNECTION'), { useMongoClient: true })
         .then((instance) => {
             logger.info('Connected to DB')
-            createDefaultUser() // create default user for the first time
+            defaults.user(User) // create default user for the first time
+            defaults.settings(Setting) // create default settings
             fulfill(instance)
         })
         .catch((err) => {
@@ -179,5 +144,5 @@ module.exports = {
     Device,
     Token,
     Rule,
-    generatePassword,
+    Setting,
 }
