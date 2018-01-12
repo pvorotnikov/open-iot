@@ -1,9 +1,13 @@
 #!/bin/bash
 
-GATEWAY_ID=5a15d05cd5f7dd001c5b58cf
-APP_ID=5a15cf2bd5f7dd001c5b58ce
-APP_KEY=fa438d04
-APP_SECRET=6acea6779fbfd3f8
+APP_ID=5a58b8457d6c1b01b01ad4a3
+APP_KEY=56e8afe4
+APP_SECRET=bdca9f359e280e03
+GATEWAY_ID=5a58b8647d6c1b01b01ad4a4
 
-# mosquitto_pub -h iot.vorotnikov.net -p 1883 -u $APP_KEY -P $APP_SECRET -t $APP_ID/$GATEWAY_ID/test -m "test-message"
-mosquitto_sub -h iot.vorotnikov.net -p 1883 -u $APP_KEY -P $APP_SECRET -t $APP_ID/$GATEWAY_ID/test
+mosquitto_sub \
+    -h 127.0.0.1 \
+    -p 8883 \
+    -u $APP_KEY \
+    -P $APP_SECRET \
+    -t $APP_ID/tpms2

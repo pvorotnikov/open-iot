@@ -50,6 +50,9 @@ class Sidebar extends Component {
                 <Menu.Item active={currentPath.startsWith('/users')} as={Link} to='/users'>
                     <Icon name='users' /> Users
                 </Menu.Item>
+                <Menu.Item active={currentPath.startsWith('/settings')} as={Link} to='/settings'>
+                    <Icon name='settings' /> Settings
+                </Menu.Item>
                 <Menu.Item as={Link} to='/' onClick={e => this.handleLogout(e)}>
                     <Icon name='sign out' /> Logout
                 </Menu.Item>

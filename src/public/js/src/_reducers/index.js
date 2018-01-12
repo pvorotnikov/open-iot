@@ -8,6 +8,7 @@ import { apps } from './apps.reducer'
 import { gateways } from './gateways.reducer'
 import { rules } from './rules.reducer'
 import { scopes } from './scopes.reducer'
+import { settings } from './settings.reducer'
 
 import { todos, visibilityFilter } from './todo.reducer'
 
@@ -20,6 +21,7 @@ const rootReducer = combineReducers({
     gateways,       // state.gateways
     rules,          // state.rules
     scopes,         // state.scopes
+    settings,       // state.settings
 
     todos,              // TODO: remove this eventually
     visibilityFilter,   // TODO: remove this eventually

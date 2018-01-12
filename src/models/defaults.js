@@ -1,4 +1,3 @@
-const Promise = require('bluebird')
 const logger = require('../lib/logger')
 const utils = require('../lib/utils')
 const { ACCESS_LEVEL } = require('./constants')
