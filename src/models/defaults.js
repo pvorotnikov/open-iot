@@ -3,13 +3,42 @@ const utils = require('../lib/utils')
 const { ACCESS_LEVEL } = require('./constants')
 
 const defaultSettings = [
-    { key: 'global.deploymentTime',     value: Date.now(), radOnly: true, },
-    { key: 'bridge.aws.enabled',        value: false, },
-    { key: 'bridge.aws.endpoint',       value: '', },
-    { key: 'bridge.aws.certificate',    value: '', },
-    { key: 'bridge.aws.publicKey',      value: '', },
-    { key: 'bridge.aws.privateKey',     value: '', },
-    { key: 'bridge.aws.ca',             value: '', },
+    {
+        key: 'global.deploymentTime',
+        value: Date.now(),
+        description: 'Time of deployment',
+        readOnly: true,
+    },
+    {
+        key: 'bridge.aws.enabled',
+        value: false,
+        description: 'Enable AWS IoT bridge',
+    },
+    {
+        key: 'bridge.aws.endpoint',
+        value: '',
+        description: 'AWS IoT Thing endpoint',
+    },
+    {
+        key: 'bridge.aws.certificate',
+        value: '',
+        description: 'AWS IoT Thing certificate',
+    },
+    {
+        key: 'bridge.aws.publickey',
+        value: '',
+        description: 'AWS IoT Thing public key',
+    },
+    {
+        key: 'bridge.aws.privatekey',
+        value: '',
+        description: 'AWS IoT Thing private key',
+    },
+    {
+        key: 'bridge.aws.ca',
+        value: '',
+        description: 'AWS IoT CA certificate',
+    },
 ]
 
 function settings(Model) {

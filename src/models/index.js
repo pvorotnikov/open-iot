@@ -96,6 +96,7 @@ const ruleSchema = new Schema({
 const settingSchema = new Schema({
     key: { type: String, required: true },
     value: { type: Schema.Types.Mixed, required: true },
+    description: { type: String, required: true },
     readOnly: { type: Boolean, default: false },
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },

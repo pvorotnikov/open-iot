@@ -27,6 +27,27 @@ export function settings(state = { items: null, loading: false, }, action) {
             return { ...state, items: null, loading: false, }
             break
 
+        case settingConstants.UPDATE_REQUEST:
+            return { ...state, loading: true, }
+            break
+
+        case settingConstants.UPDATE_SUCCESS:
+            // update the values of the user
+            return {
+                ...state,
+                items: state.items.map(setting => (
+                    setting.key === action.setting.key
+                        ? action.setting
+                        : setting
+                )),
+                loading: false
+            }
+            break
+
+        case settingConstants.UPDATE_FAILURE:
+            return { ...state, loading: false, }
+            break
+
         default:
             return state
     }

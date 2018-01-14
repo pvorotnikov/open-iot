@@ -16,6 +16,7 @@ const scopes = require('./scopes')
 const settings = require('./settings')
 const publish = require('./publish')
 const MessageHandler = require('./message-handler')
+const { AwsIotBridge } = require('./bridge')
 
 /* ================================
  * MESSAGE HANDLER
@@ -26,6 +27,11 @@ function setupServer() {
     mh.run()
 }
 
+/* ================================
+ * BRIDGES
+ * ================================
+ */
+let awsBridge = new AwsIotBridge()
 
 /* ================================
  * Database

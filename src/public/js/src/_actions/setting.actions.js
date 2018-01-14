@@ -42,8 +42,8 @@ function update(key, value) {
 
         // perform async operation
         settingService.update(key, value)
-        .then(() => {
-            dispatch(success(key, value))
+        .then(setting => {
+            dispatch(success(setting))
             dispatch(alertActions.success(`Setting ${key} updated`))
         })
         .catch(error => {
@@ -53,6 +53,6 @@ function update(key, value) {
     }
 
     function request() { return { type: settingConstants.UPDATE_REQUEST } }
-    function success(key, value) { return { type: settingConstants.UPDATE_SUCCESS, key, value } }
+    function success(setting) { return { type: settingConstants.UPDATE_SUCCESS, setting } }
     function failure(error) { return { type: settingConstants.UPDATE_FAILURE, error } }
 }

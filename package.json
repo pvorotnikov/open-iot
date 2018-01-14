@@ -25,6 +25,7 @@
   "homepage": "https://github.com/pvorotnikov/open-ui#readme",
   "dependencies": {
     "amqplib": "^0.5.2",
+    "aws-iot-device-sdk": "^2.2.0",
     "bcrypt": "^1.0.3",
     "bluebird": "^3.5.1",
     "body-parser": "^1.18.2",

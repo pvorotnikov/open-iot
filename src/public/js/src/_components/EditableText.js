@@ -33,11 +33,13 @@ export class EditableText extends Component {
     }
 
     renderNonEditableContent() {
-        const { text } = this.props
+        const { text, pre } = this.props
+
+        const textWrapper = pre ? <pre>{text}</pre> : <span>{text}</span>
 
         return (
             <span>
-                <span>{text}</span>
+                { textWrapper }
                 { '' !== text && <Icon link name='edit' size='small' style={{marginLeft: '10px'}} onClick={this.startEdit.bind(this)} /> }
             </span>
         )
@@ -45,10 +47,11 @@ export class EditableText extends Component {
 
     renderEditableContent() {
         const { text } = this.props
+        const Component = this.props.as
 
         return (
             <span>
-                <Input size='small' defaultValue={text} onChange={this.onChange.bind(this)} />
+                <Component size='small' defaultValue={text} onChange={this.onChange.bind(this)} />
                 <Icon link name='save' size='small' style={{marginLeft: '10px'}} onClick={this.completeEdit.bind(this)} />
             </span>
         )
@@ -62,7 +65,14 @@ export class EditableText extends Component {
 
 }
 
+EditableText.defaultProps = {
+    as: Input,
+    pre: false,
+}
+
 EditableText.propTypes = {
+    as: PropTypes.func,
+    pre: PropTypes.bool,
     text: PropTypes.string.isRequired,
     onUpdate: PropTypes.func.isRequired,
     onChange: PropTypes.func,
