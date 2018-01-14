@@ -12,6 +12,7 @@ class AwsIotBridge {
 
         process.on(constants.EVENTS.BRIDGE_AWS_ENABLE, e => this.enableBridge())
         process.on(constants.EVENTS.BRIDGE_AWS_DISABLE, e => this.disableBridge())
+        process.on(constants.EVENTS.BRIDGE_OUT, e => this.bridgeMessage(e))
 
         // evaluate current settings
         Setting.findOne({ key: 'bridge.aws.enabled', value: true })
@@ -68,25 +69,24 @@ class AwsIotBridge {
         })
 
         this.device.on('close', () => {
-            logger.warn('Device connection to AWS IoT Closed');
+            logger.warn('Bridge connection to AWS IoT Closed');
         })
         this.device.on('reconnect', () => {
-            logger.info('Device reconnected to AWS IoT')
+            logger.info('Bridge reconnected to AWS IoT')
         })
         this.device.on('offline', () => {
-            logger.warn('Device offline')
+            logger.warn('Bridge offline')
         })
         this.device.on('error', (err) => {
             logger.error(err)
         })
         this.device.on('connect', () => {
-            logger.info('Device connected to AWS IoT')
-            this.device.subscribe('#')
+            logger.info('Bridge connected to AWS IoT')
+            this.device.subscribe('openiot/+/message')
+            this.device.subscribe('openiot/+/+/message')
             this.device.publish('openiot/connect', JSON.stringify({ time: Date.now() }))
         })
-        this.device.on('message', (topic, payload) => {
-            logger.info('AWS IoT Message', topic, payload.toString())
-        })
+        this.device.on('message', this.receiveMessage.bind(this))
     }
 
     endDevice() {
@@ -94,6 +94,50 @@ class AwsIotBridge {
             this.device.end(() => {
                 this.device = null
             })
+        }
+    }
+
+    /**
+     * Receive a message from AWS IoT. Only messages
+     * on topics conforming the following schema will be processed:
+     * openiot/#/message
+     *
+     * @param  {[type]} topic   [description]
+     * @param  {[type]} payload [description]
+     * @return {[type]}         [description]
+     */
+    receiveMessage(topic, payload) {
+
+        let [prefix, ...topicParts] = topic.split('/')
+        let localTopic = topicParts.join('/')
+
+        // this is application-wide message
+        if (2 === topicParts.length) {
+            logger.debug(`Bridge from AWS IoT to application: ${localTopic}`)
+            process.emit(constants.EVENTS.BRIDGE_IN, { topic: localTopic, payload, })
+
+        // this is device-specific message
+        } else if (3 === topicParts.length) {
+            logger.debug(`Bridge from AWS IoT to device: ${localTopic}`)
+            process.emit(constants.EVENTS.BRIDGE_IN, { topic: localTopic, payload, })
+
+        } else {
+            logger.warn(`Unknown topic format: ${localTopic}`)
+        }
+
+    }
+
+    /**
+     * Bridge incoming message from a gateway to AWS IoT.
+     * The topic on which the message is bridged is prefixed
+     * by openiot/ segment. The payload is not altered.
+     *
+     * @param  {Object} e
+     */
+    bridgeMessage(e) {
+        if (this.device) {
+            logger.debug(`Bridge to AWS IoT: ${e.fullTopic}`)
+            this.device.publish(`openiot/${e.fullTopic}`, e.message)
         }
     }
 }

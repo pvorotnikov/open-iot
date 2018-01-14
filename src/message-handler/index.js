@@ -2,7 +2,7 @@ const nconf = require('nconf')
 const mqtt = require('mqtt')
 const amqp = require('amqplib')
 const Promise = require('bluebird')
-const { logger } = require('../lib')
+const { logger, constants } = require('../lib')
 const { Rule } = require('../models')
 const Transformer = require('./transformer')
 
@@ -11,6 +11,9 @@ class MessageHandler {
     constructor() {
         this.mqttClient = null
         this.amqpChannel = null
+
+        // listen for incoming bridged messages
+        process.on(constants.EVENTS.BRIDGE_IN, e => this.bridgeMessage(e))
     }
 
     run() {
@@ -57,7 +60,16 @@ class MessageHandler {
 
     handleMqttMessage(topic, message) {
         let [appId, gatewayId, ...topicParts] = topic.split('/')
+
+        if ('message' === gatewayId || 'message' === topicParts[topicParts.length - 1]) {
+            logger.debug('Messages on the feedback channel are not handled (to prevent recursion)')
+            return
+        }
+
         let topicName = topicParts.join('/')
+
+        // notify bridges to forward this message (that is not on the feedback channel)
+        process.emit(constants.EVENTS.BRIDGE_OUT, { appId, gatewayId, topicName, fullTopic: topic, message, })
 
         Rule.find()
         .where('application').eq(appId)
@@ -97,6 +109,14 @@ class MessageHandler {
                 })
                 break
         }
+    }
+
+    bridgeMessage(e) {
+        const { topic, payload } = e
+        if (this.mqttClient) {
+            this.mqttClient.publish(topic, payload)
+        }
+
     }
 }
 
