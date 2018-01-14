@@ -27,7 +27,7 @@ class SettingsPage extends Component {
 
     renderEditableTextArea(key, value) {
         return (
-            <EditableText as={TextArea} text={value || 'Enter value'} onUpdate={value => this.onSettingUpdate(key, value)} />
+            <EditableText as={TextArea} pre text={value || 'Enter value'} onUpdate={value => this.onSettingUpdate(key, value)} />
         )
     }
 
