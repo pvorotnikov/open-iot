@@ -10,7 +10,7 @@ const { SuccessResponse, ErrorResponse } = responses
 router.get('/', auth.protect(ACCESS_LEVEL.ADMIN), (req, res, next) => {
 
     Setting.find()
-    .sort('created')
+    .sort('key')
     .then(settings => {
         let data = settings.map(s => ({
             key: s.key,

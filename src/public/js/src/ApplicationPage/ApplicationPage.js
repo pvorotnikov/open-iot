@@ -94,6 +94,9 @@ class ApplicationPage extends Component {
                         <EditableText text={app.name || ''} onUpdate={(value) => this.onEditableTextUpdate('name', value)} />
                         <Loader active={this.props.loading} inline size='small' />
                         <Header.Subheader>{app.id && `ID: ${app.id}`}</Header.Subheader>
+                        <Header.Subheader>
+                            Alias: <EditableText text={app.alias} onUpdate={(value) => this.onEditableTextUpdate('alias', value.toLowerCase().replace(/\s/g, ''))} />
+                        </Header.Subheader>
                     </Header.Content>
                 </Header>
                 <EditableText text={app.description || ''} onUpdate={(value) => this.onEditableTextUpdate('description', value)} />
@@ -196,6 +199,9 @@ class ApplicationPage extends Component {
                         <EditableText text={gateway.name} onUpdate={(value) => this.onGatewayPropertyUpdate(gateway.id, 'name', value)} />
                     </Card.Header>
                     <Card.Meta>ID: {gateway.id}</Card.Meta>
+                    <Card.Meta>
+                        Alias: <EditableText text={gateway.alias} onUpdate={(value) => this.onGatewayPropertyUpdate(gateway.id, 'alias', value.toLowerCase().replace(/\s/g, ''))} />
+                    </Card.Meta>
                     <Card.Description>
                         <EditableText text={gateway.description} onUpdate={(value) => this.onGatewayPropertyUpdate(gateway.id, 'description', value)} />
                     </Card.Description>

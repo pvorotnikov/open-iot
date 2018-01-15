@@ -31,6 +31,7 @@ userSchema.pre('remove', function(next) {
 const applicationSchema = new Schema({
     user: { type: Schema.Types.ObjectId, ref: 'User' },
     name: String,
+    alias: String,
     description: String,
     key: String,
     secret: String,
@@ -53,6 +54,7 @@ const gatewaySchema = new Schema({
     user: { type: Schema.Types.ObjectId, ref: 'User' },
     application: { type: Schema.Types.ObjectId, ref: 'Application' },
     name: String,
+    alias: String,
     description: String,
     statsIn: { type: Number, default: 0 },
     statsOut: { type: Number, default: 0 },

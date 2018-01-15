@@ -54,6 +54,9 @@ class ApplicationsPage extends Component {
                         }
                     </Card.Header>
                     <Card.Meta>ID: {app.id}</Card.Meta>
+                    { app.alias &&
+                        <Card.Meta>Alias: {app.alias}</Card.Meta>
+                    }
                     <Card.Description>
                         {app.description}
                     </Card.Description>

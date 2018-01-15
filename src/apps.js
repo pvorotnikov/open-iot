@@ -17,6 +17,7 @@ router.get('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
             return {
                 id: a.id,
                 name: a.name,
+                alias: a.alias,
                 description: a.description,
                 key: a.key,
                 secret: a.secret,
@@ -51,6 +52,7 @@ router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
     let app = new Application({
         user: req.user._id,
         name,
+        alias: name.toLowerCase().replace(/\s/g, ''),
         description,
         key: generateAccessKey(),
         secret: generateSecretKey(),
@@ -76,6 +78,7 @@ router.get('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
             let data = {
                 id: a.id,
                 name: a.name,
+                alias: a.alias,
                 description: a.description,
                 key: a.key,
                 secret: a.secret,
@@ -97,13 +100,17 @@ router.get('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 // update app
 router.put('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
-    const { name, description } = req.body
+    const { name, description, alias } = req.body
     const _public = req.body.public
 
     const updateDefintion = {}
 
     if (name && !validator.isEmpty(name)) {
         updateDefintion.name = name
+    }
+
+    if (alias && !validator.isEmpty(alias)) {
+        updateDefintion.alias = alias.toLowerCase().replace(/\s/g, '')
     }
 
     if (description && !validator.isEmpty(description)) {
@@ -197,6 +204,7 @@ router.get('/:id/gateways', auth.protect(ACCESS_LEVEL.USER), (req, res, next) =>
             return {
                 id: g.id,
                 name: g.name,
+                alias: g.alias,
                 description: g.description,
                 statsIn: g.statsIn,
                 statsOut: g.statsOut,
