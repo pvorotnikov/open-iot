@@ -121,7 +121,7 @@ class AwsIotBridge {
                 if (gateway) {
                     localTopic = `${app._id}/${gateway._id}/${messagePart}`
                 } else {
-                    localTopic = `${app._id}/${messagePart}`
+                    localTopic = `${app._id}/message`
                 }
 
                 process.emit(constants.EVENTS.BRIDGE_IN, { topic: localTopic, payload, })
@@ -131,10 +131,10 @@ class AwsIotBridge {
         } else {
 
             if (3 === topicParts.length && (!mongoose.Types.ObjectId.isValid(appId) || !mongoose.Types.ObjectId.isValid(gatewayId))) {
-                logger.warn('Unknown application or gateway')
+                logger.warn('Unknown application or gateway. Probably bridge.aws.aliases = False?')
                 return
             } else if (2 === topicParts.length && !mongoose.Types.ObjectId.isValid(appId)) {
-                logger.warn('Unknown application')
+                logger.warn('Unknown application. Probably bridge.aws.aliases = False?')
                 return
             }
 
