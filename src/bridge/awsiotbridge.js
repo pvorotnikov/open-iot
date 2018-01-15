@@ -1,8 +1,10 @@
+const nconf = require('nconf')
+const mongoose = require('mongoose')
 const awsIot = require('aws-iot-device-sdk')
 const hat = require('hat')
 const fs = require('fs')
 const { logger, constants } = require('../lib')
-const { Setting } = require('../models')
+const { Application, Gateway } = require('../models')
 
 class AwsIotBridge {
     constructor() {
@@ -15,43 +17,23 @@ class AwsIotBridge {
         process.on(constants.EVENTS.BRIDGE_OUT, e => this.bridgeMessage(e))
 
         // evaluate current settings
-        Setting.findOne({ key: 'bridge.aws.enabled', value: true })
-        .then(setting => {
-            if (setting) {
-                this.enableBridge()
-            }
-        })
-        .catch(err => {
-            logger.error(err.message)
-        })
-
+        if (true === nconf.get('bridge.aws.enabled')) {
+            this.enableBridge()
+        }
     }
 
     enableBridge() {
         logger.info('Enabling AWS bridge')
 
-        Setting.find({
-            $and: [
-                // include all aws bridge settings...
-                { key: { $in: [
-                    'bridge.aws.endpoint',
-                    'bridge.aws.certificate',
-                    'bridge.aws.publickey',
-                    'bridge.aws.privatekey',
-                    'bridge.aws.ca'
-                ] } },
-                // ...that are not empty
-                { value: { $ne: '' } }
-            ]
-        })
-        .then(settings => {
-            let deviceSettings = {}
-            settings.forEach(s => deviceSettings[s.key] = s.value)
-            this.createDevice(deviceSettings)
-        })
-        .catch(err => {
-            logger.error(err.message)
-        })
+        let deviceSettings = {
+            'bridge.aws.endpoint': nconf.get('bridge.aws.endpoint'),
+            'bridge.aws.certificate': nconf.get('bridge.aws.certificate'),
+            'bridge.aws.publickey': nconf.get('bridge.aws.publickey'),
+            'bridge.aws.privatekey': nconf.get('bridge.aws.privatekey'),
+            'bridge.aws.ca': nconf.get('bridge.aws.ca'),
+        }
+
+        this.createDevice(deviceSettings)
     }
 
     disableBridge() {
@@ -109,22 +91,56 @@ class AwsIotBridge {
     receiveMessage(topic, payload) {
 
         let [prefix, ...topicParts] = topic.split('/')
-        let localTopic = topicParts.join('/')
+        let [appId, gatewayId, messagePart] = topicParts
 
         // this is application-wide message
         if (2 === topicParts.length) {
-            logger.debug(`Bridge from AWS IoT to application: ${localTopic}`)
-            process.emit(constants.EVENTS.BRIDGE_IN, { topic: localTopic, payload, })
-
+            logger.debug(`Bridge from AWS IoT to application: ${topicParts.join('/')}`)
         // this is device-specific message
         } else if (3 === topicParts.length) {
-            logger.debug(`Bridge from AWS IoT to device: ${localTopic}`)
-            process.emit(constants.EVENTS.BRIDGE_IN, { topic: localTopic, payload, })
-
+            logger.debug(`Bridge from AWS IoT to device: ${topicParts.join('/')}`)
         } else {
-            logger.warn(`Unknown topic format: ${localTopic}`)
+            logger.warn(`Unknown topic format: ${topicParts.join('/')}`)
+            return
         }
 
+        let localTopic
+
+        // construct IDs from aliases
+        if (nconf.get('bridge.aws.aliases')) {
+
+            let promises = [Application.findOne().where('alias').eq(appId)]
+            if (3 === topicParts.length) {
+                promises.push(Gateway.findOne().where('alias').eq(gatewayId))
+            }
+
+            Promise.all(promises)
+            .then(results => {
+
+                const [app, gateway] = results
+                if (gateway) {
+                    localTopic = `${app._id}/${gateway._id}/${messagePart}`
+                } else {
+                    localTopic = `${app._id}/${messagePart}`
+                }
+
+                process.emit(constants.EVENTS.BRIDGE_IN, { topic: localTopic, payload, })
+            })
+            .catch(err => logger.error(err.message))
+
+        } else {
+
+            if (3 === topicParts.length && (!mongoose.Types.ObjectId.isValid(appId) || !mongoose.Types.ObjectId.isValid(gatewayId))) {
+                logger.warn('Unknown application or gateway')
+                return
+            } else if (2 === topicParts.length && !mongoose.Types.ObjectId.isValid(appId)) {
+                logger.warn('Unknown application')
+                return
+            }
+
+            localTopic = topicParts.join('/')
+            process.emit(constants.EVENTS.BRIDGE_IN, { topic: localTopic, payload, })
+        }
     }
 
     /**

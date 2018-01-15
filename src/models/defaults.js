@@ -40,6 +40,11 @@ const defaultSettings = [
         value: '',
         description: 'AWS IoT CA certificate',
     },
+    {
+        key: 'bridge.aws.aliases',
+        value: false,
+        description: 'Use aliases for AWS IoT bridging',
+    },
 ]
 
 function settings(Model) {

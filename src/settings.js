@@ -1,3 +1,4 @@
+const nconf = require('nconf')
 const Promise = require('bluebird')
 const express = require('express')
 const router = express.Router()
@@ -31,6 +32,9 @@ router.get('/', auth.protect(ACCESS_LEVEL.ADMIN), (req, res, next) => {
 router.put('/:key', auth.protect(ACCESS_LEVEL.ADMIN), (req, res, next) => {
 
     const { value } = req.body
+
+    // update configuration value
+    nconf.set(req.params.key, value)
 
     Setting.findOne({ key: req.params.key })
     .then(setting => {

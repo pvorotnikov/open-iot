@@ -4,7 +4,7 @@ const mqtt = require('mqtt')
 const amqp = require('amqplib')
 const Promise = require('bluebird')
 const { logger, constants } = require('../lib')
-const { Rule } = require('../models')
+const { Rule, Application, Gateway } = require('../models')
 const Transformer = require('./transformer')
 
 class MessageHandler {
@@ -60,25 +60,48 @@ class MessageHandler {
     }
 
     handleMqttMessage(topic, message) {
+
         let [appId, gatewayId, ...topicParts] = topic.split('/')
 
-        // do not process the feedback channel
-        if ('message' === gatewayId || 'message' === topicParts[topicParts.length - 1]) {
-            logger.debug('Messages on the feedback channel are not handled (to prevent recursion)')
+        // do not process republished messages or messages on the feedback channel
+        const lastSegment = topicParts[topicParts.length - 1]
+        if (!mongoose.Types.ObjectId.isValid(appId) || !mongoose.Types.ObjectId.isValid(gatewayId) || 'message' === lastSegment) {
+            logger.debug('Republished messages or messages on the feedback channel are not handled (to prevent recursion)')
             return
         }
 
         // assemble the topic name
         let topicName = topicParts.join('/')
 
-        // notify bridges to forward this message (that is not on the feedback channel)
-        process.emit(constants.EVENTS.BRIDGE_OUT, { appId, gatewayId, topicName, fullTopic: topic, message, })
+        // notify bridges to forward this raw published message (that is not republished or on the feedback channel)
+        if (nconf.get('bridge.aws.aliases')) {
 
-        // do not process republished messages
-        if (!mongoose.Types.ObjectId.isValid(appId) || !mongoose.Types.ObjectId.isValid(gatewayId)) {
-            logger.debug('Republished messages are not handled (to prevent recursion)')
-            return
+            // replace internal IDs with aliases
+            Promise.all([Application.findById(appId), Gateway.findById(gatewayId)])
+            .then(results => {
+                const [app, gateway] = results
+                process.emit(constants.EVENTS.BRIDGE_OUT, {
+                    appId,
+                    gatewayId,
+                    topicName,
+                    fullTopic: `${app.alias}/${gateway.alias}/${topicName}`,
+                    message,
+                })
+            })
+            .catch(err => logger.error(err.message))
+
+        } else {
+
+            // use internal IDs
+            process.emit(constants.EVENTS.BRIDGE_OUT, {
+                appId,
+                gatewayId,
+                topicName,
+                fullTopic: topic,
+                message,
+            })
         }
+
 
         Rule.find()
         .where('application').eq(appId)
