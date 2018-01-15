@@ -127,9 +127,12 @@ const connection = function() {
         mongoose.connect(nconf.get('DB_CONNECTION'), { useMongoClient: true })
         .then((instance) => {
             logger.info('Connected to DB')
-            defaults.user(User) // create default user for the first time
-            defaults.settings(Setting) // create default settings
-            fulfill(instance)
+
+            Promise.all([
+                defaults.user(User), // create default user for the first time
+                defaults.settings(Setting) // create default settings
+            ])
+            .then(() => fulfill(instance))
         })
         .catch((err) => {
             logger.error('MongoDB connection error:', err.message)

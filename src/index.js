@@ -1,3 +1,4 @@
+const nconf = require('nconf')
 const path = require('path')
 const express = require('express')
 const morgan = require('morgan')
@@ -19,27 +20,32 @@ const MessageHandler = require('./message-handler')
 const { AwsIotBridge } = require('./bridge')
 
 /* ================================
- * MESSAGE HANDLER
+ * MESSAGE HANDLER AND BRIDGES
  * ================================
  */
 let mh = new MessageHandler()
-function setupServer() {
-    mh.run()
-}
+let awsBridge = null
+function setupServer(instance) {
 
-/* ================================
- * BRIDGES
- * ================================
- */
-let awsBridge = new AwsIotBridge()
+    instance.models.Setting.find()
+    .then(settings => {
+        settings.forEach(s => nconf.set(s.key, s.value))
+
+        mh.run()
+        awsBridge = new AwsIotBridge()
+    })
+    .catch(err => {
+        logger.error(err.message)
+    })
+}
 
 /* ================================
  * Database
  * ================================
  */
 DB.connection()
-.then((instance) => setupServer())
-.catch((err) => {});
+.then((instance) => setupServer(instance))
+.catch((err) => logger.error(err.message))
 
 /* ================================
  * Create app
