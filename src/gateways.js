@@ -96,7 +96,7 @@ router.put('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
     }
 
     if (alias && !validator.isEmpty(alias)) {
-        updateDefintion.alias = alias
+        updateDefintion.alias = alias.toLowerCase().replace(/\s/g, '')
     }
 
     if (description && !validator.isEmpty(description)) {
