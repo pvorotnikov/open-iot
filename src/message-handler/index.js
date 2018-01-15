@@ -146,7 +146,7 @@ class MessageHandler {
     bridgeMessage(e) {
         const { topic, payload } = e
         if (this.mqttClient) {
-            this.mqttClient.publish(topic, payload)
+            this.mqttClient.publish(topic, payload, { retain: true })
         }
 
     }
