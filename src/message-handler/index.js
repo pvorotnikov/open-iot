@@ -1,4 +1,5 @@
 const nconf = require('nconf')
+const mongoose = require('mongoose')
 const mqtt = require('mqtt')
 const amqp = require('amqplib')
 const Promise = require('bluebird')
@@ -61,15 +62,23 @@ class MessageHandler {
     handleMqttMessage(topic, message) {
         let [appId, gatewayId, ...topicParts] = topic.split('/')
 
+        // do not process the feedback channel
         if ('message' === gatewayId || 'message' === topicParts[topicParts.length - 1]) {
             logger.debug('Messages on the feedback channel are not handled (to prevent recursion)')
             return
         }
 
+        // assemble the topic name
         let topicName = topicParts.join('/')
 
         // notify bridges to forward this message (that is not on the feedback channel)
         process.emit(constants.EVENTS.BRIDGE_OUT, { appId, gatewayId, topicName, fullTopic: topic, message, })
+
+        // do not process republished messages
+        if (!mongoose.Types.ObjectId.isValid(appId) || !mongoose.Types.ObjectId.isValid(gatewayId)) {
+            logger.debug('Republished messages are not handled (to prevent recursion)')
+            return
+        }
 
         Rule.find()
         .where('application').eq(appId)
