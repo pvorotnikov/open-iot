@@ -11,11 +11,6 @@ const defaultSettings = [
         readOnly: true,
     },
     {
-        key: 'global.aliases',
-        value: false,
-        description: 'Use aliases instead of ids for publishing and subscribing',
-    },
-    {
         key: 'bridge.aws.enabled',
         value: false,
         description: 'Enable AWS IoT bridge',
