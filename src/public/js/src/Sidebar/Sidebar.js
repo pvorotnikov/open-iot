@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { connect } from 'react-redux'
 
 import { userActions } from '../_actions'
+import { ACCESS_LEVEL } from '../_constants'
 
 
 class Sidebar extends Component {
@@ -36,6 +37,8 @@ class Sidebar extends Component {
     }
 
     renderPrivateMenu(currentPath) {
+        const { user } = this.props
+
         return (
             <Menu fluid vertical pointing icon='labeled'>
                 <Menu.Item active={currentPath === '/'} as={Link} to='/'>
@@ -47,12 +50,12 @@ class Sidebar extends Component {
                 <Menu.Item active={currentPath.startsWith('/playground')} as={Link} to='/playground'>
                     <Icon name='soccer' /> Playground
                 </Menu.Item>
-                <Menu.Item active={currentPath.startsWith('/users')} as={Link} to='/users'>
+                { user.accessLevel >= ACCESS_LEVEL.MANAGER && <Menu.Item active={currentPath.startsWith('/users')} as={Link} to='/users'>
                     <Icon name='users' /> Users
-                </Menu.Item>
-                <Menu.Item active={currentPath.startsWith('/settings')} as={Link} to='/settings'>
+                </Menu.Item> }
+                { user.accessLevel >= ACCESS_LEVEL.ADMIN && <Menu.Item active={currentPath.startsWith('/settings')} as={Link} to='/settings'>
                     <Icon name='settings' /> Settings
-                </Menu.Item>
+                </Menu.Item> }
                 <Menu.Item as={Link} to='/' onClick={e => this.handleLogout(e)}>
                     <Icon name='sign out' /> Logout
                 </Menu.Item>

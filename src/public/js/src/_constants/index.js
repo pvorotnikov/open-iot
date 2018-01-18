@@ -11,3 +11,10 @@ export const ACTION_REPUBLISH = 'republish'
 export const ACTION_ENQUEUE = 'enqueue'
 export const ACTION_DISCARD = 'discard'
 export const FEEDBACK_CHANNEL = 'message'
+export const ACCESS_LEVEL = {
+    USER: 10,
+    POWER_USER: 20,
+    SERVICE: 30,
+    MANAGER: 40,
+    ADMIN: 50,
+}
