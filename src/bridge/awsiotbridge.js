@@ -64,9 +64,8 @@ class AwsIotBridge {
         })
         this.device.on('connect', () => {
             logger.info('Bridge connected to AWS IoT')
-            this.device.subscribe('openiot/+/message')
-            this.device.subscribe('openiot/+/+/message')
-            this.device.publish('openiot/connect', JSON.stringify({ time: Date.now() }))
+            this.device.subscribe('openiot/in/#')
+            this.device.publish('openiot/sys/connect', JSON.stringify({ time: Date.now() }))
         })
         this.device.on('message', this.receiveMessage.bind(this))
     }
@@ -90,62 +89,124 @@ class AwsIotBridge {
      */
     receiveMessage(topic, payload) {
 
-        let [prefix, ...topicParts] = topic.split('/')
-        let [appId, gatewayId, messagePart] = topicParts
+        let [prefix1, prefix2, channelType, ...topicParts] = topic.split('/')
 
-        // this is application-wide message
-        if (2 === topicParts.length) {
-            logger.debug(`Bridge from AWS IoT to application: ${topicParts.join('/')}`)
-        // this is device-specific message
-        } else if (3 === topicParts.length) {
-            logger.debug(`Bridge from AWS IoT to device: ${topicParts.join('/')}`)
-        } else {
-            logger.warn(`Unknown topic format: ${topicParts.join('/')}`)
+        const hasMessage = 'message' === topicParts[topicParts.length - 1]
+
+        if (!hasMessage) {
+            logger.debug('No need to bridge. Only topics ending in /message are bridged')
             return
         }
 
-        let localTopic
+        if ('app' === channelType) {
 
-        // construct IDs from aliases
-        if (nconf.get('bridge.aws.aliases')) {
+            let [appId, ...rest] = topicParts
 
-            let promises = [Application.findOne().where('alias').eq(appId)]
-            if (3 === topicParts.length) {
-                promises.push(Gateway.findOne().where('alias').eq(gatewayId))
+            if (2 === topicParts.length) {  // :appid/message
+                logger.debug(`Bridge from AWS IoT to application feedback channel: ${topicParts.join('/')}`)
+            } else if (topicParts.length > 2) { // :appid/topic/parts/message
+                logger.debug(`Bridge from AWS IoT to specific application topic: ${topicParts.join('/')}`)
+            } else {
+                logger.debug(`Unknown topic: ${topicParts.join('/')}`)
+                return
             }
 
-            Promise.all(promises)
-            .then(results => {
+            this.publishToApp(appId, rest, payload)
 
-                const [app, gateway] = results
-                if (gateway) {
-                    localTopic = `${app._id}/${gateway._id}/${messagePart}`
-                } else {
-                    localTopic = `${app._id}/message`
+        } else if ('gw' === channelType) {
+
+            let [appId, gatewayId, ...rest] = topicParts
+
+            if (3 === topicParts.length) { // :appid/:gatewayId/message
+                logger.debug(`Bridge from AWS IoT to gateway feedback channel: ${topicParts.join('/')}`)
+            } else if (topicParts.length > 3) { // :appid/:gatewayId/topic/parts/message
+                logger.debug(`Bridge from AWS IoT to specific gateway topic: ${topicParts.join('/')}`)
+            } else {
+                logger.debug(`Unknown topic: ${topicParts.join('/')}`)
+                return
+            }
+
+            this.publishToGateway(appId, gatewayId, rest, payload)
+
+        } else {
+            logger.warn(`Unknown channel type: ${channelType}`)
+            return
+        }
+    }
+
+    publishToApp(appId, rest, payload) {
+
+        let localTopic
+
+        if (nconf.get('bridge.aws.aliases')) {
+
+            Application.findOne().where('alias').eq(appId)
+            .then(app => {
+                if (!app) {
+                    logger.warn(`Unknown application with alias ${appId}`)
                 }
 
+                localTopic = `${app._id}/${rest.join('/')}`
                 process.emit(constants.EVENTS.BRIDGE_IN, { topic: localTopic, payload, })
             })
             .catch(err => logger.error(err.message))
 
         } else {
 
-            if (3 === topicParts.length && (!mongoose.Types.ObjectId.isValid(appId) || !mongoose.Types.ObjectId.isValid(gatewayId))) {
-                logger.warn('Unknown application or gateway. Probably bridge.aws.aliases = False?')
-                return
-            } else if (2 === topicParts.length && !mongoose.Types.ObjectId.isValid(appId)) {
+            if (!mongoose.Types.ObjectId.isValid(appId)) {
                 logger.warn('Unknown application. Probably bridge.aws.aliases = False?')
                 return
             }
 
-            localTopic = topicParts.join('/')
+            localTopic = `${appId}/${rest.join('/')}`
             process.emit(constants.EVENTS.BRIDGE_IN, { topic: localTopic, payload, })
+
         }
+
+    }
+
+    publishToGateway(appId, gatewayId, rest, payload) {
+
+        let localTopic
+
+        if (nconf.get('bridge.aws.aliases')) {
+
+            let promises = [
+                Application.findOne().where('alias').eq(appId),
+                Gateway.findOne().where('alias').eq(gatewayId)
+            ]
+
+            Promise.all(promises)
+            .then(results => {
+
+                const [app, gateway] = results
+                if (!app || !gateway) {
+                    throw new Error(`Unknown application or gateway with aliases ${appId} ${gatewayId}`)
+                }
+
+                localTopic = `${app._id}/${gateway._id}/${rest.join('/')}`
+                process.emit(constants.EVENTS.BRIDGE_IN, { topic: localTopic, payload, })
+
+            })
+            .catch(err => logger.error(err.message))
+
+        } else {
+
+            if (!mongoose.Types.ObjectId.isValid(appId)) {
+                logger.warn('Unknown application. Probably bridge.aws.aliases = False?')
+                return
+            }
+
+            localTopic = `${appId}/${gatewayId}/${rest.join('/')}`
+            process.emit(constants.EVENTS.BRIDGE_IN, { topic: localTopic, payload, })
+
+        }
+
     }
 
     /**
      * Bridge incoming message from a gateway to AWS IoT.
-     * The topic on which the message is bridged is prefixed
+     * The topic on which the message is bridged is prefix1, prefix2ed
      * by openiot/ segment. The payload is not altered.
      *
      * @param  {Object} e
@@ -153,7 +214,7 @@ class AwsIotBridge {
     bridgeMessage(e) {
         if (this.device) {
             logger.debug(`Bridge to AWS IoT: ${e.fullTopic}`)
-            this.device.publish(`openiot/${e.fullTopic}`, e.message)
+            this.device.publish(`openiot/out/${e.fullTopic}`, e.message)
         }
     }
 }
