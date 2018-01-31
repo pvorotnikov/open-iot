@@ -11,6 +11,11 @@ const defaultSettings = [
         readOnly: true,
     },
     {
+        key: 'global.enableregistrations',
+        value: true,
+        description: 'Allow users to register',
+    },
+    {
         key: 'bridge.aws.enabled',
         value: false,
         description: 'Enable AWS IoT bridge',

@@ -49,6 +49,7 @@ class SettingsPage extends Component {
                 switch (s.key) {
                     case 'bridge.aws.enabled':
                     case 'bridge.aws.aliases':
+                    case 'global.enableregistrations':
                         valueElement = this.renderEditableToggle(s.key, s.value)
                         break
                     case 'bridge.aws.endpoint':

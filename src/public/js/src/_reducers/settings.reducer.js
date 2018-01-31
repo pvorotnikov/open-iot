@@ -11,7 +11,7 @@ import { settingConstants } from '../_constants'
  * @param  {Object} action reducer action
  * @return {Object}        new state
  */
-export function settings(state = { items: null, loading: false, }, action) {
+export function settings(state = { items: null, loading: false, registrationEnabled: false, }, action) {
 
     switch (action.type) {
 
@@ -45,6 +45,18 @@ export function settings(state = { items: null, loading: false, }, action) {
             break
 
         case settingConstants.UPDATE_FAILURE:
+            return { ...state, loading: false, }
+            break
+
+        case settingConstants.GET_ENABLE_REGISTRATIONS_REQUEST:
+            return { ...state, loading: true, }
+            break
+
+        case settingConstants.GET_ENABLE_REGISTRATIONS_SUCCESS:
+            return { ...state, loading: false, registrationEnabled: action.setting, }
+            break
+
+        case settingConstants.GET_ENABLE_REGISTRATIONS_FAILURE:
             return { ...state, loading: false, }
             break
 

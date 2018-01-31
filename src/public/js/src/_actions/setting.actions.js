@@ -6,6 +6,7 @@ import { alertActions } from './'
 export const settingActions = {
     getAll,
     update,
+    getEnableRegistrations,
 }
 
 /**
@@ -55,4 +56,23 @@ function update(key, value) {
     function request() { return { type: settingConstants.UPDATE_REQUEST } }
     function success(setting) { return { type: settingConstants.UPDATE_SUCCESS, setting } }
     function failure(error) { return { type: settingConstants.UPDATE_FAILURE, error } }
+}
+
+function getEnableRegistrations() {
+    return dispatch => {
+        dispatch(request())
+
+        // perform async operation
+        settingService.getEnableRegistrations()
+        .then(result => {
+            dispatch(success(result.value))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+        })
+    }
+
+    function request() { return { type: settingConstants.GET_ENABLE_REGISTRATIONS_REQUEST } }
+    function success(setting) { return { type: settingConstants.GET_ENABLE_REGISTRATIONS_SUCCESS, setting } }
+    function failure(error) { return { type: settingConstants.GET_ENABLE_REGISTRATIONS_FAILURE, error } }
 }

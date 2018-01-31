@@ -1,3 +1,4 @@
+const nconf = require('nconf')
 const express = require('express')
 const router = express.Router()
 const bcrypt = require('bcrypt')
@@ -44,7 +45,12 @@ router.get('/refresh', auth.protect(), (req, res, next) => {
 
 // register user
 router.post('/register', (req, res, next) => {
+
     const { firstName, lastName, email, password } = req.body
+
+    if (!nconf.get('global.enableRegistrations')) {
+        return res.status(400).json(new ErrorResponse('Registrations are disabled'))
+    }
 
     if (!validator.isEmail(email)) {
         return res.status(400).json(new ErrorResponse('Please, enter a valid email'))

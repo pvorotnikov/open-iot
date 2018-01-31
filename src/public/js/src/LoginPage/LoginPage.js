@@ -6,9 +6,13 @@ import { connect } from 'react-redux'
 
 import { Segment, Form, Header, Button } from 'semantic-ui-react'
 
-import { userActions } from '../_actions'
+import { userActions, settingActions } from '../_actions'
 
 class LoginPage extends Component {
+
+    componentWillMount() {
+        this.props.dispatch(settingActions.getEnableRegistrations())
+    }
 
     onSubmit(e) {
         e.preventDefault()
@@ -27,7 +31,7 @@ class LoginPage extends Component {
                     <Form.Input name="email" label='Email' />
                     <Form.Input name="password" label='Password' type='password' />
                     <Button type='submit'>Login</Button>
-                    <Link to='/register'>Register</Link>
+                    { this.props.registrationEnabled && <Link to='/register'>Register</Link> }
                 </Form>
             </Segment>
         )
@@ -42,8 +46,10 @@ LoginPage.propTypes = {
 
 function mapStateToProps(state) {
     const { loggingIn } = state.authentication
+    const { registrationEnabled } = state.settings
     return {
-        loggingIn
+        loggingIn,
+        registrationEnabled,
     }
 }
 

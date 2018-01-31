@@ -7,6 +7,11 @@ const { logger, responses, auth, utils, constants } = require('./lib')
 const { ACCESS_LEVEL, Setting } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
 
+router.get('/global.enableregistrations', (req, res, next) => {
+    const setting = nconf.get('global.enableregistrations')
+    res.json(new SuccessResponse({ value: setting }))
+})
+
 // fetch all settings
 router.get('/', auth.protect(ACCESS_LEVEL.ADMIN), (req, res, next) => {
 
@@ -20,7 +25,7 @@ router.get('/', auth.protect(ACCESS_LEVEL.ADMIN), (req, res, next) => {
             updated: s.updated,
             readOnly: s.readOnly,
         }))
-        res.json({ status: 'ok', data })
+        res.json(new SuccessResponse(data))
     })
     .catch((err) => {
         res.status(500).json(new ErrorResponse(err.message))
@@ -33,11 +38,12 @@ router.put('/:key', auth.protect(ACCESS_LEVEL.ADMIN), (req, res, next) => {
 
     const { value } = req.body
 
-    // update configuration value
-    nconf.set(req.params.key, value)
-
     Setting.findOne({ key: req.params.key })
     .then(setting => {
+        if (!setting) throw new Error(`Invalid setting: ${req.params.key}`)
+
+        if (setting.readOnly) throw new Error(`Setting ${req.params.key} is read-only`)
+
         if ('bridge.aws.enabled' === req.params.key) {
             return enableAWSBridge(setting, value)
         } else {
@@ -47,6 +53,10 @@ router.put('/:key', auth.protect(ACCESS_LEVEL.ADMIN), (req, res, next) => {
         }
     })
     .then(setting => {
+
+        // update configuration value
+        nconf.set(req.params.key, value)
+
         let data = {
             key: setting.key,
             value: setting.value,
