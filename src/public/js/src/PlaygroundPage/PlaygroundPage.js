@@ -183,6 +183,7 @@ class PlaygroundPage extends Component {
         this.mqttClient = mqtt.connect(uri, {
             username: key,
             password: secret,
+            keepalive: 50,
         })
         this.mqttClient.on('connect', () => {
             dispatch(alertActions.clear())
