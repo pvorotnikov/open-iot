@@ -5,6 +5,7 @@ export const ruleService = {
     getAll,
     create,
     delete: _delete,
+    copyRules,
 }
 
 /**
@@ -42,4 +43,18 @@ function _delete(id) {
         method: 'DELETE',
     }
     return new Request().send('/api/rules/' + id, requestOptions)
+}
+
+/**
+ * Copy rules from one application to another.
+ * @param {String} source source application id
+ * @param {String} destination destination application id
+ * @return {Promise} response promise
+ */
+function copyRules(source, destination) {
+    const requestOptions = {
+        method: 'POST',
+        headers: jsonHeader(),
+    }
+    return new Request().send(`/api/rules/copy/${source}/${destination}`, requestOptions)
 }

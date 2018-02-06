@@ -11,12 +11,12 @@ import { ruleConstants } from '../_constants'
  * @param  {Object} action reducer action
  * @return {Object}        new state
  */
-export function rules(state = {items: [], loading: false}, action) {
+export function rules(state = {items: [], copyRules: [], loading: false}, action) {
 
     switch (action.type) {
 
         case ruleConstants.CLEAR:
-            return {items: [], loading: false}
+            return {items: [], copyRules: [], loading: false}
             break
 
         case ruleConstants.CREATE_REQUEST:
@@ -33,15 +33,15 @@ export function rules(state = {items: [], loading: false}, action) {
             break
 
         case ruleConstants.GETALL_REQUEST:
-            return { items: [], loading: true, }
+            return { ...state, loading: true, }
             break
 
         case ruleConstants.GETALL_SUCCESS:
-            return { items: action.rules, loading: false, }
+            return { ...state, items: action.rules, loading: false, }
             break
 
         case ruleConstants.GETALL_FAILURE:
-            return { items: [], loading: false, }
+            return { ...state, loading: false, }
             break
 
         case ruleConstants.DELETE_REQUEST:
@@ -81,6 +81,30 @@ export function rules(state = {items: [], loading: false}, action) {
                 }),
                 loading: false,
             }
+            break
+
+        case ruleConstants.GET_COPY_RULES_REQUEST:
+            return { ...state, loading: true }
+            break
+
+        case ruleConstants.GET_COPY_RULES_SUCCESS:
+            return { ...state, copyRules: action.rules, loading: false }
+            break
+
+        case ruleConstants.GET_COPY_RULES_FAILURE:
+            return { ...state, loading: false }
+            break
+
+        case ruleConstants.COPY_RULES_REQUEST:
+            return { ...state, loading: true }
+            break
+
+        case ruleConstants.COPY_RULES_SUCCESS:
+            return { ...state, items: [ ...state.items, ...action.rules ], loading: false }
+            break
+
+        case ruleConstants.COPY_RULES_FAILURE:
+            return { ...state, loading: false }
             break
 
         default:

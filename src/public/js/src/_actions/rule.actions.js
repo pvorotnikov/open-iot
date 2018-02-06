@@ -8,6 +8,8 @@ export const ruleActions = {
     getAll,
     create,
     delete: _delete,
+    getCopyRules,
+    copyRules,
 }
 
 function clear() {
@@ -87,4 +89,60 @@ function _delete(id) {
     function request(id) { return { type: ruleConstants.DELETE_REQUEST, id } }
     function success(id) { return { type: ruleConstants.DELETE_SUCCESS, id } }
     function failure(error) { return { type: ruleConstants.DELETE_FAILURE, id, error } }
+}
+
+/**
+ * Get all rules associated with an application.
+ * Although the request is the same as getAll(),
+ * the generated actions are different because they
+ * populate different part of the store.
+ * @param  {String} id application id
+ * @return {Function} get rules async action
+ */
+function getCopyRules(id) {
+    return dispatch => {
+        dispatch(request())
+
+        // perform async operation
+        ruleService.getAll(id)
+        .then(rules => {
+            dispatch(success(rules))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
+    }
+
+    function request() { return { type: ruleConstants.GET_COPY_RULES_REQUEST } }
+    function success(rules) { return { type: ruleConstants.GET_COPY_RULES_SUCCESS, rules } }
+    function failure(error) { return { type: ruleConstants.GET_COPY_RULES_FAILURE, error } }
+}
+
+/**
+ * Copy rules from one application to another.
+ * The source application must be owned by the user or public.
+ * The destination application must be owned by the user.
+ * @param {String} source source application id
+ * @param {String} destination destination application id
+ * @return {Function} copy rules async action
+ */
+function copyRules(source, destination) {
+    return dispatch => {
+        dispatch(request())
+
+        // perform async operation
+        ruleService.copyRules(source, destination)
+        .then(rules => {
+            dispatch(success(rules))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
+    }
+
+    function request() { return { type: ruleConstants.COPY_RULES_REQUEST } }
+    function success(rules) { return { type: ruleConstants.COPY_RULES_SUCCESS, rules } }
+    function failure(error) { return { type: ruleConstants.COPY_RULES_FAILURE, error } }
 }

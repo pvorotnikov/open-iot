@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const validator = require('validator')
+const Promise = require('bluebird')
 const { logger, responses, auth } = require('./lib')
 const { ACCESS_LEVEL, Rule, Application } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
@@ -91,6 +92,29 @@ router.delete('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
     .catch(err => {
         res.status(500).json(new ErrorResponse(err.message))
     })
+
+})
+
+// copy rules
+router.post('/copy/:source/:destination', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+
+    const sourceAppId = req.params.source
+    const destAppId = req.params.destination
+
+    Rule
+    .where('application').eq(sourceAppId)
+    .where('user').eq(req.user._id)
+    .then(res => {
+        logger.info(res.length)
+    })
+    .catch(err => {
+        logger.error(err.message)
+    })
+
+
+    logger.info(`Copying rules from ${sourceAppId} to ${destAppId}`)
+
+    res.json(new SuccessResponse([]))
 
 })
 

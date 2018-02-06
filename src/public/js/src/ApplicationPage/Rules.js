@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+import { connect } from 'react-redux'
 
 import {
     Container,
@@ -16,10 +17,11 @@ import {
     Divider,
 } from 'semantic-ui-react'
 
+import { ruleActions } from '../_actions'
 import { ACTION_REPUBLISH, ACTION_ENQUEUE, ACTION_DISCARD } from '../_constants'
 import { ConfirmModal, HighlightBlock } from '../_components'
 
-export class Rules extends Component {
+class Rules extends Component {
 
     constructor(props) {
         super(props)
@@ -31,6 +33,7 @@ export class Rules extends Component {
                 action: null,
                 output: '',
                 scope: '',
+                copyApp: '',
             }
         }
     }
@@ -64,6 +67,15 @@ export class Rules extends Component {
         ))
     }
 
+    copyAppOptions() {
+        const { id, name } = this.props.application
+        return this.props.scopes.filter(s => id !== s.id).map(s => (
+            s.own
+                ? {text: s.name, value: s.id}
+                : {text: `${s.name} (public app)`, value: s.id}
+        ))
+    }
+
     onChange(e, data) {
         let { name, value } = data
         if ('topic' === name) value = value.trim()
@@ -71,6 +83,11 @@ export class Rules extends Component {
             ...this.state.values,
             [name]: value
         }})
+    }
+
+    onCopyApplicationChange(e, data) {
+        this.onChange(e, data)
+        this.props.dispatch(ruleActions.getCopyRules(data.value))
     }
 
     onFormSubmit() {
@@ -103,11 +120,22 @@ export class Rules extends Component {
             action: null,
             output: '',
             scope: '',
+            copyApp: '',
         }})
     }
 
     onDeleteRule(id) {
         this.props.onDelete(id)
+    }
+
+    onCopyRules() {
+        const source = this.state.values.copyApp
+        const destination = this.props.application.id
+
+        // validate values
+        if (!source || !destination || '' === source || '' === destination) return
+
+        this.props.dispatch(ruleActions.copyRules(source, destination))
     }
 
     renderNewRule() {
@@ -172,6 +200,40 @@ export class Rules extends Component {
                     color='green'
                     onClick={ this.onFormSubmit.bind(this) } />
             </Form>
+        )
+    }
+
+    renderCopyApp() {
+
+        let copyRules = this.props.copyRules.map(r => (
+            <List.Item key={r.id}>
+                <List.Content>
+                    <Icon name='announcement' />{ r.topic }
+                </List.Content>
+            </List.Item>
+        ))
+
+        return (
+            <div>
+                <p>Synchronize with rules defined in another application. They will be copied into this app as new rules.</p>
+                <Form size='small'>
+                    <Form.Dropdown name='copyApp'
+                        label='Copy application'
+                        placeholder='Copy application'
+                        selection
+                        value={ this.state.values.copyApp }
+                        options={ this.copyAppOptions() }
+                        onChange={ this.onCopyApplicationChange.bind(this) } />
+                    <List>
+                        { copyRules }
+                    </List>
+                    <Button circular
+                        icon='copy'
+                        label='Copy'
+                        color='blue'
+                        onClick={ this.onCopyRules.bind(this) } />
+                </Form>
+            </div>
         )
     }
 
@@ -295,17 +357,19 @@ export class Rules extends Component {
                     <Loader inverted />
                 </Dimmer>
                 <Label color='blue' ribbon>Rules</Label>
-                <Container style={{padding: "10px 10px 0 10px"}}>
+                <p style={{padding: "10px 10px 0 10px"}}>
                     You can specify rules that can be executed when a message
                     is received on a given topic. You can transform the JSON
                     payload of a message and republish it on another topic or
                     enqueue it within the scope of an application.
                     Note that in order to publish a message on a given topic,
                     you need to create a rule for it first.
-                </Container>
+                </p>
                 { this.renderRules() }
                 <Divider horizontal>Create rule</Divider>
                 { this.renderNewRule() }
+                <Divider horizontal>Copy rules from another app</Divider>
+                { this.renderCopyApp() }
             </Segment>
         )
     }
@@ -318,9 +382,21 @@ Rules.propTypes = {
     rules: PropTypes.object.isRequired,
     onSubmit: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
+    copyRules: PropTypes.array.isRequired,
 }
 
 Rules.defaultProps = {
     application: {},
     scopes: [],
 }
+
+function mapStateToProps(state) {
+    const { rules } = state
+    const { copyRules } = rules
+    return {
+        copyRules
+    }
+}
+
+const connectedRules = connect(mapStateToProps)(Rules)
+export { connectedRules as Rules }

@@ -113,11 +113,11 @@ class ApplicationPage extends Component {
                     <Loader inverted />
                 </Dimmer>
                 <Label color='blue' ribbon>Credentials</Label>
-                <Container style={{padding: "10px 10px 0 10px"}}>
+                <p style={{padding: "10px 10px 0 10px"}}>
                     Use these credentials when establishing connection over MQTT or HTTP.
                     Using MQTT they need to be provided as 'username' and 'password'.
                     Using HTTP they should be used as Basic authorization method.
-                </Container>
+                </p>
                 <List>
                     <List.Item>
                         <Label color='green' horizontal>Access key</Label>
