@@ -98,23 +98,56 @@ router.delete('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 // copy rules
 router.post('/copy/:source/:destination', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
-    const sourceAppId = req.params.source
-    const destAppId = req.params.destination
 
-    Rule
-    .where('application').eq(sourceAppId)
-    .where('user').eq(req.user._id)
-    .then(res => {
-        logger.info(res.length)
+    logger.info(`Copying rules from ${req.params.source} to ${req.params.destination}`)
+
+    const sourceAppPromise =  Application.findById(req.params.source).where({  $or: [ { user: { $eq: req.user._id } }, { public: { $eq: true } } ] })
+    const destAppPromise = Application.findById(req.params.destination).where('user').eq(req.user._id)
+    const sourcRulesPromise = Rule.find().where('application').eq(req.params.source)
+
+    Promise.all([ sourceAppPromise, destAppPromise, sourcRulesPromise ])
+    .then(results => {
+
+        const [sourceApp, destApp, sourceRules] = results
+
+        if (!sourceApp) {
+            throw new Error('You are not the owner of the source app or it is not public')
+        }
+
+        if (!destApp) {
+            throw new Error('You are not the owner of the destination app')
+        }
+
+        let newRules = sourceRules.map(r => {
+            return new Rule({
+                user: req.user._id,
+                application: destApp._id,
+                topic: r.topic,
+                transformation: r.transformation,
+                action: 'discard'
+            }).save()
+        })
+
+        return Promise.all(newRules)
+    })
+    .then((rules) => {
+        let data = rules.map(r => {
+            return {
+                id: r.id,
+                topic: r.topic,
+                transformation: r.transformation,
+                action: r.action,
+                output: r.output,
+                scope: r.scope,
+                created: r.created,
+                updated: r.updated,
+            }
+        })
+        res.json(new SuccessResponse(data))
     })
     .catch(err => {
-        logger.error(err.message)
+        res.status(400).json(new ErrorResponse(err.message))
     })
-
-
-    logger.info(`Copying rules from ${sourceAppId} to ${destAppId}`)
-
-    res.json(new SuccessResponse([]))
 
 })
 

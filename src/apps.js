@@ -28,7 +28,7 @@ router.get('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
                 updated: a.updated,
             }
         })
-        res.json({ status: 'ok', data })
+        res.json(new SuccessResponse(data))
     })
     .catch((err) => {
         res.status(500).json(new ErrorResponse(err.message))
@@ -59,7 +59,7 @@ router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
     })
     app.save()
     .then(app => {
-        res.json({ status: 'ok', data: app })
+        res.json(new SuccessResponse(data))
     })
     .catch(err => {
         res.status(500).json(new ErrorResponse(err.message))
@@ -86,7 +86,7 @@ router.get('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
                 created: a.created,
                 updated: a.updated,
             }
-            res.json({ status: 'ok', data })
+            res.json(new SuccessResponse(data))
         } else {
             res.status(400).json(new ErrorResponse('Application not found'))
         }
@@ -212,7 +212,7 @@ router.get('/:id/gateways', auth.protect(ACCESS_LEVEL.USER), (req, res, next) =>
                 updated: g.updated,
             }
         })
-        res.json({ status: 'ok', data })
+        res.json(new SuccessResponse(data))
     })
     .catch((err) => {
         res.status(500).json(new ErrorResponse(err.message))
@@ -239,7 +239,7 @@ router.get('/:id/rules', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
                 updated: r.updated,
             }
         })
-        res.json({ status: 'ok', data })
+        res.json(new SuccessResponse(data))
     })
     .catch((err) => {
         res.status(500).json(new ErrorResponse(err.message))
