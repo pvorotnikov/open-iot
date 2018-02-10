@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken')
 const uuidv4 = require('uuid/v4')
 
 const logger = require('./logger')
-const { ACCESS_LEVEL, Token } = require('../models')
+const { ACCESS_LEVEL, Token, User } = require('../models')
 const { SuccessResponse, ErrorResponse } = require('./responses')
 
 function storeTokens(u, accessKey, refreshKey) {
@@ -52,56 +52,95 @@ module.exports = {
                 return res.status(401).json(new ErrorResponse('No authorization header'))
             }
 
+            const isBearer = req.headers.authorization.startsWith('Bearer ')
+            const isBasic = req.headers.authorization.startsWith('Basic ')
+
             // verify schema
-            if (!req.headers.authorization.startsWith('Bearer ')) {
+            if (!isBearer && !isBasic) {
                 return res.status(401).json(new ErrorResponse('Unsupported authorization schema'))
             }
 
             let parts = req.headers.authorization.split(' ')
             let rawToken = parts[1]
 
-            // verify token
-            verifyToken(rawToken)
-            .then(data => {
+            // JWT auth
+            if (isBearer) {
 
-                logger.debug(`Received ${data.type} token on endpoint ${req.method} ${req.originalUrl} for user ${data.id}`)
+                // verify token
+                verifyToken(rawToken)
+                .then(data => {
 
-                Token.findOne({ user: data.id, type: data.type, value: data.key })
-                .sort({created: 'desc'})
-                .populate('user')
-                .then(token => {
-                    if (token) {
+                    Token.findOne({ user: data.id, type: data.type, value: data.key })
+                    .sort({created: 'desc'})
+                    .populate('user')
+                    .then(token => {
+                        if (token) {
 
-                        // check token's access level and required access level
-                        if (data.accessLevel < requiredLevel) {
-                            logger.warn(`Token with access level ${data.accessLevel} received whereas min lvel ${requiredLevel} is required`)
+                            logger.debug(`Received ${data.type} token on endpoint ${req.method} ${req.originalUrl} for user ${token.user.firstName} ${token.user.lastName}`)
+
+                            // check token's access level and required access level
+                            if (data.accessLevel < requiredLevel) {
+                                logger.warn(`Token with access level ${data.accessLevel} received whereas min lvel ${requiredLevel} is required`)
+                                return res.status(403).json(new ErrorResponse('Insufficient access level'))
+                            }
+
+                            // determine token expiration
+                            let diff = moment().diff(moment(token.created), 'seconds')
+
+                            if ('access' === token.type && diff > nconf.get('ACCESS_TOKEN_EXPIRATION_TIME')) {
+                                logger.info(`Time difference: ${diff} seconds for ${token.type} token -> rejecting with 401`)
+                                return res.status(401).json(new ErrorResponse('Access token expired'))
+
+                            } else if  ('refresh' === token.type && diff > nconf.get('REFRESH_TOKEN_EXPIRATION_TIME')) {
+                                logger.info(`Time difference: ${diff} seconds for ${token.type} token -> rejecting with 403`)
+                                return res.status(403).json(new ErrorResponse('Refresh token expired'))
+                            }
+
+                            // store user model in request
+                            req.user = token.user
+                            next()
+
+                        } else {
+                            return res.status(403).json(new ErrorResponse('Token does not exist'))
+                        }
+                    })
+                })
+                .catch(err => {
+                    return res.status(403).json(new ErrorResponse('Invalid token'))
+                })
+
+            }
+
+            // key/secret auth
+            if (isBasic) {
+
+                let credentials = Buffer.from(rawToken, 'base64').toString()
+                const [key, secret] = credentials.split(':')
+
+                User.findOne({ key, secret })
+                .then(user => {
+                    if (user) {
+
+                        logger.debug(`Received basic credentials on endpoint ${req.method} ${req.originalUrl} for user ${user.firstName} ${user.lastName}`)
+
+                        // the user access level and required access level
+                        if (user.accessLevel < requiredLevel) {
+                            logger.warn(`Credentials with insufficient access level received whereas min lvel ${requiredLevel} is required`)
                             return res.status(403).json(new ErrorResponse('Insufficient access level'))
                         }
 
-                        // determine token expiration
-                        let diff = moment().diff(moment(token.created), 'seconds')
-
-                        if ('access' === token.type && diff > nconf.get('ACCESS_TOKEN_EXPIRATION_TIME')) {
-                            logger.info(`Time difference: ${diff} seconds for ${token.type} token -> rejecting with 401`)
-                            return res.status(401).json(new ErrorResponse('Access token expired'))
-
-                        } else if  ('refresh' === token.type && diff > nconf.get('REFRESH_TOKEN_EXPIRATION_TIME')) {
-                            logger.info(`Time difference: ${diff} seconds for ${token.type} token -> rejecting with 403`)
-                            return res.status(403).json(new ErrorResponse('Refresh token expired'))
-                        }
-
                         // store user model in request
-                        req.user = token.user
+                        req.user = user
                         next()
 
                     } else {
-                        return res.status(403).json(new ErrorResponse('Token does not exist'))
+                        return res.status(403).json(new ErrorResponse('Credentials do not exist'))
                     }
                 })
-            })
-            .catch(err => {
-                return res.status(403).json(new ErrorResponse('Invalid token'))
-            })
+                .catch(err => {
+                    return res.status(403).json(new ErrorResponse('Invalid credentials'))
+                })
+            }
         }
     },
 

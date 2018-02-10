@@ -83,7 +83,7 @@ class UsersPage extends Component {
                                 <Label color='green' horizontal>Access key</Label>
                                 &nbsp;
                                 <span>
-                                    {user.key}
+                                    <code>{user.key}</code>
                                     <ConfirmModal title='Are you sure you want to refresh this key?'
                                         trigger={<Icon link name='refresh' style={{marginLeft: '10px'}} />}
                                         onConfirm={this.refreshKey.bind(this, user.id)} />
@@ -93,7 +93,7 @@ class UsersPage extends Component {
                                 <Label color='green' horizontal>Secret key</Label>
                                 &nbsp;
                                 <span>
-                                    {user.secret}
+                                    <code>{user.secret}</code>
                                     <ConfirmModal title='Are you sure you want to refresh this key?'
                                         trigger={<Icon link name='refresh' style={{marginLeft: '10px'}} />}
                                         onConfirm={this.refreshSecret.bind(this, user.id)} />
