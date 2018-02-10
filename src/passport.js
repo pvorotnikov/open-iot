@@ -48,7 +48,7 @@ router.post('/register', (req, res, next) => {
 
     const { firstName, lastName, email, password } = req.body
 
-    if (!nconf.get('global.enableRegistrations')) {
+    if (!nconf.get('global.enableregistrations')) {
         return res.status(400).json(new ErrorResponse('Registrations are disabled'))
     }
 
