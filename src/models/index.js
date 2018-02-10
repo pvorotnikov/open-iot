@@ -1,4 +1,5 @@
 const logger = require('../lib/logger')
+const utils = require('../lib/utils')
 const nconf = require('nconf')
 const { ACCESS_LEVEL } = require('./constants')
 const defaults = require('./defaults')
@@ -17,6 +18,8 @@ const userSchema = new Schema({
     password: String,
     firstName: String,
     lastName: String,
+    key: { type: String, default: () => utils.generateAccessKey() },
+    secret: { type: String, default: () => utils.generateSecretKey() },
     accessLevel: { type: Number, default: ACCESS_LEVEL.USER },
     isDefault: { type: Boolean, default: false },
     created: { type: Date, default: Date.now },

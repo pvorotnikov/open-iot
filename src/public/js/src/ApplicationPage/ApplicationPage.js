@@ -121,6 +121,7 @@ class ApplicationPage extends Component {
                 <List>
                     <List.Item>
                         <Label color='green' horizontal>Access key</Label>
+                        &nbsp;
                         <span>
                             {app.key}
                             <ConfirmModal title='Are you sure you want to refresh this key?'
@@ -130,6 +131,7 @@ class ApplicationPage extends Component {
                     </List.Item>
                     <List.Item>
                         <Label color='green' horizontal>Secret key</Label>
+                        &nbsp;
                         <span>
                             {app.secret}
                             <ConfirmModal title='Are you sure you want to refresh this key?'

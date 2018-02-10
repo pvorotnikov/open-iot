@@ -10,6 +10,8 @@ export const userActions = {
     getAll,
     delete: _delete,
     update,
+    refreshKey,
+    refreshSecret,
 }
 
 /**
@@ -147,4 +149,54 @@ function update(id, user) {
     function request(id) { return { type: userConstants.UPDATE_REQUEST, id } }
     function success(id, user) { return { type: userConstants.UPDATE_SUCCESS, id, user } }
     function failure(id, error) { return { type: userConstants.UPDATE_FAILURE, id, error } }
+}
+
+/**
+ * Refresh user key
+ * @param  {String} id  user id
+ * @return {Function} update async action
+ */
+function refreshKey(id) {
+    return dispatch => {
+        dispatch(request())
+
+        // perform async operation
+        userService.refreshKey(id)
+        .then((data) => {
+            dispatch(success(id, data.key))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
+    }
+
+    function request() { return { type: userConstants.REFRESH_KEY_REQUEST } }
+    function success(id, key) { return { type: userConstants.REFRESH_KEY_SUCCESS, id, key } }
+    function failure(error) { return { type: userConstants.REFRESH_KEY_FAILURE, error } }
+}
+
+/**
+ * Refresh user secret
+ * @param  {String} id user id
+ * @return {Function} update async action
+ */
+function refreshSecret(id) {
+    return dispatch => {
+        dispatch(request())
+
+        // perform async operation
+        userService.refreshSecret(id)
+        .then((data) => {
+            dispatch(success(id, data.secret))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
+    }
+
+    function request() { return { type: userConstants.REFRESH_SECRET_REQUEST } }
+    function success(id, secret) { return { type: userConstants.REFRESH_SECRET_SUCCESS, id, secret } }
+    function failure(error) { return { type: userConstants.REFRESH_SECRET_FAILURE, error } }
 }

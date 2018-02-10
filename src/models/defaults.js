@@ -108,9 +108,9 @@ function user(Model) {
                     isDefault: true,
                     accessLevel: ACCESS_LEVEL.ADMIN,
                 })
+                logger.info(`Creating default user ${defaultUser.firstName} ${defaultUser.lastName}`)
                 defaultUser.save()
                 .then((u) => {
-                    logger.info(`Created default user ${u.firstName} ${u.lastName}`)
                     fulfill()
                 })
             } else {

@@ -1,3 +1,4 @@
+const hat = require('hat')
 const bcrypt = require('bcrypt')
 
 function generatePassword(password) {
@@ -7,6 +8,16 @@ function generatePassword(password) {
     return hash
 }
 
+function generateAccessKey(size=64) {
+    return hat(size, 16)
+}
+
+function generateSecretKey(size=128) {
+    return hat(size, 16)
+}
+
 module.exports = {
     generatePassword,
+    generateAccessKey,
+    generateSecretKey,
 }

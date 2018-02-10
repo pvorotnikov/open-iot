@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
-import { Header, Container, Button, Accordion, Icon, Form, Loader } from 'semantic-ui-react'
+import { Header, Container, Button, Accordion, Icon, Form, Loader, List, Label } from 'semantic-ui-react'
 
 import { userActions } from '../_actions'
 import { ConfirmModal } from '../_components'
@@ -61,6 +61,14 @@ class UsersPage extends Component {
         this.setState({ userValues: newState })
     }
 
+    refreshKey(id) {
+        this.props.dispatch(userActions.refreshKey(id))
+    }
+
+    refreshSecret(id) {
+        this.props.dispatch(userActions.refreshSecret(id))
+    }
+
     renderUsers() {
         const { users } = this.props
 
@@ -70,6 +78,28 @@ class UsersPage extends Component {
                 <Icon name='dropdown' />{`${user.firstName} ${user.lastName}`}</Accordion.Title>
                 <Accordion.Content active={this.state.activeUser === user.id}>
                     <Form loading={user.updating || user.deleting}>
+                        <List>
+                            <List.Item>
+                                <Label color='green' horizontal>Access key</Label>
+                                &nbsp;
+                                <span>
+                                    {user.key}
+                                    <ConfirmModal title='Are you sure you want to refresh this key?'
+                                        trigger={<Icon link name='refresh' style={{marginLeft: '10px'}} />}
+                                        onConfirm={this.refreshKey.bind(this, user.id)} />
+                                </span>
+                            </List.Item>
+                            <List.Item>
+                                <Label color='green' horizontal>Secret key</Label>
+                                &nbsp;
+                                <span>
+                                    {user.secret}
+                                    <ConfirmModal title='Are you sure you want to refresh this key?'
+                                        trigger={<Icon link name='refresh' style={{marginLeft: '10px'}} />}
+                                        onConfirm={this.refreshSecret.bind(this, user.id)} />
+                                </span>
+                            </List.Item>
+                        </List>
                         <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="email" label='Email' defaultValue={user.email} />
                         <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="password" label='Password' type='password' />
                         <Form.Input onChange={(e, d)=>this.handleUserValueChange(e, d)} name="firstName" label='First Name' defaultValue={user.firstName} />

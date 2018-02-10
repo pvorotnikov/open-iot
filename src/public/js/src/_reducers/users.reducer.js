@@ -11,20 +11,20 @@ import { userConstants } from '../_constants'
  * @param  {Object} action reducer action
  * @return {Object}        new state
  */
-export function users(state = {}, action) {
+export function users(state = { items: [], loading: false, }, action) {
 
     switch (action.type) {
 
         case userConstants.GETALL_REQUEST:
-            return { loading: true, }
+            return { ...state, loading: true, }
             break
 
         case userConstants.GETALL_SUCCESS:
-            return { items: action.users, }
+            return { ...state, items: action.users, loading: false, }
             break
 
         case userConstants.GETALL_FAILURE:
-            return { error: action.error }
+            return { ...state, loading: false, }
             break
 
         case userConstants.DELETE_REQUEST:
@@ -104,6 +104,84 @@ export function users(state = {}, action) {
                         const { updating, ...userCopy } = user
                         // return the copied user with update error
                         return { ...userCopy, updateError: action.error }
+                    }
+                    return user
+                })
+            }
+            break
+
+        case userConstants.REFRESH_KEY_REQUEST:
+            // mark the user as being updated
+            return {
+                ...state,
+                items: state.items.map(user =>
+                    user.id === action.id
+                        ? { ...user, updating: true }
+                        : user
+                )
+            }
+            break
+
+        case userConstants.REFRESH_KEY_SUCCESS:
+            // update the key of the user
+            return {
+                ...state,
+                items: state.items.map(user => {
+                    if (user.id === action.id) {
+                        const { updating, ...userCopy } = user
+                        return { ...userCopy, key: action.key }
+                    }
+                    return user
+                })
+            }
+            break
+
+        case userConstants.REFRESH_KEY_FAILURE:
+            return {
+                ...state,
+                items: state.items.map(user => {
+                    if (user.id === action.id) {
+                        const { updating, ...userCopy } = user
+                        return userCopy
+                    }
+                    return user
+                })
+            }
+            break
+
+        case userConstants.REFRESH_SECRET_REQUEST:
+            // mark the user as being updated
+            return {
+                ...state,
+                items: state.items.map(user =>
+                    user.id === action.id
+                        ? { ...user, updating: true }
+                        : user
+                )
+            }
+            break
+
+        case userConstants.REFRESH_SECRET_SUCCESS:
+            // update the secret of the user
+            return {
+                ...state,
+                items: state.items.map(user => {
+                    if (user.id === action.id) {
+                        const { updating, ...userCopy } = user
+                        return { ...userCopy, secret: action.secret }
+                    }
+                    return user
+                })
+            }
+            break
+
+        case userConstants.REFRESH_SECRET_FAILURE:
+            return {
+                ...state,
+                items: state.items.map(user => {
+                    if (user.id === action.id) {
+                        const { updating, ...userCopy } = user
+                        return userCopy
                     }
                     return user
                 })
