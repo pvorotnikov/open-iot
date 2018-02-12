@@ -44,6 +44,13 @@ function authorizeTopicPublish(key, topic, track=true) {
     return new Promise((fulfill, reject) => {
 
         if (key === nconf.get('HANDLER_KEY')) {
+
+            // check if this is a message on a feedback channel
+            if (topic.endsWith('message')) {
+                const [ appId, gwId, ...topicParts ] = topic.split('/')
+                storeStats('out', appId, gwId)
+            }
+
             return fulfill()
         }
 
