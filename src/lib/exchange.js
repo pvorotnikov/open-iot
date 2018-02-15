@@ -109,7 +109,7 @@ function authorizeTopicSubscribe(key, topic) {
     return new Promise((fulfill, reject) => {
 
         if (key === nconf.get('HANDLER_KEY')) {
-            return fulfill()
+            return fulfill('message handler')
         }
 
         // analyze topic

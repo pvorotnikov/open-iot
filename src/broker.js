@@ -43,9 +43,9 @@ router.post('/resource', (req, res, next) => {
     // permission - the access level to the resource (configure, write, read)
     const { username, vhost, resource, name, permission } = req.body
 
-    logger.debug(`Request to ${permission} ${resource}: ${name}`)
-
     if ('topic' === resource) {
+
+        logger.debug(`Request to ${permission} ${resource}: ${name}`)
 
         switch (permission) {
 
@@ -74,13 +74,12 @@ router.post('/resource', (req, res, next) => {
                 break
 
             default:
-                logger.error('...denied')
+                logger.error('...denied', `Unhandled permission: ${permission}`)
                 res.send('deny')
                 break
         }
 
     } else {
-        logger.debug('...allowed')
         res.send('allow')
     }
 
