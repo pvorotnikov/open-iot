@@ -1,0 +1,17 @@
+sudo: required
+
+language: node_js
+
+services:
+  - docker
+
+script:
+- docker build -t $DOCKER_USERNAME/$REPO_UI:$IMAGE_TAG --file Dockerfile .
+- docker build -t $DOCKER_USERNAME/$REPO_BROKER:$IMAGE_TAG --file Dockerfile-broker .
+- docker build -t $DOCKER_USERNAME/$REPO_PROXY:$IMAGE_TAG --file Dockerfile-proxy .
+
+after_success:
+- docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+- docker push $DOCKER_USERNAME/$REPO_UI:$IMAGE_TAG
+- docker push $DOCKER_USERNAME/$REPO_BROKER:$IMAGE_TAG
+- docker push $DOCKER_USERNAME/$REPO_PROXY:$IMAGE_TAG
