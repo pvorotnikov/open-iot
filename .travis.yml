@@ -1,19 +1,20 @@
 sudo: required
-
 language: node_js
 node_js:
-  - "8"
-
+- '8'
 services:
-  - docker
-
+- docker
 script:
 - docker build -t $DOCKER_USERNAME/$REPO_UI:$IMAGE_TAG --file Dockerfile .
-- docker build -t $DOCKER_USERNAME/$REPO_BROKER:$IMAGE_TAG --file Dockerfile-broker .
-- docker build -t $DOCKER_USERNAME/$REPO_PROXY:$IMAGE_TAG --file Dockerfile-proxy .
-
+- docker build -t $DOCKER_USERNAME/$REPO_BROKER:$IMAGE_TAG --file Dockerfile-broker
+  .
+- docker build -t $DOCKER_USERNAME/$REPO_PROXY:$IMAGE_TAG --file Dockerfile-proxy
+  .
 after_success:
 - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
 - docker push $DOCKER_USERNAME/$REPO_UI:$IMAGE_TAG
 - docker push $DOCKER_USERNAME/$REPO_BROKER:$IMAGE_TAG
 - docker push $DOCKER_USERNAME/$REPO_PROXY:$IMAGE_TAG
+notifications:
+  slack:
+    secure: VAxTvB+jCFfAkJ9pCSPpMJkjoboE6kAgQZT6rCBblsOSJSOiAieydtpd0JQ8PnmIbH+8Cwi+dv9Zba7EIyv3eHKnk19HY7iWwIZUpimPBuhBdrPPdYfi32iXuFEmsE+55nT2fERNqT0IfrDIFq9ogGDGrNHW+6XJuoKYVq/nDfXjSPplWCJtxJnO/OU3ju+FnXn7L5CxoaKk0jdMtmU+I0e9nKlJrj1h+KZp+JA1AQXjykMF/Ynddipvd2/H3L+8qcrAKWO2GcbaSU3wU1H37KtK7/xAUcNr14zkh6jPbZw9euKtowsuQ1y7DUTXzOumzRK/uh/pYdhL/jQC1NYHjdDp5Dy3ufj3/xd1hVE1v9mjiLyxsc62T+iLRQZwAskM53xak/+MfaYbttsn7Wvg1J+8XPn/SLJym5zZekomHf8rCztxy0Ni0ccy68aF/6zecPxL2NqOgJe4+CwJI1eHKVn/V8VrZSbIuI2U+/RJQ3AXPLWDPpM9JqXXQmX1Crb7wai3xXLxgGvnbVgED61kue4TqPk4k4Js9/P9Tc0/g9GydZEQyaXWxMo33nFSEYWtDJ5ZQC0YsmYK5zxGNx4Xe6fsaSwvKj8Bsh1KUW1v0DiZbgwmWBee4IUnAX06acU14TNnakWEwaQjMejR1WxGqPFV7ds+Fbm4MBNi0Glu1p4=
