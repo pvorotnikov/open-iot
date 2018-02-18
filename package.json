@@ -6,7 +6,7 @@
   "scripts": {
     "postinstall": "mkdir -p src/public/css && cp node_modules/semantic-ui-css/semantic.min.css src/public/css/",
     "start": "nodemon src/bin/www",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha --exit --timeout 120000",
     "clean": "rm -Rf src/public/js/dist && mkdir -p src/public/js/dist",
     "watch-js": "npm run clean && watchify src/public/js/src/*.js -o src/public/js/dist/bundle.js -dv --transform [ babelify ]",
     "watch": "npm run watch-js",
@@ -68,8 +68,11 @@
     "browserify": "^14.5.0",
     "chai": "^4.1.2",
     "mocha": "^4.0.1",
+    "mockgoose": "^7.3.5",
+    "rewire": "^3.0.2",
     "sinon": "^4.0.2",
     "sinon-chai": "^2.14.0",
+    "supertest": "^3.0.0",
     "watchify": "^3.9.0"
   },
   "nodemonConfig": {

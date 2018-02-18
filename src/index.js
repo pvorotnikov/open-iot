@@ -62,7 +62,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
-app.use('/api/passport', passport)
+passport(app)
 app.use('/api/users', users)
 app.use('/api/apps', apps)
 app.use('/api/gateways', gateways)
