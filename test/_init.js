@@ -1,6 +1,10 @@
 // configuration
 const nconf = require('nconf')
 nconf.env().file({ file: '../src/config.json' })
+nconf.set('ENCRYPTION_SECRET', 'encryption-secret')
+nconf.set('HANDLER_KEY', 'handler-key')
+nconf.set('HANDLER_SECRET', 'handler-secret')
+nconf.set('BROKER_HOST', 'broker-host')
 
 // prepare testing framework
 const chai = require('chai')

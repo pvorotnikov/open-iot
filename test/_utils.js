@@ -5,7 +5,20 @@ const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser')
 const hat = require('hat')
 
+const { User, Application, Gateway, Device, Token, Rule, Setting } = require('../src/models')
 const { logger } = require('../src/lib')
+
+function cleanDb() {
+    return Promise.all([
+        User.remove({}),
+        Application.remove({}),
+        Gateway.remove({}),
+        Device.remove({}),
+        Token.remove({}),
+        Rule.remove({}),
+        Setting.remove({})
+    ])
+}
 
 function expressApp(routes) {
     const app = express()
@@ -21,6 +34,7 @@ function expressApp(routes) {
 }
 
 module.exports = {
+    cleanDb,
     expressApp,
     logger,
 }
