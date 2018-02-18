@@ -5,9 +5,9 @@ node_js:
 services:
 - docker
 script:
+- npm test
 - docker build -t $DOCKER_USERNAME/$REPO_UI:$IMAGE_TAG --file Dockerfile .
 - docker build -t $DOCKER_USERNAME/$REPO_BROKER:$IMAGE_TAG --file Dockerfile-broker
-  .
 - docker build -t $DOCKER_USERNAME/$REPO_PROXY:$IMAGE_TAG --file Dockerfile-proxy
   .
 after_success:
