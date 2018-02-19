@@ -4,6 +4,7 @@ const express = require('express')
 const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser')
 const hat = require('hat')
+const mongoose = require('mongoose')
 
 const { User, Application, Gateway, Device, Token, Rule, Setting } = require('../src/models')
 const { logger } = require('../src/lib')
@@ -33,8 +34,18 @@ function expressApp(routes) {
     return app
 }
 
+function objectId() {
+    return mongoose.Types.ObjectId()
+}
+
+function isObjectId(objId) {
+    mongoose.Types.ObjectId.isValid(objId)
+}
+
 module.exports = {
     cleanDb,
     expressApp,
     logger,
+    objectId,
+    isObjectId,
 }

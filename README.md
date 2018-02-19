@@ -31,6 +31,9 @@ docker logs -f openiot_ui_1
 
 # To run tests
 npm test
+
+# To run tests with coverage
+npm run test:coverage
 ```
 
 ## Configuration
