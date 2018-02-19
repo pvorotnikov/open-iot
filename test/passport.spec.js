@@ -3,6 +3,7 @@ const Promise = require('bluebird')
 const chai = require('chai')
 const request = require('supertest')
 const rewire = require('rewire')
+const sinon = require('sinon')
 const should = chai.should()
 const expect = chai.expect
 
