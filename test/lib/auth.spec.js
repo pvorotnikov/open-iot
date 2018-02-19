@@ -7,10 +7,11 @@ const sinon = require('sinon')
 const should = chai.should()
 const expect = chai.expect
 
+const moment = require('moment')
 const { cleanDb, logger, objectId } = require('../_utils')
 
 const { utils } = require('../../src/lib')
-const { Application, Gateway, Rule, User, Token } = require('../../src/models')
+const { Application, Gateway, Rule, User, Token, ACCESS_LEVEL } = require('../../src/models')
 const auth = rewire('../../src/lib/auth')
 
 describe('Authentication', function() {
@@ -35,7 +36,6 @@ describe('Authentication', function() {
         })
         .then(res => {
             user = res[0]
-            logger.info(JSON.stringify(user))
             done()
         })
     })
@@ -91,59 +91,83 @@ describe('Authentication', function() {
             constructor(headers, body) {
                 this.headers = headers || {}
                 this.body = body || {}
+                this.methoh = 'GET'
+                this.originalUrl = '/test'
                 this.user = null
             }
         }
 
         class Response {
-            constructor() {
+            constructor(cb) {
                 this._json = null
                 this._status = 200
+                this._cb = cb || null
             }
 
             status(s) {
                 this._status = s
+                if (this._cb) this._cb('status', this)
                 return this
             }
 
             json(j) {
                 this._json = j
+                if (this._cb) this._cb('json', this)
                 return this
             }
         }
 
         function next() { }
 
-        it('should reject - no header', () => {
+        it('protect: should reject - no header', () => {
             let protect = auth.protect()
             let req = new Request()
             let res = new Response()
             protect(req, res, next)
             res._status.should.equal(401)
+            res._json.status.should.equal('error')
+            res._json.errorMessage.should.equal('No authorization header')
         })
 
-        it('should reject - wrong schema', () => {
+        it('protect: should reject - wrong schema', () => {
             let protect = auth.protect()
             let req = new Request({ authorization: 'Wrong ' })
             let res = new Response()
             protect(req, res, next)
             res._status.should.equal(401)
+            res._json.status.should.equal('error')
+            res._json.errorMessage.should.equal('Unsupported authorization schema')
         })
 
-        it('should reject - invalid bearer', () => {
+        /* ============================
+         * PROTECT: BEARER
+         * ============================
+         */
+
+        it('protect: should reject - invalid bearer', done => {
 
             const verifyTokenSpy = sinon.spy(verifyToken)
             auth.__set__('verifyToken', verifyTokenSpy)
 
             let protect = auth.protect()
             let req = new Request({ authorization: 'Bearer wrong' })
-            let res = new Response()
+            let res = new Response((method, res) => {
+                if ('json' === method) {
+                    try {
+                        res._status.should.equal(403)
+                        res._json.status.should.equal('error')
+                        res._json.errorMessage.should.equal('Invalid token')
+                        done()
+                    } catch (err) {
+                        done(err)
+                    }
+                }
+            })
             protect(req, res, next)
             verifyTokenSpy.should.have.been.calledWith('wrong')
-            // TODO: check res._status
         })
 
-        it('should reject - token does not exist', () => {
+        it('protect: should reject - token does not exist', done => {
 
             const token = createToken({ 'test': 123 })
             const verifyTokenSpy = sinon.spy(verifyToken)
@@ -151,29 +175,211 @@ describe('Authentication', function() {
 
             const protect = auth.protect()
             const req = new Request({ authorization: 'Bearer ' + token })
-            const res = new Response()
+            const res = new Response((method, res) => {
+                if ('json' === method) {
+                    try {
+                        res._status.should.equal(403)
+                        res._json.status.should.equal('error')
+                        res._json.errorMessage.should.equal('Token does not exist')
+                        done()
+                    } catch (err) {
+                        done(err)
+                    }
+                }
+            })
             protect(req, res, next)
             verifyTokenSpy.should.have.been.calledWith(token)
-            // TODO: check res._status
         })
 
-        it('should allow', done => {
-
-
+        it('protect: should reject - insufficient token access level', done => {
             let accessToken = createToken({ key: 'access-key', type: 'access', accessLevel: user.accessLevel, id: user._id, })
             let refreshToken = createToken({ key: 'refresh-key', type: 'refresh', accessLevel: user.accessLevel, id: user._id, })
             Promise.all([
-                new Token({ user: user._id, type: 'access', value: accessToken, }).save(),
-                new Token({ user: user._id, type: 'refresh', value: refreshToken, }).save()
+                new Token({ user: user._id, type: 'access', value: 'access-key', }).save(),
+                new Token({ user: user._id, type: 'refresh', value: 'refresh-key', }).save()
+            ])
+            .then(() => {
+                const protect = auth.protect(ACCESS_LEVEL.ADMIN)
+                const req = new Request({ authorization: 'Bearer ' + accessToken })
+                const res = new Response((method, res) => {
+                    if ('json' === method) {
+                        try {
+                            res._status.should.equal(403)
+                            res._json.status.should.equal('error')
+                            res._json.errorMessage.should.equal('Insufficient access level')
+                            done()
+                        } catch (err) {
+                            done(err)
+                        }
+                    }
+                })
+                protect(req, res, next)
+            })
+        })
+
+        it('protect: should allow - valid token', done => {
+            let accessToken = createToken({ key: 'access-key', type: 'access', accessLevel: user.accessLevel, id: user._id, })
+            let refreshToken = createToken({ key: 'refresh-key', type: 'refresh', accessLevel: user.accessLevel, id: user._id, })
+            Promise.all([
+                new Token({ user: user._id, type: 'access', value: 'access-key', }).save(),
+                new Token({ user: user._id, type: 'refresh', value: 'refresh-key', }).save()
             ])
             .then(() => {
                 const protect = auth.protect()
                 const req = new Request({ authorization: 'Bearer ' + accessToken })
                 const res = new Response()
                 protect(req, res, function() {
-
+                    try {
+                        req.user.should.not.be.null
+                        req.user.should.be.an('object')
+                        expect(req.user._id.toString()).to.equal(user._id.toString())
+                        done()
+                    } catch (err) {
+                        done(err)
+                    }
                 })
-                done()
+            })
+        })
+
+
+        /* ============================
+         * PROTECT: BASIC
+         * ============================
+         */
+
+        it('protect: should reject - improper credentials', done => {
+            const credentials = new Buffer('wrong:wronger').toString('base64')
+            const protect = auth.protect()
+            const req = new Request({ authorization: 'Basic ' + credentials })
+            const res = new Response((method, res) => {
+                if ('json' === method) {
+                    try {
+                        res._status.should.equal(403)
+                        res._json.status.should.equal('error')
+                        res._json.errorMessage.should.equal('Credentials do not exist')
+                        done()
+                    } catch (err) {
+                        done(err)
+                    }
+                }
+            })
+            protect(req, res, next)
+        })
+
+        it('protect: should reject - improper secret', done => {
+            const credentials = new Buffer(`${user.key}:wronger`).toString('base64')
+            const protect = auth.protect()
+            const req = new Request({ authorization: 'Basic ' + credentials })
+            const res = new Response((method, res) => {
+                if ('json' === method) {
+                    try {
+                        res._status.should.equal(403)
+                        res._json.status.should.equal('error')
+                        res._json.errorMessage.should.equal('Credentials do not exist')
+                        done()
+                    } catch (err) {
+                        done(err)
+                    }
+                }
+            })
+            protect(req, res, next)
+        })
+
+        it('protect: should reject - improper key', done => {
+            const credentials = new Buffer(`wrong:${user.secret}`).toString('base64')
+            const protect = auth.protect()
+            const req = new Request({ authorization: 'Basic ' + credentials })
+            const res = new Response((method, res) => {
+                if ('json' === method) {
+                    try {
+                        res._status.should.equal(403)
+                        res._json.status.should.equal('error')
+                        res._json.errorMessage.should.equal('Credentials do not exist')
+                        done()
+                    } catch (err) {
+                        done(err)
+                    }
+                }
+            })
+            protect(req, res, next)
+        })
+
+        it('protect: should reject - insufficient credentials access level', done => {
+            const credentials = new Buffer(`${user.key}:${user.secret}`).toString('base64')
+            const protect = auth.protect(ACCESS_LEVEL.ADMIN)
+            const req = new Request({ authorization: 'Basic ' + credentials })
+            const res = new Response((method, res) => {
+                if ('json' === method) {
+                    try {
+                        res._status.should.equal(403)
+                        res._json.status.should.equal('error')
+                        res._json.errorMessage.should.equal('Insufficient access level')
+                        done()
+                    } catch (err) {
+                        done(err)
+                    }
+                }
+            })
+            protect(req, res, next)
+        })
+
+        it('protect: should allow - valid credentials', done => {
+            const credentials = new Buffer(`${user.key}:${user.secret}`).toString('base64')
+            const protect = auth.protect()
+            const req = new Request({ authorization: 'Basic ' + credentials })
+            const res = new Response()
+            protect(req, res, function() {
+                try {
+                    req.user.should.not.be.null
+                    req.user.should.be.an('object')
+                    expect(req.user._id.toString()).to.equal(user._id.toString())
+                    done()
+                } catch (err) {
+                    done(err)
+                }
+            })
+        })
+
+        /* ============================
+         * BASIC
+         * ============================
+         */
+
+        it('basic: should reject - no header', () => {
+            let basic = auth.basic()
+            let req = new Request()
+            let res = new Response()
+            basic(req, res, next)
+            res._status.should.equal(401)
+            res._json.status.should.equal('error')
+            res._json.errorMessage.should.equal('No authorization header')
+        })
+
+        it('basic: should reject - wrong schema', () => {
+            let basic = auth.basic()
+            let req = new Request({ authorization: 'Wrong ' })
+            let res = new Response()
+            basic(req, res, next)
+            res._status.should.equal(401)
+            res._json.status.should.equal('error')
+            res._json.errorMessage.should.equal('Unsupported authorization schema')
+        })
+
+        it('basic: should allow - valid credentials', done => {
+            const credentials = new Buffer(`${user.key}:${user.secret}`).toString('base64')
+            const basic = auth.basic()
+            const req = new Request({ authorization: 'Basic ' + credentials })
+            const res = new Response()
+            basic(req, res, function() {
+                try {
+                    req.user.should.not.be.null
+                    req.user.should.be.an('object')
+                    req.user.username.should.equal(user.key)
+                    req.user.password.should.equal(user.secret)
+                    done()
+                } catch (err) {
+                    done(err)
+                }
             })
         })
 
