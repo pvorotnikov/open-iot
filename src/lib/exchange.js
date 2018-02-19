@@ -1,5 +1,6 @@
 const nconf = require('nconf')
 const Promise = require('bluebird')
+const mongoose = require('mongoose')
 const { Application, Gateway, Rule } = require('../models')
 const logger = require('./logger')
 
@@ -46,7 +47,7 @@ function authorizeTopicPublish(key, topic, track=true) {
         if (key === nconf.get('HANDLER_KEY')) {
 
             // check if this is a message on a feedback channel
-            if (topic.endsWith('message')) {
+            if (topic.endsWith('message') && track) {
                 const [ appId, gwId, ...topicParts ] = topic.split('/')
                 storeStats('out', appId, gwId)
             }
@@ -147,7 +148,7 @@ function storeStats(traffic, appId, gwId) {
         Application.findByIdAndUpdate(appId, { $inc: { statsOut: 1 } })
         .catch(err => logger.error(err.message))
 
-        if ('message' !== gwId) {
+        if ('message' !== gwId && mongoose.Types.ObjectId.isValid(gwId)) {
             Gateway.findByIdAndUpdate(gwId, { $inc: { statsOut: 1 } })
             .catch(err => logger.error(err.message))
         }

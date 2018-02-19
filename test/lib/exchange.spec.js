@@ -45,6 +45,28 @@ describe('Exchange', function() {
                     description: 'Test app',
                     key: APP_KEY,
                     secret: APP_SECRET,
+                }).save(),
+
+                // create gateway
+                new Gateway({
+                    _id: GATEWAY_ID,
+                    user: USER_ID,
+                    application: APP_ID,
+                    name: 'Test',
+                    alias: 'test',
+                    description: 'Test gateway',
+                }).save(),
+
+                // create rule
+                new Rule({
+                    _id: RULE_ID,
+                    user: USER_ID,
+                    application: APP_ID,
+                    topic: 'test',
+                    transformation: null,
+                    action: 'discard',
+                    output: null,
+                    scope: null,
                 }).save()
 
             ])
@@ -116,13 +138,17 @@ describe('Exchange', function() {
     })
 
     /* ============================
-     * NEW CONNECTION SUITE
+     * PUBLISH SUITE
      * ============================
      */
 
     describe('Publish', function() {
 
-        let storeStats = exchange.__get__('storeStats')
+        const storeStats = exchange.__get__('storeStats')
+
+        afterEach(() => {
+            exchange.__set__('storeStats', storeStats)
+        })
 
         it('should publish - message handler, regular topic', done => {
             exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), 'test', true)
@@ -132,15 +158,165 @@ describe('Exchange', function() {
             .finally(() => done())
         })
 
-        it('should publish - message handler, feedback topic', done => {
+        it('should publish - message handler, application feedback topic', done => {
 
-            let spy = sinon.spy()
-            exchange.__set__('storeStats', spy)
+            const storeStatsSpy = sinon.spy(storeStats)
+            exchange.__set__('storeStats', storeStatsSpy)
+
+            exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), `${APP_ID}/message`, true)
+            .then(res => {
+                storeStatsSpy.should.have.been.calledWith('out', APP_ID.toString(), 'message')
+            })
+            .finally(() => done())
+        })
+
+        it('should publish - message handler, application deep feedback topic', done => {
+
+            const storeStatsSpy = sinon.spy(storeStats)
+            exchange.__set__('storeStats', storeStatsSpy)
+
+            exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), `${APP_ID}/topic/tree/message`, true)
+            .then(res => {
+                storeStatsSpy.should.have.been.calledWith('out', APP_ID.toString(), 'topic')
+            })
+            .finally(() => done())
+        })
+
+        it('should publish - message handler, gateway feedback topic', done => {
+
+            const storeStatsSpy = sinon.spy(storeStats)
+            exchange.__set__('storeStats', storeStatsSpy)
 
             exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), `${APP_ID}/${GATEWAY_ID}/message`, true)
             .then(res => {
-                expect(res).to.be.undefined
-                spy.should.have.been.called
+                storeStatsSpy.should.have.been.calledWith('out', APP_ID.toString(), GATEWAY_ID.toString())
+            })
+            .finally(() => done())
+        })
+
+        it('should publish - message handler, gateway deep feedback topic', done => {
+
+            const storeStatsSpy = sinon.spy(storeStats)
+            exchange.__set__('storeStats', storeStatsSpy)
+
+            exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), `${APP_ID}/${GATEWAY_ID}/topic/tree/message`, true)
+            .then(res => {
+                storeStatsSpy.should.have.been.calledWith('out', APP_ID.toString(), GATEWAY_ID.toString())
+            })
+            .finally(() => done())
+        })
+
+
+        it('should not publish - wrong key', done => {
+            exchange.authorizeTopicPublish('wrong', `${APP_ID}/${GATEWAY_ID}/test`, true)
+            .catch(err => {
+                err.should.be.an('error')
+            })
+            .finally(() => done())
+        })
+
+        it('should not publish - wrong rule', done => {
+            exchange.authorizeTopicPublish(APP_KEY, `${APP_ID}/${GATEWAY_ID}/non/existent/topic`, true)
+            .catch(err => {
+                logger.warn(err.message)
+                err.should.be.an('error')
+            })
+            .finally(() => done())
+        })
+
+        it('should publish - application feedback channel', done => {
+
+            const storeStatsSpy = sinon.spy(storeStats)
+            exchange.__set__('storeStats', storeStatsSpy)
+
+            exchange.authorizeTopicPublish(APP_KEY, `${APP_ID}/message`, true)
+            .then(() => {
+                storeStatsSpy.should.have.been.calledWith('out', APP_ID.toString(), 'message')
+            })
+            .finally(() => done())
+        })
+
+        it('should publish - gateway feedback channel', done => {
+
+            const storeStatsSpy = sinon.spy(storeStats)
+            exchange.__set__('storeStats', storeStatsSpy)
+
+            exchange.authorizeTopicPublish(APP_KEY, `${APP_ID}/${GATEWAY_ID}/message`, true)
+            .then(() => {
+                storeStatsSpy.should.have.been.calledWith('out', APP_ID.toString(), GATEWAY_ID.toString())
+            })
+            .finally(() => done())
+        })
+
+        it('should publish and not track - gateway feedback channel', done => {
+
+            const storeStatsSpy = sinon.spy(storeStats)
+            exchange.__set__('storeStats', storeStatsSpy)
+
+            exchange.authorizeTopicPublish(APP_KEY, `${APP_ID}/${GATEWAY_ID}/message`, false)
+            .then(() => {
+                storeStatsSpy.should.not.have.been.called
+            })
+            .finally(() => done())
+        })
+
+        it('should publish - registered topic', done => {
+
+            const storeStatsSpy = sinon.spy(storeStats)
+            exchange.__set__('storeStats', storeStatsSpy)
+
+            exchange.authorizeTopicPublish(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`, true)
+            .then((direction) => {
+                direction.should.equal('in')
+                storeStatsSpy.should.have.been.calledWith('in', APP_ID.toString(), GATEWAY_ID.toString())
+            })
+            .finally(() => done())
+        })
+
+        it('should publish and not track - registered topic', done => {
+
+            const storeStatsSpy = sinon.spy(storeStats)
+            exchange.__set__('storeStats', storeStatsSpy)
+
+            exchange.authorizeTopicPublish(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`, false)
+            .then((direction) => {
+                direction.should.equal('in')
+                storeStatsSpy.should.not.have.been.called
+            })
+            .finally(() => done())
+        })
+
+    })
+
+    /* ============================
+     * SUBSCRIBE SUITE
+     * ============================
+     */
+
+    describe('Subscribe', function() {
+
+        it('should subscribe - message handler', done => {
+            exchange.authorizeTopicSubscribe(nconf.get('HANDLER_KEY'), 'test-topic')
+            .then(res => {
+                res.should.be.a('string')
+                res.should.equal('message handler')
+            })
+            .finally(() => done())
+        })
+
+        it('should subscribe - own topic', done => {
+            exchange.authorizeTopicSubscribe(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
+            .then(res => {
+                res.should.be.a('string')
+                res.should.equal('own topic')
+            })
+            .finally(() => done())
+        })
+
+        it('should subscribe - wrong key', done => {
+            exchange.authorizeTopicSubscribe('wrong', `${APP_ID}/${GATEWAY_ID}/test`)
+            .catch(err => {
+                err.should.be.an('error')
             })
             .finally(() => done())
         })
