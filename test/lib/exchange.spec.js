@@ -323,4 +323,63 @@ describe('Exchange', function() {
 
     })
 
+    /* ============================
+     * STATS SUITE
+     * ============================
+     */
+
+    describe('Stats', function() {
+
+        const storeStats = exchange.__get__('storeStats')
+        let applicationUpdateSpy
+        let gatewayUpdateSpy
+
+        beforeEach(() => {
+            applicationUpdateSpy = sinon.stub(Application, 'findByIdAndUpdate').resolves()
+            gatewayUpdateSpy = sinon.stub(Gateway, 'findByIdAndUpdate').resolves()
+        })
+
+        afterEach(() => {
+            applicationUpdateSpy.restore()
+            gatewayUpdateSpy.restore()
+        })
+
+        it('should record ingress for app and gateway', () => {
+            storeStats('in', APP_ID, GATEWAY_ID)
+            applicationUpdateSpy.should.have.been.calledOnce
+            applicationUpdateSpy.should.have.been.calledWith(APP_ID, { $inc: { statsIn: 1 } })
+            gatewayUpdateSpy.should.have.been.calledOnce
+            gatewayUpdateSpy.should.have.been.calledWith(GATEWAY_ID, { $inc: { statsIn: 1 } })
+        })
+
+        it('should record egress for app and gateway', () => {
+            storeStats('out', APP_ID, GATEWAY_ID)
+            applicationUpdateSpy.should.have.been.calledOnce
+            applicationUpdateSpy.should.have.been.calledWith(APP_ID, { $inc: { statsOut: 1 } })
+            gatewayUpdateSpy.should.have.been.calledOnce
+            gatewayUpdateSpy.should.have.been.calledWith(GATEWAY_ID, { $inc: { statsOut: 1 } })
+        })
+
+        it('should record egress only for app', () => {
+            storeStats('out', APP_ID, 'message')
+            applicationUpdateSpy.should.have.been.calledOnce
+            applicationUpdateSpy.should.have.been.calledWith(APP_ID, { $inc: { statsOut: 1 } })
+            gatewayUpdateSpy.should.not.have.been.called
+        })
+
+        it('should record egress only for app - deep topic', () => {
+            storeStats('out', APP_ID, 'topic/tree/message')
+            applicationUpdateSpy.should.have.been.calledOnce
+            applicationUpdateSpy.should.have.been.calledWith(APP_ID, { $inc: { statsOut: 1 } })
+            gatewayUpdateSpy.should.not.have.been.called
+        })
+
+        it('should not record anything', () => {
+            storeStats(null, APP_ID, GATEWAY_ID)
+            applicationUpdateSpy.should.not.have.been.called
+            gatewayUpdateSpy.should.not.have.been.called
+        })
+
+    })
+
 })

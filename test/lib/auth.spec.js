@@ -7,7 +7,6 @@ const sinon = require('sinon')
 const should = chai.should()
 const expect = chai.expect
 
-const moment = require('moment')
 const { cleanDb, logger, objectId } = require('../_utils')
 
 const { utils } = require('../../src/lib')
