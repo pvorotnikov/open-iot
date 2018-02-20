@@ -57,7 +57,7 @@ describe('Authentication', function() {
 
     describe('Create', function() {
 
-        it('should create token', () => {
+        it('should create tokens', () => {
 
             const storeTokensSpy = sinon.spy(storeTokens)
             auth.__set__('storeTokens', storeTokensSpy)
@@ -75,6 +75,19 @@ describe('Authentication', function() {
                 .and(sinon.match.has('id', user._id))
             )
             storeTokensSpy.should.have.been.calledWith(sinon.match((value) => value._id === user._id), sinon.match.string, sinon.match.string)
+        })
+
+        it('should not create tokens - db error', done => {
+            const errorSpy = sinon.spy(logger, 'error')
+            const storeTokensStub = sinon.stub().rejects(new Error('Forced reject'))
+            auth.__set__('storeTokens', storeTokensStub)
+
+            auth.createTokens(user)
+            setImmediate(() => {
+                errorSpy.should.have.been.calledOnce
+                errorSpy.restore()
+                done()
+            })
         })
 
     })

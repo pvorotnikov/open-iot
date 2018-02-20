@@ -4,6 +4,7 @@ const chai = require('chai')
 const request = require('supertest')
 const rewire = require('rewire')
 const sinon = require('sinon')
+const sinonMongoose = require('sinon-mongoose')
 const should = chai.should()
 const expect = chai.expect
 
@@ -117,6 +118,30 @@ describe('Exchange', function() {
             .finally(() => done())
         })
 
+        it('should not authenticate app - db error', done => {
+
+            const ApplicationMock = sinon.mock(Application)
+
+            ApplicationMock
+            .expects('findOne')
+            .chain('where').withArgs('key')
+            .chain('eq').withArgs(APP_KEY)
+            .chain('where').withArgs('secret')
+            .chain('eq').withArgs(APP_SECRET)
+            .rejects(new Error('Forced reject'))
+
+            exchange.authenticateApp(APP_KEY, APP_SECRET)
+            .catch(err => {
+                err.should.be.an('error')
+                err.message.should.equal('Forced reject')
+            })
+            .finally(() => {
+                ApplicationMock.verify()
+                ApplicationMock.restore()
+                done()
+            })
+        })
+
         it('should authenticate app', done => {
             exchange.authenticateApp(APP_KEY, APP_SECRET)
             .then(res => {
@@ -224,6 +249,28 @@ describe('Exchange', function() {
             .finally(() => done())
         })
 
+        it('should not publish - db error', done => {
+
+            const ApplicationMock = sinon.mock(Application)
+
+            ApplicationMock
+            .expects('findById').withArgs(APP_ID.toString())
+            .chain('where').withArgs('key')
+            .chain('eq').withArgs(APP_KEY)
+            .rejects(new Error('Forced reject'))
+
+            exchange.authorizeTopicPublish(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
+            .catch(err => {
+                err.should.be.an('error')
+                err.message.should.equal('Forced reject')
+            })
+            .finally(() => {
+                ApplicationMock.verify()
+                ApplicationMock.restore()
+                done()
+            })
+        })
+
         it('should publish - application feedback channel', done => {
 
             const storeStatsSpy = sinon.spy(storeStats)
@@ -313,12 +360,35 @@ describe('Exchange', function() {
             .finally(() => done())
         })
 
-        it('should subscribe - wrong key', done => {
+        it('should not subscribe - wrong key', done => {
             exchange.authorizeTopicSubscribe('wrong', `${APP_ID}/${GATEWAY_ID}/test`)
             .catch(err => {
                 err.should.be.an('error')
+                err.message.should.equal('Application id and key do not match')
             })
             .finally(() => done())
+        })
+
+        it('should not subscribe - db error', done => {
+
+            const ApplicationMock = sinon.mock(Application)
+
+            ApplicationMock
+            .expects('findById').withArgs(APP_ID.toString())
+            .chain('where').withArgs('key')
+            .chain('eq').withArgs(APP_KEY)
+            .rejects(new Error('Forced reject'))
+
+            exchange.authorizeTopicSubscribe(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
+            .catch(err => {
+                err.should.be.an('error')
+                err.message.should.equal('Forced reject')
+            })
+            .finally(() => {
+                ApplicationMock.verify()
+                ApplicationMock.restore()
+                done()
+            })
         })
 
     })
@@ -331,53 +401,91 @@ describe('Exchange', function() {
     describe('Stats', function() {
 
         const storeStats = exchange.__get__('storeStats')
-        let applicationUpdateSpy
-        let gatewayUpdateSpy
+        let applicationUpdateStub
+        let gatewayUpdateStub
 
         beforeEach(() => {
-            applicationUpdateSpy = sinon.stub(Application, 'findByIdAndUpdate').resolves()
-            gatewayUpdateSpy = sinon.stub(Gateway, 'findByIdAndUpdate').resolves()
+            applicationUpdateStub = sinon.stub(Application, 'findByIdAndUpdate').resolves()
+            gatewayUpdateStub = sinon.stub(Gateway, 'findByIdAndUpdate').resolves()
         })
 
         afterEach(() => {
-            applicationUpdateSpy.restore()
-            gatewayUpdateSpy.restore()
+            applicationUpdateStub.restore()
+            gatewayUpdateStub.restore()
         })
 
         it('should record ingress for app and gateway', () => {
             storeStats('in', APP_ID, GATEWAY_ID)
-            applicationUpdateSpy.should.have.been.calledOnce
-            applicationUpdateSpy.should.have.been.calledWith(APP_ID, { $inc: { statsIn: 1 } })
-            gatewayUpdateSpy.should.have.been.calledOnce
-            gatewayUpdateSpy.should.have.been.calledWith(GATEWAY_ID, { $inc: { statsIn: 1 } })
+            applicationUpdateStub.should.have.been.calledOnce
+            applicationUpdateStub.should.have.been.calledWith(APP_ID, { $inc: { statsIn: 1 } })
+            gatewayUpdateStub.should.have.been.calledOnce
+            gatewayUpdateStub.should.have.been.calledWith(GATEWAY_ID, { $inc: { statsIn: 1 } })
         })
 
         it('should record egress for app and gateway', () => {
             storeStats('out', APP_ID, GATEWAY_ID)
-            applicationUpdateSpy.should.have.been.calledOnce
-            applicationUpdateSpy.should.have.been.calledWith(APP_ID, { $inc: { statsOut: 1 } })
-            gatewayUpdateSpy.should.have.been.calledOnce
-            gatewayUpdateSpy.should.have.been.calledWith(GATEWAY_ID, { $inc: { statsOut: 1 } })
+            applicationUpdateStub.should.have.been.calledOnce
+            applicationUpdateStub.should.have.been.calledWith(APP_ID, { $inc: { statsOut: 1 } })
+            gatewayUpdateStub.should.have.been.calledOnce
+            gatewayUpdateStub.should.have.been.calledWith(GATEWAY_ID, { $inc: { statsOut: 1 } })
         })
 
         it('should record egress only for app', () => {
             storeStats('out', APP_ID, 'message')
-            applicationUpdateSpy.should.have.been.calledOnce
-            applicationUpdateSpy.should.have.been.calledWith(APP_ID, { $inc: { statsOut: 1 } })
-            gatewayUpdateSpy.should.not.have.been.called
+            applicationUpdateStub.should.have.been.calledOnce
+            applicationUpdateStub.should.have.been.calledWith(APP_ID, { $inc: { statsOut: 1 } })
+            gatewayUpdateStub.should.not.have.been.called
         })
 
         it('should record egress only for app - deep topic', () => {
             storeStats('out', APP_ID, 'topic/tree/message')
-            applicationUpdateSpy.should.have.been.calledOnce
-            applicationUpdateSpy.should.have.been.calledWith(APP_ID, { $inc: { statsOut: 1 } })
-            gatewayUpdateSpy.should.not.have.been.called
+            applicationUpdateStub.should.have.been.calledOnce
+            applicationUpdateStub.should.have.been.calledWith(APP_ID, { $inc: { statsOut: 1 } })
+            gatewayUpdateStub.should.not.have.been.called
         })
 
         it('should not record anything', () => {
             storeStats(null, APP_ID, GATEWAY_ID)
-            applicationUpdateSpy.should.not.have.been.called
-            gatewayUpdateSpy.should.not.have.been.called
+            applicationUpdateStub.should.not.have.been.called
+            gatewayUpdateStub.should.not.have.been.called
+        })
+
+        it('should not record ingress - db error', (done) => {
+            const errorSpy = sinon.spy(logger, 'error')
+
+            // restore in order to wrap the rejects
+            applicationUpdateStub.restore()
+            gatewayUpdateStub.restore()
+            applicationUpdateStub = sinon.stub(Application, 'findByIdAndUpdate').rejects(new Error('Forced reject'))
+            gatewayUpdateStub = sinon.stub(Gateway, 'findByIdAndUpdate').rejects(new Error('Forced reject'))
+
+            storeStats('in', APP_ID, GATEWAY_ID)
+            setImmediate(() => {
+                errorSpy.should.have.been.calledTwice
+                errorSpy.firstCall.should.have.been.calledWith('Forced reject')
+                errorSpy.secondCall.should.have.been.calledWith('Forced reject')
+                errorSpy.restore()
+                done()
+            })
+        })
+
+        it('should not record egress - db error', (done) => {
+            const errorSpy = sinon.spy(logger, 'error')
+
+            // restore in order to wrap the rejects
+            applicationUpdateStub.restore()
+            gatewayUpdateStub.restore()
+            applicationUpdateStub = sinon.stub(Application, 'findByIdAndUpdate').rejects(new Error('Forced reject'))
+            gatewayUpdateStub = sinon.stub(Gateway, 'findByIdAndUpdate').rejects(new Error('Forced reject'))
+
+            storeStats('out', APP_ID, GATEWAY_ID)
+            setImmediate(() => {
+                errorSpy.should.have.been.calledTwice
+                errorSpy.firstCall.should.have.been.calledWith('Forced reject')
+                errorSpy.secondCall.should.have.been.calledWith('Forced reject')
+                errorSpy.restore()
+                done()
+            })
         })
 
     })

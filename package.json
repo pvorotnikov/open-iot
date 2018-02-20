@@ -5,11 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon src/bin/www",
-
     "test": "mocha --exit --timeout 120000 --recursive",
     "test:coverage": "nyc --reporter=html --reporter=text npm test",
     "test:coveralls": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
-
     "postinstall": "mkdir -p src/public/css && cp node_modules/semantic-ui-css/semantic.min.css src/public/css/",
     "clean": "rm -Rf src/public/js/dist && mkdir -p src/public/js/dist",
     "watch-js": "npm run clean && watchify src/public/js/src/*.js -o src/public/js/dist/bundle.js -dv --transform [ babelify ]",
@@ -79,6 +77,7 @@
     "rewire": "^3.0.2",
     "sinon": "^4.0.2",
     "sinon-chai": "^2.14.0",
+    "sinon-mongoose": "^2.0.2",
     "supertest": "^3.0.0",
     "watchify": "^3.9.0"
   },
