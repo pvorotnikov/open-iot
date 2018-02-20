@@ -8,6 +8,8 @@ nconf.set('BROKER_HOST', 'broker-host')
 
 // prepare testing framework
 const chai = require('chai')
+const sinon = require('sinon')
+const sinonMongoose = require('sinon-mongoose')
 const sinonChai = require('sinon-chai')
 chai.use(sinonChai)
 

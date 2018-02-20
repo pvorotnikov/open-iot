@@ -86,7 +86,7 @@ function settings(Model) {
         })
         .catch(err => {
             logger.error(err.message)
-            reject()
+            reject(err)
         })
 
     })
@@ -120,7 +120,7 @@ function user(Model) {
         })
         .catch((err) => {
             logger.error(err.message)
-            reject()
+            reject(err)
         })
 
     })

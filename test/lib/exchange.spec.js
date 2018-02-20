@@ -4,7 +4,6 @@ const chai = require('chai')
 const request = require('supertest')
 const rewire = require('rewire')
 const sinon = require('sinon')
-const sinonMongoose = require('sinon-mongoose')
 const should = chai.should()
 const expect = chai.expect
 

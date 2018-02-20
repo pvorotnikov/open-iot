@@ -1,10 +1,11 @@
+const Promise = require('bluebird')
 const logger = require('../lib/logger')
 const utils = require('../lib/utils')
 const nconf = require('nconf')
 const { ACCESS_LEVEL } = require('./constants')
 const defaults = require('./defaults')
 const mongoose = require('mongoose')
-mongoose.Promise = require('bluebird')
+mongoose.Promise = Promise
 
 const { Schema } = mongoose
 
