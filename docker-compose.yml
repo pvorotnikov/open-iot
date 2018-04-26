@@ -45,7 +45,7 @@ services:
         depends_on:
             - db
         volumes:
-            - ./src:/usr/app/src
+            - ./src:/usr/app/src                                # this mounts the src dir in the container
 
     db:
         image: mongo:latest
