@@ -72,6 +72,22 @@ describe('Passport', function() {
             .expect(401, done)
         })
 
+        it('should not authenticate user - db error', done => {
+
+            const userFindStub = sinon.stub(User, 'findOne').rejects(new Error('user-rejection'))
+
+            request(app)
+            .post('/api/passport/auth')
+            .send({ email: 'wrong@wrong.com', password: 'wrong' })
+            .expect(500)
+            .end((err, res) => {
+                userFindStub.restore()
+                res.body.errorMessage.should.equal('user-rejection')
+                if (err) return done(err)
+                done()
+            })
+        })
+
         it('should authenticate admin user', done => {
             request(app)
             .post('/api/passport/auth')
@@ -193,6 +209,21 @@ describe('Passport', function() {
             .post('/api/passport/register')
             .send({ email: 'test@test.com', password: 'goodPassword', firstName: 'New', lastName: 'User' })
             .expect(500, done)
+        })
+
+        it('should not register user - db error', done => {
+            const userSaveStub = sinon.stub(User.prototype, 'save').rejects(new Error('user-save'))
+
+            request(app)
+            .post('/api/passport/register')
+            .send({ email: 'test@test.com', password: 'goodPassword', firstName: 'New', lastName: 'User' })
+            .expect(500)
+            .end((err, res) => {
+                userSaveStub.restore()
+                res.body.errorMessage.should.equal('user-save')
+                if (err) return done(err)
+                done()
+            })
         })
 
         it('should register user', done => {
