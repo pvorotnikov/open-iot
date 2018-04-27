@@ -335,6 +335,28 @@ describe('Authentication', function() {
             protect(req, res, next)
         })
 
+        it('protect: should reject - db error', done => {
+            const userFindStub = sinon.stub(User, 'findOne').rejects(new Error('user-rejection'))
+
+            const credentials = new Buffer(`${user.key}:${user.secret}`).toString('base64')
+            const protect = auth.protect()
+            const req = new Request({ authorization: 'Basic ' + credentials })
+            const res = new Response((method, res) => {
+                userFindStub.restore()
+                if ('json' === method) {
+                    try {
+                        res._status.should.equal(403)
+                        res._json.status.should.equal('error')
+                        res._json.errorMessage.should.equal('Invalid credentials')
+                        done()
+                    } catch (err) {
+                        done(err)
+                    }
+                }
+            })
+            protect(req, res, next)
+        })
+
         it('protect: should allow - valid credentials', done => {
             const credentials = new Buffer(`${user.key}:${user.secret}`).toString('base64')
             const protect = auth.protect()
@@ -375,6 +397,17 @@ describe('Authentication', function() {
             res._status.should.equal(401)
             res._json.status.should.equal('error')
             res._json.errorMessage.should.equal('Unsupported authorization schema')
+        })
+
+        it('basic: should reject - invalid credentials', () => {
+            const credentials = new Buffer(`${user.key}:${user.secret}`).toString('base64')
+            const basic = auth.basic()
+            const req = new Request({ authorization: 'Basic ' + credentials })
+            const res = new Response()
+            basic(req, res, () => { throw new Error() })
+            res._status.should.equal(403)
+            res._json.status.should.equal('error')
+            res._json.errorMessage.should.equal('Invalid credentials')
         })
 
         it('basic: should allow - valid credentials', done => {
