@@ -36,5 +36,49 @@ npm test
 npm run test:coverage
 ```
 
-## Configuration
-TODO
+## Deployment
+
+1. Generate SSL certificates for your domain.
+* Place the server private key in `server_key.pem` file
+* Place the certificate chain of the server certificate and the root certificate by inserting them one after another (in that order) in `server_certificate.pem` file.
+* Copy the two files in a psersistent directory on the docker host and create symlinks with the domain name (note that the names are important):
+    * `/certs/server_certificate.pem`
+    * `/certs/iot.example.com.crt -> /certs/server_certificate.pem`
+    * `/certs/server_key.pem`
+    * `/certs/iot.example.com.key -> /certs/server_key.pem`
+
+2. Copy `docker-compose-prod.yml` to your host as `docker-compose.yml` and update it by changing the following fields:
+* `services.proxy.volumes[1] = /certs:/etc/nginx/certs/`
+* `services.broker.environment.RABBITMQ_ERLANG_COOKIE = cookie_secret`
+* `services.ui.environment.VIRTUAL_HOST = iot.example.com`
+* `services.ui.environment.DB_CONNECTION = mongodb://db/prod`
+* `services.ui.environment.ENCRYPTION_SECRET = encryption_secret`
+* `services.ui.environment.HANDLER_KEY = handler_key`
+* `services.ui.environment.HANDLER_SECRET = handler_secret`
+
+3. (Optional) Add MongoDB service to composition. Don't forget to mount a persistent directory on the docker host as `/data` volume in the Mongo container:
+```yaml
+db:
+    image: mongo:latest
+    ports:
+        - 27017:27017
+    hostname: db
+    volumes:
+        - /path/to/mongodb/data:/data/
+```
+
+4. Run `docker-compose up -d`
+
+### How to update
+
+Create a `redeploy.sh` script next to docker-compose.yml with the following contents:
+
+```bash
+#!/bin/bash
+docker pull pvorotnikov/open-iot-proxy:latest
+docker pull pvorotnikov/open-iot-broker:latest
+docker pull pvorotnikov/open-iot-ui:latest
+docker-compose up -d
+```
+
+Run it every time you need to update the service

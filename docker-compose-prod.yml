@@ -4,10 +4,7 @@ services:
 
     # reverse proxy to backend doing SSL offloading
     proxy:
-        build:
-            context: ./
-            dockerfile: ./Dockerfile-proxy
-        image: open-iot-proxy:latest
+        image: pvorotnikov/open-iot-proxy:latest
         ports:
             - 80:80
             - 443:443
@@ -17,25 +14,18 @@ services:
             - 15676:15676
         volumes:
             - /var/run/docker.sock:/tmp/docker.sock:ro
-            - ./certs/server_key.pem:/etc/nginx/certs/example.com.key
-            - ./certs/server_certificate.pem:/etc/nginx/certs/example.com.crt
+            - /path/to/certs:/etc/nginx/certs
 
     # broker service
     broker:
-        build:
-            context: ./
-            dockerfile: ./Dockerfile-broker
-        image: open-iot-broker:latest
+        image: pvorotnikov/open-iot-broker:latest
         hostname: broker
         environment:
             RABBITMQ_ERLANG_COOKIE: erlang-cookie                  # change this
 
     # ui and api service
     ui:
-        build:
-            context: ./
-            dockerfile: ./Dockerfile
-        image: open-iot-ui:latest
+        image: pvorotnikov/open-iot-ui:latest
         hostname: ui
         environment:
             VIRTUAL_HOST: example.com                              # how is the host reached
