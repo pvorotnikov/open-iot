@@ -69,7 +69,7 @@ app.use('/api/gateways', gateways)
 app.use('/api/broker', broker)
 app.use('/api/rules', rules)
 app.use('/api/scopes', scopes)
-app.use('/api/settings', settings)
+settings(app)
 app.use('/api/publish', publish)
 
 // catch 404 and forward it to error handler
