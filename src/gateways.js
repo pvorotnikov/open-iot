@@ -5,6 +5,35 @@ const { logger, responses, auth } = require('./lib')
 const { ACCESS_LEVEL, Gateway, Application } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
 
+// fetch all registered gateways
+router.get('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+
+    Gateway
+    .find()
+    .where('user').eq(req.user._id)
+    .populate('application')
+    .then(gateways => {
+        let data = gateways.map(g => ({
+            id: g.id,
+            name: g.name,
+            alias: g.alias,
+            description: g.description,
+            created: g.created,
+            updated: g.updated,
+            application: {
+                id: g.application.id,
+                name: g.application.name,
+                alias: g.application.alias,
+            },
+        }))
+        res.json(new SuccessResponse(data))
+    })
+    .catch((err) => {
+        res.status(500).json(new ErrorResponse(err.message))
+    })
+
+})
+
 // fetch gateway by id that belongs to a particular user
 router.get('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
