@@ -56,7 +56,7 @@ npm run test:coverage
 * `services.ui.environment.HANDLER_KEY = handler_key`
 * `services.ui.environment.HANDLER_SECRET = handler_secret`
 
-3. (Optional) Add MongoDB service to composition. Don't forget to mount a persistent directory on the docker host as `/data` volume in the Mongo container:
+3. (Optional) Add MongoDB service to composition. Don't forget to mount a persistent directories on the docker host as `/data/db` and `/data/configdb` volumes in the Mongo container:
 ```yaml
 db:
     image: mongo:latest
@@ -64,7 +64,8 @@ db:
         - 27017:27017
     hostname: db
     volumes:
-        - /path/to/mongodb/data:/data/
+        - /path/to/mongodb/data/db:/data/db
+        - /path/to/mongodb/data/configdb:/data/configdb
 ```
 
 4. Run `docker-compose up -d`
