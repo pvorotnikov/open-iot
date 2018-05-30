@@ -121,9 +121,14 @@ describe('Plugins', function() {
     describe('Create plugin', function() {
 
         before(done => {
+
+
+
             Promise.all([ cleanDb(), createUsers() ])
             .then(res => done())
         })
+
+
 
         it('should not create a plugin - insufficient credentials', done => {
             request(app)

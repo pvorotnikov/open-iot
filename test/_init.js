@@ -21,6 +21,12 @@ const mockgoose = new Mockgoose(mongoose)
 const { logger } = require('./_utils')
 
 before(done => {
+
+    sinon.stub(logger, 'debug')
+    sinon.stub(logger, 'info')
+    sinon.stub(logger, 'warn')
+    sinon.stub(logger, 'error')
+
     mockgoose.prepareStorage().then(() => {
         logger.info('Mongoose DB setup complete')
         mongoose.connect('mongodb://iot/db', { useMongoClient: true })
@@ -30,6 +36,10 @@ before(done => {
 })
 
 after(done => {
+    logger.debug.restore()
+    logger.info.restore()
+    logger.warn.restore()
+    logger.error.restore()
     done()
 })
 

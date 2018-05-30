@@ -78,14 +78,14 @@ describe('Authentication', function() {
         })
 
         it('should not create tokens - db error', done => {
-            const errorSpy = sinon.spy(logger, 'error')
+            logger.error.resetHistory()
+
             const storeTokensStub = sinon.stub().rejects(new Error('Forced reject'))
             auth.__set__('storeTokens', storeTokensStub)
 
             auth.createTokens(user)
             setImmediate(() => {
-                errorSpy.should.have.been.calledOnce
-                errorSpy.restore()
+                logger.error.should.have.been.calledOnce
                 done()
             })
         })

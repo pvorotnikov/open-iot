@@ -450,9 +450,8 @@ describe('Exchange', function() {
         })
 
         it('should not record ingress - db error', (done) => {
-            const errorSpy = sinon.spy(logger, 'error')
-
             // restore in order to wrap the rejects
+            logger.error.resetHistory()
             applicationUpdateStub.restore()
             gatewayUpdateStub.restore()
             applicationUpdateStub = sinon.stub(Application, 'findByIdAndUpdate').rejects(new Error('Forced reject'))
@@ -460,18 +459,16 @@ describe('Exchange', function() {
 
             storeStats('in', APP_ID, GATEWAY_ID)
             setImmediate(() => {
-                errorSpy.should.have.been.calledTwice
-                errorSpy.firstCall.should.have.been.calledWith('Forced reject')
-                errorSpy.secondCall.should.have.been.calledWith('Forced reject')
-                errorSpy.restore()
+                logger.error.should.have.been.calledTwice
+                logger.error.firstCall.should.have.been.calledWith('Forced reject')
+                logger.error.secondCall.should.have.been.calledWith('Forced reject')
                 done()
             })
         })
 
         it('should not record egress - db error', (done) => {
-            const errorSpy = sinon.spy(logger, 'error')
-
             // restore in order to wrap the rejects
+            logger.error.resetHistory()
             applicationUpdateStub.restore()
             gatewayUpdateStub.restore()
             applicationUpdateStub = sinon.stub(Application, 'findByIdAndUpdate').rejects(new Error('Forced reject'))
@@ -479,10 +476,9 @@ describe('Exchange', function() {
 
             storeStats('out', APP_ID, GATEWAY_ID)
             setImmediate(() => {
-                errorSpy.should.have.been.calledTwice
-                errorSpy.firstCall.should.have.been.calledWith('Forced reject')
-                errorSpy.secondCall.should.have.been.calledWith('Forced reject')
-                errorSpy.restore()
+                logger.error.should.have.been.calledTwice
+                logger.error.firstCall.should.have.been.calledWith('Forced reject')
+                logger.error.secondCall.should.have.been.calledWith('Forced reject')
                 done()
             })
         })

@@ -1,5 +1,6 @@
 const express = require('express')
 const validator = require('validator')
+const unzip = require('unzip')
 const { logger, responses, auth, utils } = require('./lib')
 const { ACCESS_LEVEL, Plugin } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
@@ -28,7 +29,9 @@ module.exports = function(app) {
 
     })
 
-    // upload a new plugin
+    /**
+     * Upload a new plugin. This handler accept multipart
+     */
     router.post('/', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
 
         if (!req.body.name || validator.isEmpty(req.body.name)) {
@@ -59,5 +62,32 @@ module.exports = function(app) {
         })
 
     })
+
+
+    /**
+     * Perform plugin installation. Essentially this is unzipping the
+     * plugin in a directory that is named after the plugin name.
+     * @param {String} zipFile path to the plugin zip file
+     * @param {String} destination where to put the unzipped content
+     * @return {Promise<>}
+     */
+    function installPlugin(zipFile, destination) {
+        return new Promise((fulfill, reject) => {
+
+            const readStream = fs.createReadStream(zipFile)
+            const writeStrem = unzip.Extract({ path: destination })
+
+            writeStrem.on('close', () => {
+                logger.info('-> Waiting for service to restart...')
+                fulfill()
+            })
+
+            writeStrem.on('error', err => {
+                reject(err)
+            })
+
+            readStream.pipe(writeStrem)
+        })
+    }
 
 } // module.exports
