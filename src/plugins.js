@@ -4,6 +4,9 @@ const unzip = require('unzip')
 const { logger, responses, auth, utils } = require('./lib')
 const { ACCESS_LEVEL, Plugin } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
+const util = require('util')
+const fs = require('fs')
+const hat = require('hat')
 
 module.exports = function(app) {
 
@@ -11,7 +14,7 @@ module.exports = function(app) {
     app.use('/api/plugins', router)
 
     // fetch all available plugins and their statuses
-    router.get('/', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
+    router.get('/', auth.protect(ACCESS_LEVEL.ADMIN), (req, res, next) => {
 
         Plugin.find()
         .then(plugins => {
@@ -32,19 +35,15 @@ module.exports = function(app) {
     /**
      * Upload a new plugin. This handler accept multipart
      */
-    router.post('/', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
+    router.post('/', auth.protect(ACCESS_LEVEL.ADMIN), async (req, res, next) => {
 
-        if (!req.body.name || validator.isEmpty(req.body.name)) {
-            return res.status(400).json(new ErrorResponse('name is required'))
-        }
-
-        if (!req.body.description || validator.isEmpty(req.body.description)) {
-            return res.status(400).json(new ErrorResponse('description is required'))
-        }
+        const pluginSource = __dirname + '/temp'
+        await installPlugin(req.body, pluginSource)
+        const pluginName = await validatePlugin()
 
         let plugin = new Plugin({
-            name: req.body.name,
-            description: req.body.description,
+            name: 'bla',
+            description: 'bla',
             enabled: false,
         })
         plugin.save()
@@ -67,26 +66,50 @@ module.exports = function(app) {
     /**
      * Perform plugin installation. Essentially this is unzipping the
      * plugin in a directory that is named after the plugin name.
-     * @param {String} zipFile path to the plugin zip file
+     * @param {String} buf buffer with the file contents
      * @param {String} destination where to put the unzipped content
      * @return {Promise<>}
      */
-    function installPlugin(zipFile, destination) {
+    function installPlugin(buf, destination) {
         return new Promise((fulfill, reject) => {
 
-            const readStream = fs.createReadStream(zipFile)
-            const writeStrem = unzip.Extract({ path: destination })
+            let writeFile = util.promisify(fs.writeFile)
+            let uniqueId = hat(32)
+            let zipFile = `${destination}/${uniqueId}.zip`
 
-            writeStrem.on('close', () => {
-                logger.info('-> Waiting for service to restart...')
-                fulfill()
+            writeFile(zipFile, buf)
+            .then(() => {
+
+                const readStream = fs.createReadStream(zipFile)
+                const writeStrem = unzip.Extract({ path: `${destination}/${uniqueId}` })
+
+                writeStrem.on('close', () => {
+                    logger.info('-> Waiting for service to restart...')
+                    fulfill()
+                })
+
+                writeStrem.on('error', err => {
+                    reject(err)
+                })
+
+                readStream.pipe(writeStrem)
+
             })
-
-            writeStrem.on('error', err => {
+            .catch(err => {
                 reject(err)
             })
 
-            readStream.pipe(writeStrem)
+        })
+    }
+
+    function validatePlugin(pluginSource) {
+        return new Promise((fulfill,  reject) => {
+
+            let name = 'com.example.plugin1'
+            let description = 'Plugin 1'
+
+            fulfill(name, description)
+
         })
     }
 

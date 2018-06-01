@@ -20,12 +20,16 @@ const mockgoose = new Mockgoose(mongoose)
 
 const { logger } = require('./_utils')
 
+let enableLogger = nconf.get('TEST_LOGGER')
+
 before(done => {
 
-    sinon.stub(logger, 'debug')
-    sinon.stub(logger, 'info')
-    sinon.stub(logger, 'warn')
-    sinon.stub(logger, 'error')
+    if ('true' !== enableLogger) {
+        sinon.stub(logger, 'debug')
+        sinon.stub(logger, 'info')
+        sinon.stub(logger, 'warn')
+        sinon.stub(logger, 'error')
+    }
 
     mockgoose.prepareStorage().then(() => {
         logger.info('Mongoose DB setup complete')
@@ -36,10 +40,12 @@ before(done => {
 })
 
 after(done => {
-    logger.debug.restore()
-    logger.info.restore()
-    logger.warn.restore()
-    logger.error.restore()
+    if ('true' !== enableLogger) {
+        logger.debug.restore()
+        logger.info.restore()
+        logger.warn.restore()
+        logger.error.restore()
+    }
     done()
 })
 

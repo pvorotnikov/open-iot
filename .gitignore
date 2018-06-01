@@ -63,3 +63,5 @@ typings/
 # Built public/js/dist files
 src/public/js/dist
 src/public/css
+
+temp

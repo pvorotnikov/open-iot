@@ -34,6 +34,9 @@ npm test
 
 # To run tests with coverage
 npm run test:coverage
+
+# To run tests with logger enabled
+env TEST_LOGGER=true npm test
 ```
 
 ## Deployment

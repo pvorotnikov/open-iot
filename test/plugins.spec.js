@@ -6,6 +6,7 @@ const rewire = require('rewire')
 const sinon = require('sinon')
 const should = chai.should()
 const expect = chai.expect
+const fs = require('fs')
 
 const { cleanDb, expressApp, logger } = require('./_utils')
 
@@ -121,58 +122,16 @@ describe('Plugins', function() {
     describe('Create plugin', function() {
 
         before(done => {
-
-
-
             Promise.all([ cleanDb(), createUsers() ])
             .then(res => done())
-        })
-
-
-
-        it('should not create a plugin - insufficient credentials', done => {
-            request(app)
-            .post('/api/plugins')
-            .set('Authorization', userAuthorization)
-            .send({ name: 'com.example.plugin1', description: 'Plugin 1' })
-            .expect(403, done)
-        })
-
-        it('should not create a plugin - db error', done => {
-            const pluginStub = sinon.stub(Plugin.prototype, 'save').rejects(new Error('plugin-save'))
-            request(app)
-            .post('/api/plugins')
-            .set('Authorization', adminAuthorization)
-            .send({ name: 'com.example.plugin1', description: 'Plugin 1' })
-            .expect(500)
-            .end((err, res) => {
-                pluginStub.restore()
-                if (err) return done(err)
-                done()
-            })
-        })
-
-        it('should not create a plugin - missing name', done => {
-            request(app)
-            .post('/api/plugins')
-            .set('Authorization', adminAuthorization)
-            .send({ description: 'Plugin 1' })
-            .expect(400, done)
-        })
-
-        it('should not create a plugin - missing description', done => {
-            request(app)
-            .post('/api/plugins')
-            .set('Authorization', adminAuthorization)
-            .send({ name: 'com.example.plugin1' })
-            .expect(400, done)
         })
 
         it('should create a plugins', done => {
             request(app)
             .post('/api/plugins')
             .set('Authorization', adminAuthorization)
-            .send({ name: 'com.example.plugin1', description: 'Plugin 1' })
+            .set('Content-Type', 'application/zip')
+            .send(fs.readFileSync(`${__dirname}/data/com.example.plugin1-v1.0.0.zip`))
             .expect(200)
             .end((err, res) => {
                 if (err) return done(err)
@@ -185,6 +144,26 @@ describe('Plugins', function() {
                 done()
             })
         })
+
+        // it('should not create a plugin - insufficient credentials', done => {
+        //     request(app)
+        //     .post('/api/plugins')
+        //     .set('Authorization', userAuthorization)
+        //     .expect(403, done)
+        // })
+
+        // it('should not create a plugin - db error', done => {
+        //     const pluginStub = sinon.stub(Plugin.prototype, 'save').rejects(new Error('plugin-save'))
+        //     request(app)
+        //     .post('/api/plugins')
+        //     .set('Authorization', adminAuthorization)
+        //     .expect(500)
+        //     .end((err, res) => {
+        //         pluginStub.restore()
+        //         if (err) return done(err)
+        //         done()
+        //     })
+        // })
 
     })
 

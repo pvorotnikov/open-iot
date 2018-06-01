@@ -26,6 +26,7 @@ function expressApp(routes) {
     const app = express()
 
     app.use(bodyParser.json())
+    app.use(bodyParser.raw({ type: 'application/zip' }))
     app.use(bodyParser.urlencoded({ extended: false }))
     app.use(cookieParser())
 
