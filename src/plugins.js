@@ -8,6 +8,11 @@ const util = require('util')
 const fs = require('fs')
 const hat = require('hat')
 
+const TEMP_DIR = __dirname + '/temp'
+if (!fs.existsSync(TEMP_DIR)){
+    fs.mkdirSync(TEMP_DIR);
+}
+
 module.exports = function(app) {
 
     const router = express.Router()
@@ -37,7 +42,7 @@ module.exports = function(app) {
      */
     router.post('/', auth.protect(ACCESS_LEVEL.ADMIN), async (req, res, next) => {
 
-        const pluginSource = __dirname + '/temp'
+        const pluginSource = TEMP_DIR
         await installPlugin(req.body, pluginSource)
         const pluginName = await validatePlugin()
 
