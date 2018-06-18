@@ -108,6 +108,25 @@ const settingSchema = new Schema({
     updated: { type: Date, default: Date.now },
 })
 
+const moduleSchema = new Schema({
+    name: { type: String, required: true },
+    description: { type: String, required: true },
+    meta: { type: Object, default: {} },
+    created: { type: Date, default: Date.now },
+    updated: { type: Date, default: Date.now },
+})
+
+
+const integrationSchema = new Schema({
+    user: { type: Schema.Types.ObjectId, ref: 'User' },
+    application: { type: Schema.Types.ObjectId, ref: 'Application' },
+    topic: String,
+    pipeline: [moduleSchema],
+    output: String,
+    created: { type: Date, default: Date.now },
+    updated: { type: Date, default: Date.now },
+})
+
 /* ================================
  * Models
  * ================================
@@ -119,6 +138,8 @@ const Device = mongoose.model('Device', deviceSchema)
 const Token = mongoose.model('Token', tokenSchema)
 const Rule = mongoose.model('Rule', ruleSchema)
 const Setting = mongoose.model('Setting', settingSchema)
+const Integration = mongoose.model('Integration', integrationSchema)
+const Module = mongoose.model('Module', moduleSchema)
 
 /* ================================
  * Database
