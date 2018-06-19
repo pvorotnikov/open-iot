@@ -1,47 +1,52 @@
+const fs = require('fs')
+const path = require('path')
 const Promise = require('bluebird')
 const logger = require('../lib/logger')
 const utils = require('../lib/utils')
+const util = require('util')
 
-function modules(Model) {
+const MODULES_DIR = path.join(__dirname, '..', 'modules')
+const readdir = util.promisify(fs.readdir)
 
+function index(Module) {
     return new Promise((fulfill, reject) => {
 
-        let requiredSettings = defaultSettings.map(s => s.key)
+        let allModules = []
 
-        Model.find({ key: { $in: requiredSettings } })
-        .then(res => {
-
-            // walk through all default settings to check if there's entry in the DB
-            defaultSettings.forEach(s => {
-
-                let shouldAdd = true
-                for (let i=0; i < res.length; i++) {
-                    if (s.key === res[i].key) {
-                        logger.debug(`Setting ${s.key} already present`)
-                        shouldAdd = false
-                        break
-                    }
-                }
-
-                if (shouldAdd) {
-                    logger.info(`Creating default setting ${s.key} -> ${s.value}...`)
-                    let setting = new Model(s)
-                    setting.save()
-                }
-
-            })
+        Module.find()
+        .then(modules => {
+            allModules = modules.map(m => m.name)
         })
-        .then(() => {
+        .then(() => readdir(MODULES_DIR))
+        .then(files => {
+            let dirs = files.filter(f => fs.lstatSync(path.join(MODULES_DIR, f)).isDirectory())
+            dirs.forEach(async d => {
+
+                // TODO: read package.json to extract module meta
+
+                if (-1 === allModules.indexOf(d)) {
+                    await addNewModule(Module, d)
+                } else {
+                    // TODO: heal module
+                }
+            })
             fulfill()
         })
-        .catch(err => {
-            logger.error(err.message)
-            reject(err)
-        })
+        .catch(err => reject(err))
+    })
+}
+
+function addNewModule(Module, name) {
+    return new Promise((fulfill, reject) => {
+
+        const m = new Module({ name })
+
+        logger.info(`Adding module ${name} to DB`)
+        fulfill()
 
     })
 }
 
 module.exports = {
-    modules,
+    index,
 }

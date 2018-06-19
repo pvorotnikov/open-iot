@@ -4,6 +4,7 @@ const utils = require('../lib/utils')
 const nconf = require('nconf')
 const { ACCESS_LEVEL } = require('./constants')
 const defaults = require('./defaults')
+const modules = require('./modules')
 const mongoose = require('mongoose')
 mongoose.Promise = Promise
 
@@ -116,12 +117,18 @@ const moduleSchema = new Schema({
     updated: { type: Date, default: Date.now },
 })
 
+const pipelineStepSchema = new Schema({
+    module: { type: Schema.Types.ObjectId, ref: 'Module' },
+    enabled: { type: Boolean, default: true },
+    created: { type: Date, default: Date.now },
+    updated: { type: Date, default: Date.now },
+})
 
 const integrationSchema = new Schema({
     user: { type: Schema.Types.ObjectId, ref: 'User' },
     application: { type: Schema.Types.ObjectId, ref: 'Application' },
     topic: String,
-    pipeline: [moduleSchema],
+    pipeline: [pipelineStepSchema],
     output: String,
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
@@ -140,6 +147,7 @@ const Rule = mongoose.model('Rule', ruleSchema)
 const Setting = mongoose.model('Setting', settingSchema)
 const Integration = mongoose.model('Integration', integrationSchema)
 const Module = mongoose.model('Module', moduleSchema)
+const PipelineStep = mongoose.model('PipelineStep', pipelineStepSchema)
 
 /* ================================
  * Database
@@ -155,7 +163,8 @@ const connection = function() {
 
             Promise.all([
                 defaults.user(User), // create default user for the first time
-                defaults.settings(Setting) // create default settings
+                defaults.settings(Setting), // create default settings
+                modules.index(Module)
             ])
             .then(() => fulfill(instance))
         })
@@ -176,4 +185,8 @@ module.exports = {
     Token,
     Rule,
     Setting,
+
+    Integration,
+    Module,
+    PipelineStep,
 }
