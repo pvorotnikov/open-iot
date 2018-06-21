@@ -113,6 +113,7 @@ const moduleSchema = new Schema({
     name: { type: String, required: true },
     description: { type: String, required: true },
     meta: { type: Object, default: {} },
+    status: { type: String, enum: ['enabled', 'disabled', 'missing'], default: 'enabled' },
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
 })
