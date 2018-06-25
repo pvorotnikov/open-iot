@@ -9,7 +9,7 @@ module.exports = function(app) {
     app.use('/api/modules', router)
 
     // fetch all modules
-    router.get('/', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
+    router.get('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
         Module.find()
         .then((modules) => {
@@ -28,7 +28,7 @@ module.exports = function(app) {
 
     })
 
-    // enable/disable module
+    // enable/disable module (edit module)
     router.put('/:moduleId', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
 
         const { status } = req.body

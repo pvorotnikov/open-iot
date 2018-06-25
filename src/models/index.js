@@ -120,7 +120,7 @@ const moduleSchema = new Schema({
 
 const pipelineStepSchema = new Schema({
     module: { type: Schema.Types.ObjectId, ref: 'Module' },
-    enabled: { type: Boolean, default: true },
+    status: { type: String, enum: ['enabled', 'disabled', 'missing'], default: 'enabled' },
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
 })

@@ -9,6 +9,19 @@ const util = require('util')
 const MODULES_DIR = path.join(__dirname, '..', 'modules')
 const readdir = util.promisify(fs.readdir)
 
+/**
+ * Perform module (extensions) indexing. This function
+ * traverses the modules directory (MODULES_DIR) and
+ * for every module found performs one of the following:
+ * - Adds the module to the DB if it doesn't have a DB entry.
+ *   This marks each pipeline step that has this module as "disabled".
+ * - Heals the module if it is in the DB but has been missing
+ * - Marks a module as missing in the DB if it is not located in the modules dir.
+ *   This also marks each pipeline step that uses the missing module as "missing"
+ *   so that it gets skipped upon pipeline execution.
+ * @param {Module} Module model
+ * @return {Promise}
+ */
 function index(Module) {
     return new Promise((fulfill, reject) => {
 
@@ -45,9 +58,11 @@ function index(Module) {
             missingModules.forEach(async mm => {
                 await Module.findOne({ name: mm })
                 .then(m => {
-                    logger.warn('Missing module', m.name)
-                    m.status = 'missing'
-                    return m.save()
+                    if (m) {
+                        logger.warn('Missing module', m.name)
+                        m.status = 'missing'
+                        return m.save()
+                    }
                 })
                 .catch(err => logger.error(err.message))
 
