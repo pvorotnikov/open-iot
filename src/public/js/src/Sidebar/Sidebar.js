@@ -47,6 +47,9 @@ class Sidebar extends Component {
                 <Menu.Item active={currentPath.startsWith('/apps')} as={Link} to='/apps'>
                     <Icon name='lab' /> Apps
                 </Menu.Item>
+                <Menu.Item active={currentPath.startsWith('/integrations')} as={Link} to='/integrations'>
+                    <Icon name='fast forward' /> Integrations
+                </Menu.Item>
                 <Menu.Item active={currentPath.startsWith('/playground')} as={Link} to='/playground'>
                     <Icon name='soccer' /> Playground
                 </Menu.Item>

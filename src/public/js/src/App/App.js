@@ -18,6 +18,7 @@ import { NewApplicationPage } from '../NewApplicationPage'
 import { ApplicationPage } from '../ApplicationPage'
 import { NewGatewayPage } from '../NewGatewayPage'
 import { SettingsPage } from '../SettingsPage'
+import { IntegrationsPage } from '../IntegrationsPage'
 
 class App extends Component {
 
@@ -68,6 +69,7 @@ class App extends Component {
                                 <PrivateRoute exact path="/apps/i/:id" component={ApplicationPage} />
                                 <PrivateRoute exact path="/apps/new" component={NewApplicationPage} />
                                 <PrivateRoute exact path="/apps/i/:id/newgw" component={NewGatewayPage} />
+                                <PrivateRoute exact path="/integrations" component={IntegrationsPage} />
                                 <PrivateRoute exact path="/settings" component={SettingsPage} />
                                 <Route exact path="/login" component={LoginPage} />
                                 <Route exact path="/register" component={RegisterPage} />
