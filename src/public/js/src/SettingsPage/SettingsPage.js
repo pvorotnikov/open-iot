@@ -6,17 +6,24 @@ import moment from 'moment'
 import { Header, Container, Icon, Loader, Table, Checkbox, TextArea } from 'semantic-ui-react'
 
 import { EditableText } from '../_components'
-import { settingActions } from '../_actions'
+import { settingActions, moduleActions } from '../_actions'
 
 class SettingsPage extends Component {
 
     componentDidMount() {
         this.props.dispatch(settingActions.getAll())
+        this.props.dispatch(moduleActions.getAll())
     }
 
     onSettingUpdate(key, value) {
         console.log(`Setting ${key} updated to ${value}`)
         this.props.dispatch(settingActions.update(key, value))
+    }
+
+    onModuleEnable(id, enabled) {
+        let newStatus = enabled ? 'enabled' : 'disabled'
+        console.log(`Module ${id} set to ${newStatus}`)
+        this.props.dispatch(moduleActions.setStatus(id, newStatus))
     }
 
     renderEditableToggle(key, value) {
@@ -81,7 +88,7 @@ class SettingsPage extends Component {
         })
 
         return (
-            <Table celled>
+            <Table celled columns='3'>
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell>Setting</Table.HeaderCell>
@@ -96,8 +103,53 @@ class SettingsPage extends Component {
         )
     }
 
+    renderModules() {
+
+        const { modules } = this.props
+
+        let moduleItems = modules.items.map(m => {
+
+            let moduleEnabled = m.status === 'enabled'
+            let moduleMissing = m.status === 'missing'
+
+            return (
+                <Table.Row key={m.id} negative={moduleMissing}>
+                    <Table.Cell>
+                        <Header as='h4'>
+                            <Header.Content>
+                                { m.name }
+                                <Header.Subheader>{ m.description }</Header.Subheader>
+                            </Header.Content>
+                        </Header>
+                    </Table.Cell>
+                    <Table.Cell>
+                        { !moduleMissing && <Checkbox toggle defaultChecked={moduleEnabled} onChange={(e, data) => this.onModuleEnable(m.id, data.checked)} /> }
+                        { moduleMissing && <span>Missing module</span> }
+                    </Table.Cell>
+                </Table.Row>
+            )
+        })
+
+        return (
+            <div>
+                <Header as='h2'>Modules</Header>
+                <Table celled columns='2'>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell>Module</Table.HeaderCell>
+                            <Table.HeaderCell>Enable/Disable</Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        { moduleItems }
+                    </Table.Body>
+                </Table>
+            </div>
+        )
+    }
+
     render() {
-        const { settings } = this.props
+        const { settings, modules } = this.props
 
         return (
             <Container>
@@ -106,6 +158,7 @@ class SettingsPage extends Component {
                     <Header.Content>Service Settings <Loader active={settings.loading} inline size='small' /></Header.Content>
                 </Header>
                 { settings.items && this.renderSettings() }
+                { modules.items && this.renderModules() }
             </Container>
         )
     }
@@ -113,13 +166,15 @@ class SettingsPage extends Component {
 
 SettingsPage.propTypes = {
     settings: PropTypes.object.isRequired,
+    modules: PropTypes.object.isRequired,
     dispatch: PropTypes.func.isRequired,
 }
 
 function mapStateToProps(state) {
-    const { settings } = state
+    const { settings, modules } = state
     return {
         settings,
+        modules,
     }
 }
 

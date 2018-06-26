@@ -8,7 +8,11 @@ module.exports = function(app) {
     const router = express.Router()
     app.use('/api/modules', router)
 
-    // fetch all modules
+    /**
+     * Fetch all modules. This returns a list of available modules with their
+     * respective status. This is to be used by any user-level calls to obtain
+     * a list of the modules with their ids.
+     */
     router.get('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
         Module.find()
@@ -28,7 +32,12 @@ module.exports = function(app) {
 
     })
 
-    // enable/disable module (edit module)
+    /**
+     * Enable/disable module (edit module). This performs global module disable
+     * i.e. it marks the module as "disabled" in the DB and also marks any PipelineStep
+     * that involves the module as "disabled". This effectively causes the step to not
+     * getting called during pipeline execution.
+     */
     router.put('/:moduleId', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
 
         const { status } = req.body

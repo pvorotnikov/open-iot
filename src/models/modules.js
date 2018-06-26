@@ -25,19 +25,21 @@ const readdir = util.promisify(fs.readdir)
 function index(Module) {
     return new Promise((fulfill, reject) => {
 
+        let dbModuleNames = []
         let dbModules = []
         let dirModules = []
 
         Module.find()
         .then(modules => {
-            dbModules = modules.map(m => m.name)
+            dbModuleNames = modules.map(m => m.name)
+            dbModules = modules
         })
         .then(() => readdir(MODULES_DIR))
         .then(files => {
             dirModules = files.filter(f => fs.lstatSync(path.join(MODULES_DIR, f)).isDirectory())
             dirModules.forEach(async d => {
 
-                if (-1 === dbModules.indexOf(d)) {
+                if (-1 === dbModuleNames.indexOf(d)) {
                     // let hasPackage = fs.lstatSync(path.join(MODULES_DIR, d, 'package.json')).isFile()
                     // read package.json to extract module meta
                     let packageInfo = JSON.parse(fs.readFileSync(path.join(MODULES_DIR, d, 'package.json'), 'utf8'))
@@ -47,14 +49,24 @@ function index(Module) {
                     logger.info(`Adding new module ${moduleName} to DB`)
                     await m.save()
                 } else {
-                    // TODO: heal module
+                    // heal module
                     logger.info(`Module ${d} exists. Checking healing status`)
+                    dbModules.forEach(async dbm => {
+                        if (dbm.name === d && 'missing' === dbm.status) {
+                            logger.info(`Healing module ${d}`)
+                            dbm.status = 'enabled'
+
+                            // TODO: heal pipeline steps involving the module
+
+                            return dbm.save()
+                        }
+                    })
                 }
 
             })
         })
         .then(() => {
-            let missingModules = _.xor(dbModules, dirModules)
+            let missingModules = _.xor(dbModuleNames, dirModules)
             missingModules.forEach(async mm => {
                 await Module.findOne({ name: mm })
                 .then(m => {
