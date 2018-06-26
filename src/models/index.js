@@ -121,16 +121,15 @@ const moduleSchema = new Schema({
 const pipelineStepSchema = new Schema({
     module: { type: Schema.Types.ObjectId, ref: 'Module' },
     status: { type: String, enum: ['enabled', 'disabled', 'missing'], default: 'enabled' },
+    arguments: { type: Object, default: {} },
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
 })
 
 const integrationSchema = new Schema({
     user: { type: Schema.Types.ObjectId, ref: 'User' },
-    application: { type: Schema.Types.ObjectId, ref: 'Application' },
     topic: String,
     pipeline: [pipelineStepSchema],
-    output: String,
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
 })

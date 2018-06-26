@@ -17,6 +17,7 @@ const scopes = require('./scopes')
 const settings = require('./settings')
 const publish = require('./publish')
 const modules = require('./modules')
+const integrations = require('./integrations')
 const MessageHandler = require('./message-handler')
 const { AwsIotBridge } = require('./bridge')
 
@@ -73,6 +74,7 @@ app.use('/api/scopes', scopes)
 settings(app)
 app.use('/api/publish', publish)
 modules(app)
+integrations(app)
 
 // catch 404 and forward it to error handler
 app.use((req, res, next) => {

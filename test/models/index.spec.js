@@ -175,7 +175,6 @@ describe('Models', function() {
         new models.Integration({
             topic: 'test',
             pipeline: [],
-            output: null,
         }).save()
         .then(r => {
             r.should.be.an('object')
@@ -190,6 +189,7 @@ describe('Models', function() {
     it('should create and remove pipeline step', done => {
         new models.PipelineStep({
             status: 'enabled',
+            arguments: {},
         }).save()
         .then(r => {
             r.should.be.an('object')
