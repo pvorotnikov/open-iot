@@ -5,17 +5,18 @@ import { connect } from 'react-redux'
 
 import { Header, Container, Icon, Card, Button, Loader, Label } from 'semantic-ui-react'
 
-import { moduleActions } from '../_actions'
+import { moduleActions, integrationActions } from '../_actions'
 import { PipelineCreator } from './'
 
 class IntegrationsPage extends Component {
 
     componentDidMount() {
         this.props.dispatch(moduleActions.getAll())
+        this.props.dispatch(integrationActions.getAll())
     }
 
     render() {
-        const { modules } = this.props
+        const { modules, integrations } = this.props
 
         return (
             <Container>
@@ -23,7 +24,7 @@ class IntegrationsPage extends Component {
                     <Icon name='fast forward' circular />
                     <Header.Content>
                         Integrations
-                        <Loader active={modules.loading} inline size='small' />
+                        <Loader active={modules.loading || integrations.loading} inline size='small' />
                     </Header.Content>
                 </Header>
 
@@ -41,9 +42,10 @@ IntegrationsPage.propTypes = {
 }
 
 function mapStateToProps(state) {
-    const { modules } = state
+    const { modules, integrations } = state
     return {
-        modules
+        modules,
+        integrations,
     }
 }
 

@@ -5,7 +5,7 @@ import { connect } from 'react-redux'
 
 import { Segment, Icon, Button, Label, Form, Step, Divider, TextArea, Popup, List } from 'semantic-ui-react'
 
-import { alertActions } from '../_actions'
+import { alertActions, integrationActions } from '../_actions'
 
 class PipelineCreator extends Component {
 
@@ -81,15 +81,11 @@ class PipelineCreator extends Component {
             return
         }
 
-        let pipelineDefinition = {
-            topic: this.state.values.topic,
-            pipeline: this.state.values.pipeline.map(s => ({
-                module: s.id,
-                arguments: s.arguments
-            }))
-        }
-
-        console.log(pipelineDefinition)
+        let pipelineDefinition = this.state.values.pipeline.map(s => ({
+            module: s.id,
+            arguments: s.arguments,
+        }))
+        this.props.dispatch(integrationActions.create(this.state.values.topic, pipelineDefinition))
     }
 
     renderPipelineSteps() {

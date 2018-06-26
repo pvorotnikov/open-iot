@@ -10,6 +10,7 @@ import { rules } from './rules.reducer'
 import { scopes } from './scopes.reducer'
 import { settings } from './settings.reducer'
 import { modules } from './modules.reducer'
+import { integrations } from './integrations.reducer'
 
 import { todos, visibilityFilter } from './todo.reducer'
 
@@ -24,6 +25,7 @@ const rootReducer = combineReducers({
     scopes,         // state.scopes
     settings,       // state.settings
     modules,        // state.modules
+    integrations,   // state.integrations
 
     todos,              // TODO: remove this eventually
     visibilityFilter,   // TODO: remove this eventually
