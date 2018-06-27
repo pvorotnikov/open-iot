@@ -16,6 +16,11 @@ const defaultSettings = [
         description: 'Allow users to register',
     },
     {
+        key: 'global.integrationmode',
+        value: 'rules',
+        description: 'Integration mode - rules or integrations',
+    },
+    {
         key: 'bridge.aws.enabled',
         value: false,
         description: 'Enable AWS IoT bridge',

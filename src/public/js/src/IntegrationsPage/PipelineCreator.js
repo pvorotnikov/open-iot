@@ -6,6 +6,7 @@ import { connect } from 'react-redux'
 import { Segment, Icon, Button, Label, Form, Step, Divider, TextArea, Popup, List } from 'semantic-ui-react'
 
 import { alertActions, integrationActions } from '../_actions'
+import { ConfirmModal, HighlightBlock } from '../_components'
 
 class PipelineCreator extends Component {
 
@@ -112,7 +113,7 @@ class PipelineCreator extends Component {
             )
 
             return (
-                <Popup key={'step-' + i} trigger={stepContents} flowing hoverable>
+                <Popup key={'step-' + i} trigger={stepContents} on='click' flowing hoverable>
                     <Popup.Content>
                         <List>
                             <List.Item>
@@ -121,7 +122,7 @@ class PipelineCreator extends Component {
                             </List.Item>
                             <List.Item>
                                 <Label horizontal>Arguments</Label>
-                                { JSON.stringify(s.arguments) }
+                                <HighlightBlock language='json'>{ JSON.stringify(s.arguments) }</HighlightBlock>
                             </List.Item>
                             <List.Item>
                                 <a href='#' onClick={(e) => this.onPipelineStepRemove(e, i)}><Icon name='delete' />Remove</a>
@@ -137,7 +138,7 @@ class PipelineCreator extends Component {
     render() {
 
         return (
-            <Segment raised>
+            <Segment raised color='blue'>
                 <Label color='blue' ribbon>Pipeline Creator</Label>
 
                 <Form size='small' style={{ marginTop: '10px' }}>
