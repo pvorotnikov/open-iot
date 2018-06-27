@@ -130,6 +130,7 @@ const integrationSchema = new Schema({
     user: { type: Schema.Types.ObjectId, ref: 'User' },
     topic: String,
     pipeline: [pipelineStepSchema],
+    status: { type: String, enum: ['enabled', 'disabled'], default: 'enabled' },
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
 })

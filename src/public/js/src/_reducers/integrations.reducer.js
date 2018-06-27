@@ -28,10 +28,29 @@ export function integrations(state = { items: [], loading: false, }, action) {
             return { ...state, loading: true, }
 
         case integrationConstants.CREATE_SUCCESS:
-            // TODO
             return { ...state, items: [...state.items, action.integration], loading: false, }
 
         case integrationConstants.CREATE_FAILURE:
+            return { ...state, loading: false, }
+
+        case integrationConstants.DELETE_REQUEST:
+            return { ...state, loading: true, }
+
+        case integrationConstants.DELETE_SUCCESS:
+            return { ...state, items: state.items.filter(i => i.id !== action.id), loading: false, }
+
+        case integrationConstants.DELETE_FAILURE:
+            return { ...state, loading: false, }
+
+        case integrationConstants.SET_STATUS_REQUEST:
+            return { ...state, loading: true, }
+
+        case integrationConstants.SET_STATUS_SUCCESS:
+            return { ...state, items: state.items.map(i => (
+                i.id !== action.integration.id ? i : action.integration
+            )), loading: false, }
+
+        case integrationConstants.SET_STATUS_FAILURE:
             return { ...state, loading: false, }
 
         default:

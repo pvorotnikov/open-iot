@@ -17,7 +17,11 @@ class IntegrationsPage extends Component {
     }
 
     onDeleteIntegration(integrationId) {
-        console.log('Should delete ', integrationId)
+        this.props.dispatch(integrationActions.delete(integrationId))
+    }
+
+    onEnableDisableIntegration(integrationId, status) {
+        this.props.dispatch(integrationActions.setStatus(integrationId, status))
     }
 
     renderIntegrations() {
@@ -83,7 +87,20 @@ class IntegrationsPage extends Component {
 
                         <Step>
                             <Step.Content>
-                                <Label as='a' color='grey' size='tiny'>Disable</Label>
+                                { 'enabled' === integration.status && <Label
+                                    as='a'
+                                    color='grey'
+                                    size='tiny'
+                                    onClick={() => this.onEnableDisableIntegration(integration.id, 'disabled')}>
+                                    Disable
+                                </Label> }
+                                { 'disabled' === integration.status && <Label
+                                    as='a'
+                                    color='green'
+                                    size='tiny'
+                                    onClick={() => this.onEnableDisableIntegration(integration.id, 'enabled')}>
+                                    Enable
+                                </Label> }
                                 <ConfirmModal
                                     trigger={<Label as='a' color='red' size='tiny'>Delete</Label>}
                                     title='Are you sure you want to delete this integration?'
