@@ -1,3 +1,4 @@
+const mongoose = require('mongoose')
 const fs = require('fs')
 const path = require('path')
 const Promise = require('bluebird')
@@ -22,7 +23,7 @@ const readdir = util.promisify(fs.readdir)
  * @param {Module} Module model
  * @return {Promise}
  */
-function index(Module) {
+function index(Module, Integration) {
     return new Promise((fulfill, reject) => {
 
         let dbModuleNames = []
@@ -36,7 +37,7 @@ function index(Module) {
         })
         .then(() => readdir(MODULES_DIR))
         .then(files => {
-            dirModules = files.filter(f => fs.lstatSync(path.join(MODULES_DIR, f)).isDirectory())
+            dirModules = files.filter(f => fs.lstatSync(path.join(MODULES_DIR, f)).isDirectory() && -1 === f.indexOf('ignore'))
             dirModules.forEach(async d => {
 
                 if (-1 === dbModuleNames.indexOf(d)) {
@@ -55,10 +56,22 @@ function index(Module) {
                         if (dbm.name === d && 'missing' === dbm.status) {
                             logger.info(`Healing module ${d}`)
                             dbm.status = 'enabled'
+                            dbm.updated = Date.now()
 
-                            // TODO: heal pipeline steps involving the module
+                            // heal pipeline steps involving the module
+                            let integrations = await Integration.find({ 'pipeline.module': new mongoose.mongo.ObjectId(dbm._id) })
+                            integrations.forEach(async i => {
+                                i.pipeline.forEach(s => {
+                                    if (s.module.toString() === dbm._id.toString()) {
+                                        logger.info(`Setting pipeline step ${s._id} to disabled`)
+                                        s.status = 'disabled'
+                                        s.updated = Date.now()
+                                    }
+                                })
+                                await i.save()
+                            })
 
-                            return dbm.save()
+                            await dbm.save()
                         }
                     })
                 }
@@ -76,9 +89,23 @@ function index(Module) {
                         return m.save()
                     }
                 })
+                .then(async m => {
+                    // update pipeline step status to missing
+                    if (m) {
+                        let integrations = await Integration.find({ 'pipeline.module': new mongoose.mongo.ObjectId(m._id) })
+                        integrations.forEach(async i => {
+                            i.pipeline.forEach(s => {
+                                if (s.module.toString() === m._id.toString()) {
+                                    logger.info(`Setting pipeline step ${s._id} to missing`)
+                                    s.status = 'missing'
+                                    s.updated = Date.now()
+                                }
+                            })
+                            await i.save()
+                        })
+                    }
+                })
                 .catch(err => logger.error(err.message))
-
-                // TODO: update pipeline step status
             })
             fulfill()
         })

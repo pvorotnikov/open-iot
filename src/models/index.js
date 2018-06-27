@@ -165,7 +165,7 @@ const connection = function() {
             Promise.all([
                 defaults.user(User), // create default user for the first time
                 defaults.settings(Setting), // create default settings
-                modules.index(Module)
+                modules.index(Module, Integration)
             ])
             .then(() => fulfill(instance))
         })

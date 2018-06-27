@@ -8,7 +8,7 @@ const should = chai.should()
 const expect = chai.expect
 
 const { logger, cleanDb } = require('../_utils')
-const { Module } = require('../../src/models')
+const { Module, Integration } = require('../../src/models')
 const modules = require('../../src/models/modules')
 
 describe('Modules', function() {
@@ -24,7 +24,7 @@ describe('Modules', function() {
     })
 
     it('should not index any modules - no modules in directory', done => {
-        modules.index(Module)
+        modules.index(Module, Integration)
         .then(() => done())
         .catch(err => done(err))
     })
