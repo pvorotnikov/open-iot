@@ -53,6 +53,17 @@ export function integrations(state = { items: [], loading: false, }, action) {
         case integrationConstants.SET_STATUS_FAILURE:
             return { ...state, loading: false, }
 
+        case integrationConstants.SET_STEP_STATUS_REQUEST:
+            return { ...state, loading: true, }
+
+        case integrationConstants.SET_STEP_STATUS_SUCCESS:
+            return { ...state, items: state.items.map(i => (
+                i.id !== action.integration.id ? i : action.integration
+            )), loading: false, }
+
+        case integrationConstants.SET_STEP_STATUS_FAILURE:
+            return { ...state, loading: false, }
+
         default:
             return state
     }

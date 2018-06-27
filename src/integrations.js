@@ -130,4 +130,50 @@ module.exports = function(app) {
 
     })
 
+
+    /**
+     * Enable/disable integration step
+     */
+    router.put('/:integrationId/:stepIndex', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+
+        const { status } = req.body
+        const stepIndex = parseInt(req.params.stepIndex)
+
+        Integration.findById(req.params.integrationId)
+        .where('user').eq(req.user._id)
+        .then(async integration => {
+            if (!integration) throw new Error(`Invalid integration: ${req.params.integrationId}`)
+            if (!integration.pipeline[stepIndex]) throw new Error('Invalid pipeline step')
+            if ('missing' === integration.pipeline[stepIndex].status) throw new Error('Cannot change the status of steps involving a missing module')
+
+            if ('enabled' === status) {
+                let module = await Module.findById(integration.pipeline[stepIndex].module)
+                if ('enabled' !== module.status) throw new Error('The module involving this step is not enabled')
+            }
+
+            integration.pipeline[stepIndex].status = status
+            integration.pipeline[stepIndex].updated = Date.now()
+            return integration.save()
+        })
+        .then(result => {
+            let data = {
+                id: result._id,
+                topic: result.topic,
+                pipeline: result.pipeline.map((s, i) => ({
+                    module: s.module,
+                    arguments: s.arguments,
+                    status: i === stepIndex ? status : s.status,
+                })),
+                status: result.status,
+                created: result.crated,
+                updated: result.updated,
+            }
+            res.json(new SuccessResponse(data))
+        })
+        .catch(err => {
+            res.status(500).json(new ErrorResponse(err.message))
+        })
+
+    })
+
 }

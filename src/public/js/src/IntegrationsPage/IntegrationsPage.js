@@ -24,6 +24,20 @@ class IntegrationsPage extends Component {
         this.props.dispatch(integrationActions.setStatus(integrationId, status))
     }
 
+    onEnableDisablePipelineStep(e, integrationId, stepIndex, status) {
+        e.preventDefault()
+        console.log(`Setting ${integrationId} step ${stepIndex} to ${status}`)
+        this.props.dispatch(integrationActions.setStepStatus(integrationId, stepIndex, status))
+    }
+
+    getModuleName(moduleId) {
+        let moduleName = moduleId
+        this.props.modules.items.forEach(m => {
+            if (m.id === moduleId) moduleName = m.name
+        })
+        return moduleName
+    }
+
     renderIntegrations() {
         const integrations = this.props.integrations.items
         const modules = this.props.modules.items
@@ -45,21 +59,37 @@ class IntegrationsPage extends Component {
 
                 const stepContents = (
                     <Step>
-                        <Icon name='chevron circle right' />
+                        <Icon name='chevron circle right' color={
+                            'enabled' === step.status
+                                ? 'black'
+                                : 'disabled' === step.status
+                                    ? 'grey'
+                                    : 'red'
+                            } />
                     </Step>
                 )
 
                 return (
-                    <Popup key={'step-' + i} trigger={stepContents} flowing hoverable>
+                    <Popup key={'step-' + i} trigger={stepContents} on='click' flowing hoverable>
                         <Popup.Content>
                             <List>
                                 <List.Item>
-                                    <Label horizontal>Module</Label> {step.module}
+                                    <Label horizontal>Module</Label> {this.getModuleName(step.module)}
                                 </List.Item>
                                 <List.Item>
                                     <Label horizontal>Arguments</Label>
                                     <HighlightBlock language='json'>{ JSON.stringify(step.arguments) }</HighlightBlock>
                                 </List.Item>
+                                { 'enabled' === step.status &&
+                                    <List.Item>
+                                        <a href='#' onClick={(e) => this.onEnableDisablePipelineStep(e, integration.id, i, 'disabled')}>Disable</a>
+                                    </List.Item>
+                                }
+                                { 'disabled' === step.status &&
+                                    <List.Item>
+                                        <a href='#' onClick={(e) => this.onEnableDisablePipelineStep(e, integration.id, i, 'enabled')}>Enable</a>
+                                    </List.Item>
+                                }
                             </List>
                         </Popup.Content>
                     </Popup>

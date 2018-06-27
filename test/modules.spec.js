@@ -10,7 +10,7 @@ const expect = chai.expect
 const { cleanDb, expressApp, logger } = require('./_utils')
 
 const { utils } = require('../src/lib')
-const { User, Module, ACCESS_LEVEL } = require('../src/models')
+const { User, Module, Integration, ACCESS_LEVEL } = require('../src/models')
 const modules = require('../src/modules')
 
 describe('Modules', function() {
@@ -114,12 +114,26 @@ describe('Modules', function() {
         })
 
         it('should enable module', done => {
+
+            const mockedIntegration = new Integration({
+                topic: 'test-topic',
+                pipeline: [
+                    { module: moduleId, arguments: { foo: 'bar' } },
+                    { module: moduleId, arguments: { bar: 'baz' } }
+                ],
+            })
+            const integrationMock = sinon.mock(Integration)
+            integrationMock.expects('find').resolves([mockedIntegration])
+
             request(app)
             .put('/api/modules/' + moduleId)
             .send({ status: 'enabled' })
             .set('Authorization', managerAuthorization)
             .expect(200)
             .end((err, res) => {
+                integrationMock.verify()
+                integrationMock.restore()
+
                 if (err) return done(err)
                 res.body.data.should.have.all.keys('id', 'name', 'description', 'status', 'meta')
                 res.body.data.id.should.equal(moduleId)
@@ -132,12 +146,26 @@ describe('Modules', function() {
         })
 
         it('should disable module', done => {
+
+            const mockedIntegration = new Integration({
+                topic: 'test-topic',
+                pipeline: [
+                    { module: moduleId, arguments: { foo: 'bar' } },
+                    { module: moduleId, arguments: { bar: 'baz' } }
+                ],
+            })
+            const integrationMock = sinon.mock(Integration)
+            integrationMock.expects('find').resolves([mockedIntegration])
+
             request(app)
             .put('/api/modules/' + moduleId)
             .send({ status: 'disabled' })
             .set('Authorization', managerAuthorization)
             .expect(200)
             .end((err, res) => {
+                integrationMock.verify()
+                integrationMock.restore()
+
                 if (err) return done(err)
                 res.body.data.should.have.all.keys('id', 'name', 'description', 'status', 'meta')
                 res.body.data.id.should.equal(moduleId)

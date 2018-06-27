@@ -8,6 +8,7 @@ export const integrationActions = {
     create,
     delete: _delete,
     setStatus,
+    setStepStatus,
 }
 
 /**
@@ -105,4 +106,28 @@ function setStatus(integrationId, status) {
     function request() { return { type: integrationConstants.SET_STATUS_REQUEST } }
     function success(integration) { return { type: integrationConstants.SET_STATUS_SUCCESS, integration } }
     function failure(error) { return { type: integrationConstants.SET_STATUS_FAILURE, error } }
+}
+
+/**
+ * Set integration step status
+ * @return {Function} set status async action
+ */
+function setStepStatus(integrationId, stepIndex, status) {
+    return dispatch => {
+        dispatch(request())
+
+        // perform async operation
+        integrationService.setStepStatus(integrationId, stepIndex, status)
+        .then(integration => {
+            dispatch(success(integration))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
+    }
+
+    function request() { return { type: integrationConstants.SET_STEP_STATUS_REQUEST } }
+    function success(integration) { return { type: integrationConstants.SET_STEP_STATUS_SUCCESS, integration } }
+    function failure(error) { return { type: integrationConstants.SET_STEP_STATUS_FAILURE, error } }
 }

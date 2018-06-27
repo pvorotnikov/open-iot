@@ -6,6 +6,7 @@ export const integrationService = {
     create,
     delete: _delete,
     setStatus,
+    setStepStatus,
 }
 
 function getAll() {
@@ -38,4 +39,13 @@ function setStatus(integrationId, status) {
         body: JSON.stringify({ status })
     }
     return new Request().send('/api/integrations/' + integrationId, requestOptions)
+}
+
+function setStepStatus(integrationId, stepIndex, status) {
+    const requestOptions = {
+        method: 'PUT',
+        headers: jsonHeader(),
+        body: JSON.stringify({ status })
+    }
+    return new Request().send(`/api/integrations/${integrationId}/${stepIndex}`, requestOptions)
 }

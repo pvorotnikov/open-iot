@@ -1,6 +1,7 @@
+const mongoose = require('mongoose')
 const express = require('express')
 const { logger, responses, auth, utils } = require('./lib')
-const { ACCESS_LEVEL, Module } = require('./models')
+const { ACCESS_LEVEL, Module, Integration } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
 
 module.exports = function(app) {
@@ -41,21 +42,38 @@ module.exports = function(app) {
     router.put('/:moduleId', auth.protect(ACCESS_LEVEL.MANAGER), (req, res, next) => {
 
         const { status } = req.body
+        let updtedModule = null
 
         Module.findOne({ _id: req.params.moduleId })
         .then(m => {
             if (!m) throw new Error(`Invalid module: ${req.params.moduleId}`)
             m.status = status
             m.updated = Date.now()
+            updtedModule = m
             return m.save()
         })
-        .then(m => {
+        .then(m => Integration.find({ 'pipeline.module': new mongoose.mongo.ObjectId(m._id) }))
+        .then(integrations => {
+            logger.info(`Found ${integrations.length} integrations that involve module ${req.params.moduleId}`)
+            let integrationPromises = integrations.map(i => {
+                i.pipeline.forEach(s => {
+                    if ('disabled' === status && s.module.toString() === updtedModule._id.toString()) {
+                        logger.info(`Disabling pipeline step ${s._id}`)
+                        s.status = 'disabled'
+                        s.updated = Date.now()
+                    }
+                })
+                return i.save()
+            })
+            return Promise.all(integrationPromises)
+        })
+        .then(() => {
             let data = {
-                id: m._id,
-                name: m.name,
-                description: m.description,
-                meta: m.meta,
-                status: status,
+                id:updtedModule._id,
+                name:updtedModule.name,
+                description:updtedModule.description,
+                meta:updtedModule.meta,
+                status: updtedModule.status,
             }
             res.json(new SuccessResponse(data))
         })
