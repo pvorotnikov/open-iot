@@ -15,9 +15,10 @@ import {
     Icon,
     Popup,
     Divider,
+    Message,
 } from 'semantic-ui-react'
 
-import { ruleActions } from '../_actions'
+import { ruleActions, settingActions } from '../_actions'
 import { ACTION_REPUBLISH, ACTION_ENQUEUE, ACTION_DISCARD } from '../_constants'
 import { ConfirmModal, HighlightBlock } from '../_components'
 
@@ -36,6 +37,10 @@ class Rules extends Component {
                 copyApp: '',
             }
         }
+    }
+
+    componentDidMount() {
+        this.props.dispatch(settingActions.getIntegrationMode())
     }
 
     getScopeName(scopeId) {
@@ -350,28 +355,42 @@ class Rules extends Component {
     render() {
 
         const { loading } = this.props.rules
+        const { integrationMode } = this.props
 
-        return (
-            <Segment raised>
-                <Dimmer active={loading} inverted>
-                    <Loader inverted />
-                </Dimmer>
-                <Label color='blue' ribbon>Rules</Label>
-                <p style={{padding: "10px 10px 0 10px"}}>
-                    You can specify rules that can be executed when a message
-                    is received on a given topic. You can transform the JSON
-                    payload of a message and republish it on another topic or
-                    enqueue it within the scope of an application.
-                    Note that in order to publish a message on a given topic,
-                    you need to create a rule for it first.
-                </p>
-                { this.renderRules() }
-                <Divider horizontal>Create rule</Divider>
-                { this.renderNewRule() }
-                <Divider horizontal>Copy rules from another app</Divider>
-                { this.renderCopyApp() }
-            </Segment>
-        )
+        if (integrationMode === 'rules') {
+
+            return (
+                <Segment raised>
+                    <Dimmer active={loading} inverted>
+                        <Loader inverted />
+                    </Dimmer>
+                    <Label color='blue' ribbon>Rules</Label>
+                    <p style={{padding: "10px 10px 0 10px"}}>
+                        You can specify rules that can be executed when a message
+                        is received on a given topic. You can transform the JSON
+                        payload of a message and republish it on another topic or
+                        enqueue it within the scope of an application.
+                        Note that in order to publish a message on a given topic,
+                        you need to create a rule for it first.
+                    </p>
+                    { this.renderRules() }
+                    <Divider horizontal>Create rule</Divider>
+                    { this.renderNewRule() }
+                    <Divider horizontal>Copy rules from another app</Divider>
+                    { this.renderCopyApp() }
+                </Segment>
+            )
+
+        } else {
+
+            return (
+                <Message warning>
+                    <Message.Header>Rules are not supported in this mode</Message.Header>
+                    <p>The current integration mode is set to <b>"{ integrationMode }"</b>.
+                       You need to change the value of the <b>global.integrationmode</b> setting to <b>"rules"</b>.</p>
+                </Message>
+            )
+        }
     }
 
 }
@@ -380,6 +399,7 @@ Rules.propTypes = {
     application: PropTypes.object.isRequired,
     scopes: PropTypes.array.isRequired,
     rules: PropTypes.object.isRequired,
+    integrationMode: PropTypes.string.isRequired,
     onSubmit: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
     copyRules: PropTypes.array.isRequired,
@@ -391,10 +411,11 @@ Rules.defaultProps = {
 }
 
 function mapStateToProps(state) {
-    const { rules } = state
+    const { rules, settings } = state
     const { copyRules } = rules
     return {
-        copyRules
+        copyRules,
+        integrationMode: settings.integrationMode,
     }
 }
 

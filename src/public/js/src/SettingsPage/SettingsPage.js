@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import moment from 'moment'
 
-import { Header, Container, Icon, Loader, Table, Checkbox, TextArea } from 'semantic-ui-react'
+import { Header, Container, Icon, Loader, Table, Checkbox, TextArea, Dropdown } from 'semantic-ui-react'
 
 import { EditableText } from '../_components'
 import { settingActions, moduleActions } from '../_actions'
@@ -44,6 +44,12 @@ class SettingsPage extends Component {
         )
     }
 
+    renderEditableDropdown(key, value, options) {
+        return (
+            <Dropdown fluid selection defaultValue={value} options={options} onChange={(e, data) => this.onSettingUpdate(key, data.value)} />
+        )
+    }
+
     renderSettings() {
         const { settings } = this.props
 
@@ -61,6 +67,13 @@ class SettingsPage extends Component {
                         break
                     case 'bridge.aws.endpoint':
                         valueElement = this.renderEditableText(s.key, s.value)
+                        break
+                    case 'global.integrationmode':
+                        let options = [
+                            { text: 'Rules', value: 'rules' },
+                            { text: 'Integrations', value: 'integrations' }
+                        ]
+                        valueElement = this.renderEditableDropdown(s.key, s.value, options)
                         break
                     default:
                         valueElement = this.renderEditableTextArea(s.key, s.value)

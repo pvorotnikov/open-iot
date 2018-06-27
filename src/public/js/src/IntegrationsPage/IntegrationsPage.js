@@ -3,15 +3,16 @@ import PropTypes from 'prop-types'
 import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 
-import { Header, Segment, Container, Icon, Loader, Label, List, Step, Popup } from 'semantic-ui-react'
+import { Header, Segment, Container, Icon, Loader, Label, List, Step, Popup, Message } from 'semantic-ui-react'
 
-import { moduleActions, integrationActions } from '../_actions'
+import { moduleActions, integrationActions, settingActions } from '../_actions'
 import { PipelineCreator } from './'
 import { ConfirmModal, HighlightBlock } from '../_components'
 
 class IntegrationsPage extends Component {
 
     componentDidMount() {
+        this.props.dispatch(settingActions.getIntegrationMode())
         this.props.dispatch(moduleActions.getAll())
         this.props.dispatch(integrationActions.getAll())
     }
@@ -153,7 +154,18 @@ class IntegrationsPage extends Component {
     }
 
     render() {
-        const { modules, integrations } = this.props
+        const { modules, integrations, integrationMode } = this.props
+
+        let contents = integrationMode === 'integrations'
+            ? (<div>
+                    { this.renderIntegrations() }
+                    <PipelineCreator />
+                </div>)
+            : (<Message warning>
+                    <Message.Header>Unsupported integration mode</Message.Header>
+                    <p>The current integration mode is set to <b>"{ integrationMode }"</b>.
+                       You need to change the value of the <b>global.integrationmode</b> setting to <b>"integrations"</b>.</p>
+                </Message>)
 
         return (
             <Container>
@@ -165,9 +177,7 @@ class IntegrationsPage extends Component {
                     </Header.Content>
                 </Header>
 
-                { this.renderIntegrations() }
-
-                <PipelineCreator />
+                { contents }
 
             </Container>
         )
@@ -177,15 +187,17 @@ class IntegrationsPage extends Component {
 IntegrationsPage.propTypes = {
     modules: PropTypes.object,
     integrations: PropTypes.object,
+    integrationMode: PropTypes.string.isRequired,
     dispatch: PropTypes.func.isRequired,
     history: PropTypes.object.isRequired,
 }
 
 function mapStateToProps(state) {
-    const { modules, integrations } = state
+    const { modules, integrations, settings } = state
     return {
         modules,
         integrations,
+        integrationMode: settings.integrationMode,
     }
 }
 

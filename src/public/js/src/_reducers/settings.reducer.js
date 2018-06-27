@@ -11,25 +11,21 @@ import { settingConstants } from '../_constants'
  * @param  {Object} action reducer action
  * @return {Object}        new state
  */
-export function settings(state = { items: null, loading: false, registrationEnabled: false, }, action) {
+export function settings(state = { items: null, loading: false, registrationEnabled: false, integrationMode: 'rules', }, action) {
 
     switch (action.type) {
 
         case settingConstants.GETALL_REQUEST:
             return { ...state, loading: true, }
-            break
 
         case settingConstants.GETALL_SUCCESS:
             return { ...state, items: action.settings, loading: false, }
-            break
 
         case settingConstants.GETALL_FAILURE:
             return { ...state, items: null, loading: false, }
-            break
 
         case settingConstants.UPDATE_REQUEST:
             return { ...state, loading: true, }
-            break
 
         case settingConstants.UPDATE_SUCCESS:
             // update the values of the user
@@ -42,23 +38,27 @@ export function settings(state = { items: null, loading: false, registrationEnab
                 )),
                 loading: false
             }
-            break
 
         case settingConstants.UPDATE_FAILURE:
             return { ...state, loading: false, }
-            break
 
         case settingConstants.GET_ENABLE_REGISTRATIONS_REQUEST:
             return { ...state, loading: true, }
-            break
 
         case settingConstants.GET_ENABLE_REGISTRATIONS_SUCCESS:
             return { ...state, loading: false, registrationEnabled: action.setting, }
-            break
 
         case settingConstants.GET_ENABLE_REGISTRATIONS_FAILURE:
             return { ...state, loading: false, }
-            break
+
+        case settingConstants.GET_INTEGRATION_MODE_REQUEST:
+            return { ...state, loading: true, }
+
+        case settingConstants.GET_INTEGRATION_MODE_SUCCESS:
+            return { ...state, loading: false, integrationMode: action.mode, }
+
+        case settingConstants.GET_INTEGRATION_MODE_FAILURE:
+            return { ...state, loading: false, }
 
         default:
             return state

@@ -18,7 +18,7 @@ const defaultSettings = [
     {
         key: 'global.integrationmode',
         value: 'rules',
-        description: 'Integration mode - rules or integrations',
+        description: 'Integration mode',
     },
     {
         key: 'bridge.aws.enabled',
