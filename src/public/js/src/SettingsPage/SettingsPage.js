@@ -105,30 +105,37 @@ class SettingsPage extends Component {
 
     renderModules() {
 
-        const { modules } = this.props
+        const modules = this.props.modules.items
+        let moduleItems = null
 
-        let moduleItems = modules.items.map(m => {
+        if (!modules.length) {
+            moduleItems = (<Table.Row>
+                <Table.Cell colSpan='2' textAlign='center'>There are no modules available</Table.Cell>
+            </Table.Row>)
+        } else {
+            moduleItems = modules.map(m => {
 
-            let moduleEnabled = m.status === 'enabled'
-            let moduleMissing = m.status === 'missing'
+                let moduleEnabled = m.status === 'enabled'
+                let moduleMissing = m.status === 'missing'
 
-            return (
-                <Table.Row key={m.id} negative={moduleMissing}>
-                    <Table.Cell>
-                        <Header as='h4'>
-                            <Header.Content>
-                                { m.name }
-                                <Header.Subheader>{ m.description }</Header.Subheader>
-                            </Header.Content>
-                        </Header>
-                    </Table.Cell>
-                    <Table.Cell>
-                        { !moduleMissing && <Checkbox toggle defaultChecked={moduleEnabled} onChange={(e, data) => this.onModuleEnable(m.id, data.checked)} /> }
-                        { moduleMissing && <span>Missing module</span> }
-                    </Table.Cell>
-                </Table.Row>
-            )
-        })
+                return (
+                    <Table.Row key={m.id} negative={moduleMissing}>
+                        <Table.Cell>
+                            <Header as='h4'>
+                                <Header.Content>
+                                    { m.name }
+                                    <Header.Subheader>{ m.description }</Header.Subheader>
+                                </Header.Content>
+                            </Header>
+                        </Table.Cell>
+                        <Table.Cell>
+                            { !moduleMissing && <Checkbox toggle defaultChecked={moduleEnabled} onChange={(e, data) => this.onModuleEnable(m.id, data.checked)} /> }
+                            { moduleMissing && <span>Missing module</span> }
+                        </Table.Cell>
+                    </Table.Row>
+                )
+            })
+        }
 
         return (
             <div>
@@ -158,7 +165,7 @@ class SettingsPage extends Component {
                     <Header.Content>Service Settings <Loader active={settings.loading} inline size='small' /></Header.Content>
                 </Header>
                 { settings.items && this.renderSettings() }
-                { modules.items && this.renderModules() }
+                { this.renderModules() }
             </Container>
         )
     }
