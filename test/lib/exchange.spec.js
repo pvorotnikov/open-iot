@@ -188,7 +188,7 @@ describe('Exchange', function() {
         it('should publish - message handler, regular topic', done => {
             exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), 'test', true)
             .then(res => {
-                expect(res).to.be.undefined
+                expect(res).to.equal('Message Handler')
             })
             .finally(() => done())
         })
@@ -324,7 +324,7 @@ describe('Exchange', function() {
 
             exchange.authorizeTopicPublish(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`, true)
             .then((direction) => {
-                direction.should.equal('in')
+                direction.should.equal('Test')
                 storeStatsSpy.should.have.been.calledWith('in', APP_ID.toString(), GATEWAY_ID.toString())
             })
             .finally(() => done())
@@ -337,7 +337,7 @@ describe('Exchange', function() {
 
             exchange.authorizeTopicPublish(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`, false)
             .then((direction) => {
-                direction.should.equal('in')
+                direction.should.equal('Test')
                 storeStatsSpy.should.not.have.been.called
             })
             .finally(() => done())
@@ -355,7 +355,7 @@ describe('Exchange', function() {
         it('should publish - message handler, regular topic', done => {
             exchange.authorizeTopicPublishIntegrations(nconf.get('HANDLER_KEY'), 'test')
             .then(res => {
-                res.should.equal('message handler')
+                res.should.equal('Message Handler')
                 done()
             })
             .catch(err => done(err))
@@ -364,7 +364,7 @@ describe('Exchange', function() {
         it('should publish - registered topic', done => {
             exchange.authorizeTopicPublishIntegrations(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
             .then(res => {
-                res.should.equal('in')
+                res.should.equal('Test')
                 done()
             })
             .catch(err => done(err))
@@ -453,7 +453,7 @@ describe('Exchange', function() {
             exchange.authorizeTopicSubscribe(nconf.get('HANDLER_KEY'), 'test-topic')
             .then(res => {
                 res.should.be.a('string')
-                res.should.equal('message handler')
+                res.should.equal('Message Handler')
             })
             .finally(() => done())
         })
@@ -462,7 +462,7 @@ describe('Exchange', function() {
             exchange.authorizeTopicSubscribe(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
             .then(res => {
                 res.should.be.a('string')
-                res.should.equal('own topic')
+                res.should.equal('Test')
             })
             .finally(() => done())
         })
@@ -511,7 +511,7 @@ describe('Exchange', function() {
             exchange.authorizeTopicSubscribeIntegrations(nconf.get('HANDLER_KEY'), 'test-topic')
             .then(res => {
                 res.should.be.a('string')
-                res.should.equal('message handler')
+                res.should.equal('Message Handler')
                 done()
             })
             .catch(err => done(err))
@@ -521,7 +521,7 @@ describe('Exchange', function() {
             exchange.authorizeTopicSubscribeIntegrations(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
             .then(res => {
                 res.should.be.a('string')
-                res.should.equal('topic registered')
+                res.should.equal('Test')
                 done()
             })
             .catch(err => done(err))

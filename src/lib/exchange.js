@@ -52,7 +52,7 @@ function authorizeTopicPublish(key, topic, track=true) {
                 storeStats('out', appId, gwId)
             }
 
-            return fulfill()
+            return fulfill('Message Handler')
         }
 
         // analyze topic
@@ -75,7 +75,7 @@ function authorizeTopicPublish(key, topic, track=true) {
                     if (track) {
                         storeStats('out', appId, gwId)
                     }
-                    return fulfill()
+                    return fulfill(app.name)
                 }
 
                 // verify that the topic is registered within the application
@@ -87,7 +87,7 @@ function authorizeTopicPublish(key, topic, track=true) {
                         if (track) {
                             storeStats('in', appId, gwId)
                         }
-                        fulfill('in', appId, gwId)
+                        fulfill(app.name)
                     } else {
                         reject(new Error(`Topic ${topicName} is not registered within app ${appId}`))
                     }
@@ -110,7 +110,7 @@ function authorizeTopicPublishIntegrations(key, topic, track=true) {
     return new Promise((fulfill, reject) => {
 
         if (key === nconf.get('HANDLER_KEY')) {
-            return fulfill('message handler')
+            return fulfill('Message Handler')
         }
 
         // analyze topic
@@ -130,9 +130,9 @@ function authorizeTopicPublishIntegrations(key, topic, track=true) {
                 Integration.findOne({ topic: topicName })
                 .then(integration => {
                     if (!integration) {
-                        reject(new Error(`Unknown topic: ${topicName}. Request from app ${appId}`))
+                        reject(new Error(`Unknown topic: ${topicName} (${app.name})`))
                     } else {
-                        fulfill('in', appId, gwId)
+                        fulfill(app.name)
                     }
                 })
                 .catch(err => {
@@ -156,7 +156,7 @@ function authorizeTopicSubscribe(key, topic) {
     return new Promise((fulfill, reject) => {
 
         if (key === nconf.get('HANDLER_KEY')) {
-            return fulfill('message handler')
+            return fulfill('Message Handler')
         }
 
         // analyze topic
@@ -171,7 +171,7 @@ function authorizeTopicSubscribe(key, topic) {
                 // TODO: in sharing scenario this should branch in permissions evaluation
                 reject(new Error('Application id and key do not match'))
             } else {
-                fulfill('own topic')
+                fulfill(app.name)
             }
         })
         .catch(err => {
@@ -190,7 +190,7 @@ function authorizeTopicSubscribeIntegrations(key, topic) {
     return new Promise((fulfill, reject) => {
 
         if (key === nconf.get('HANDLER_KEY')) {
-            return fulfill('message handler')
+            return fulfill('Message Handler')
         }
 
         // analyze topic
@@ -210,9 +210,9 @@ function authorizeTopicSubscribeIntegrations(key, topic) {
                 Integration.findOne({ topic: topicName })
                 .then(integration => {
                     if (!integration) {
-                        reject(new Error(`Unknown topic: ${topicName}. Request from app ${appId}`))
+                        reject(new Error(`Unknown topic: ${topicName} (${app.name})`))
                     } else {
-                        fulfill('topic registered')
+                        fulfill(app.name)
                     }
                 })
                 .catch(err => {

@@ -1,15 +1,15 @@
 #!/bin/bash
 
-APP_ID=5a5890807d6c1b01b01ad49d
-APP_KEY=9122d97d
-APP_SECRET=0f027c9e206d4d7a
-GATEWAY_ID=5a58909b7d6c1b01b01ad49e
+APP_ID=5b34e107e22d520032efd2a8
+APP_KEY=f0559092
+APP_SECRET=96301bba000be3b5
+GATEWAY_ID=5b34e113e22d520032efd2a9
 
 mosquitto_pub \
     -h 127.0.0.1 \
-    -p 8883 \
+    -p 1883 \
     -u $APP_KEY \
     -P $APP_SECRET \
-    -t $APP_ID/$GATEWAY_ID/tpms/fl \
+    -t $APP_ID/$GATEWAY_ID/test \
     -m '{"value": 123}' \
     -d
