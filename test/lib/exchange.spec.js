@@ -10,7 +10,7 @@ const expect = chai.expect
 const { cleanDb, logger, objectId } = require('../_utils')
 
 const { utils } = require('../../src/lib')
-const { Application, Gateway, Rule, User } = require('../../src/models')
+const { Application, Gateway, Rule, User, Integration } = require('../../src/models')
 const exchange = rewire('../../src/lib/exchange')
 
 describe('Exchange', function() {
@@ -19,6 +19,8 @@ describe('Exchange', function() {
     const APP_ID = objectId()
     const GATEWAY_ID = objectId()
     const RULE_ID = objectId()
+    const MODULE_ID = objectId()
+    const INTEGRATION_ID = objectId()
     const APP_KEY = utils.generateAccessKey(32)
     const APP_SECRET = utils.generateSecretKey(64)
 
@@ -67,6 +69,15 @@ describe('Exchange', function() {
                     action: 'discard',
                     output: null,
                     scope: null,
+                }).save(),
+
+                // create integration
+                new Integration({
+                    _id: INTEGRATION_ID,
+                    user: USER_ID,
+                    topic: 'test',
+                    pipeline: [],
+                    status: 'enabled',
                 }).save()
 
             ])
@@ -335,6 +346,103 @@ describe('Exchange', function() {
     })
 
     /* ============================
+     * PUBLISH SUITE - INTEGRATIONS
+     * ============================
+     */
+
+    describe('Publish (integrations)', function() {
+
+        it('should publish - message handler, regular topic', done => {
+            exchange.authorizeTopicPublishIntegrations(nconf.get('HANDLER_KEY'), 'test')
+            .then(res => {
+                res.should.equal('message handler')
+                done()
+            })
+            .catch(err => done(err))
+        })
+
+        it('should publish - registered topic', done => {
+            exchange.authorizeTopicPublishIntegrations(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
+            .then(res => {
+                res.should.equal('in')
+                done()
+            })
+            .catch(err => done(err))
+        })
+
+        it('should not publish - wrong key', done => {
+            exchange.authorizeTopicPublishIntegrations('wrong', `${APP_ID}/${GATEWAY_ID}/test`)
+            .then(res => {
+                done(new Error('Should not resolve'))
+            })
+            .catch(err => {
+                err.should.be.an('error')
+                err.message.should.equal('Application id and key do not match')
+                done()
+            })
+        })
+
+        it('should not publish - unknown app', done => {
+            exchange.authorizeTopicPublishIntegrations(APP_KEY, `${objectId()}/${GATEWAY_ID}/test-topic`)
+            .then(res => {
+                done(new Error('Should not resolve'))
+            })
+            .catch(err => done())
+        })
+
+        it('should not publish - unknown topic', done => {
+            exchange.authorizeTopicPublishIntegrations(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test-topic`)
+            .then(res => {
+                done(new Error('Should not resolve'))
+            })
+            .catch(err => done())
+        })
+
+        it('should not publish - db error in Application', done => {
+
+            const ApplicationMock = sinon.mock(Application)
+
+            ApplicationMock
+            .expects('findById').withArgs(APP_ID.toString())
+            .chain('where').withArgs('key')
+            .chain('eq').withArgs(APP_KEY)
+            .rejects(new Error('Forced reject'))
+
+            exchange.authorizeTopicPublishIntegrations(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
+            .catch(err => {
+                err.should.be.an('error')
+                err.message.should.equal('Forced reject')
+            })
+            .finally(() => {
+                ApplicationMock.verify()
+                ApplicationMock.restore()
+                done()
+            })
+        })
+
+        it('should not publish - db error in Integration', done => {
+
+            const IntegrationMock = sinon.mock(Integration)
+
+            IntegrationMock
+            .expects('findOne')
+            .rejects(new Error('Forced reject'))
+
+            exchange.authorizeTopicPublishIntegrations(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
+            .catch(err => {
+                err.should.be.an('error')
+                err.message.should.equal('Forced reject')
+            })
+            .finally(() => {
+                IntegrationMock.verify()
+                IntegrationMock.restore()
+                done()
+            })
+        })
+
+    })
+
+    /* ============================
      * SUBSCRIBE SUITE
      * ============================
      */
@@ -386,6 +494,112 @@ describe('Exchange', function() {
             .finally(() => {
                 ApplicationMock.verify()
                 ApplicationMock.restore()
+                done()
+            })
+        })
+
+    })
+
+    /* ============================
+     * SUBSCRIBE SUITE - INTEGRATIONS
+     * ============================
+     */
+
+    describe('Subscribe (integrations)', function() {
+
+        it('should subscribe - message handler', done => {
+            exchange.authorizeTopicSubscribeIntegrations(nconf.get('HANDLER_KEY'), 'test-topic')
+            .then(res => {
+                res.should.be.a('string')
+                res.should.equal('message handler')
+                done()
+            })
+            .catch(err => done(err))
+        })
+
+        it('should subscribe - registered topic', done => {
+            exchange.authorizeTopicSubscribeIntegrations(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
+            .then(res => {
+                res.should.be.a('string')
+                res.should.equal('topic registered')
+                done()
+            })
+            .catch(err => done(err))
+        })
+
+        it('should not subscribe - wrong key', done => {
+            exchange.authorizeTopicSubscribeIntegrations('wrong', `${APP_ID}/${GATEWAY_ID}/test`)
+            .then(res => {
+                done(new Error('Should not resolve'))
+            })
+            .catch(err => {
+                err.should.be.an('error')
+                err.message.should.equal('Application id and key do not match')
+                done()
+            })
+        })
+
+        it('should not subscribe - unknown topic', done => {
+            exchange.authorizeTopicSubscribeIntegrations(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test-topic`)
+            .then(res => {
+                done(new Error('Should not resolve'))
+            })
+            .catch(err => {
+                err.should.be.an('error')
+                done()
+            })
+        })
+
+        it('should not subscribe - unknown app', done => {
+            exchange.authorizeTopicSubscribeIntegrations(APP_KEY, `${objectId()}/${GATEWAY_ID}/test`)
+            .then(res => {
+                done(new Error('Should not resolve'))
+            })
+            .catch(err => {
+                err.should.be.an('error')
+                err.message.should.equal('Application id and key do not match')
+                done()
+            })
+        })
+
+        it('should not subscribe - db error in Application', done => {
+
+            const ApplicationMock = sinon.mock(Application)
+
+            ApplicationMock
+            .expects('findById').withArgs(APP_ID.toString())
+            .chain('where').withArgs('key')
+            .chain('eq').withArgs(APP_KEY)
+            .rejects(new Error('Forced reject'))
+
+            exchange.authorizeTopicSubscribeIntegrations(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
+            .catch(err => {
+                err.should.be.an('error')
+                err.message.should.equal('Forced reject')
+            })
+            .finally(() => {
+                ApplicationMock.verify()
+                ApplicationMock.restore()
+                done()
+            })
+        })
+
+        it('should not subscribe - db error in Integration', done => {
+
+            const IntegrationMock = sinon.mock(Integration)
+
+            IntegrationMock
+            .expects('findOne')
+            .rejects(new Error('Forced reject'))
+
+            exchange.authorizeTopicSubscribeIntegrations(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
+            .catch(err => {
+                err.should.be.an('error')
+                err.message.should.equal('Forced reject')
+            })
+            .finally(() => {
+                IntegrationMock.verify()
+                IntegrationMock.restore()
                 done()
             })
         })
