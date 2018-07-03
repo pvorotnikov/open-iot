@@ -65,3 +65,4 @@ src/public/js/dist
 src/public/css
 src/modules/*
 !src/modules/.gitkeep
+!src/modules/system.*

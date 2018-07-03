@@ -1,0 +1,7 @@
+{
+  "name": "system.republish",
+  "version": "1.0.0",
+  "description": "Republish message to another topic",
+  "main": "index.js",
+  "author": "Petar Vorotnikov"
+}

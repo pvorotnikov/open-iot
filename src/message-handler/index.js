@@ -4,8 +4,10 @@ const mqtt = require('mqtt')
 const amqp = require('amqplib')
 const Promise = require('bluebird')
 const { logger, constants } = require('../lib')
-const { Rule, Application, Gateway } = require('../models')
+const { Rule, Application, Gateway, Module, Integration } = require('../models')
 const Transformer = require('./transformer')
+
+const integrations = {}
 
 class MessageHandler {
 
@@ -15,11 +17,33 @@ class MessageHandler {
 
         // listen for incoming bridged messages
         process.on(constants.EVENTS.BRIDGE_IN, e => this.bridgeMessage(e))
+        process.on(constants.EVENTS.MODULE_ENABLE, e => {
+            // TODO
+            logger.info(`Should disable module ${e}`)
+        })
+        process.on(constants.EVENTS.MODULE_ENABLE, e => {
+            // TODO
+            logger.info(`Should enable module ${e}`)
+        })
     }
 
-    run() {
+    async run() {
         this.setupMqtt()
         this.setupAmqp()
+
+        // setup integrations
+        if ('integrations' === nconf.get('global.integrationmode')) {
+            let modules = await Module.find()
+            modules.filter(m => 'enabled' === m.status).forEach(m => {
+                logger.info(`Loading module module ${m.name} (${m._id})`)
+                integrations[m._id] = require('../modules/' + m.name)
+                integrations[m._id].name = m.name
+                if (!integrations[m._id].hasOwnProperty('init') || !integrations[m._id].hasOwnProperty('process')) {
+                    logger.warn(`Module ${m.name} does not expose required interface.`)
+                    delete integrations[m._id]
+                }
+            })
+        }
     }
 
     setupAmqp() {
@@ -63,9 +87,11 @@ class MessageHandler {
 
         let [appId, gatewayId, ...topicParts] = topic.split('/')
 
-        // do not process republished messages or messages on the feedback channel
+        // do not process republished messages or messages on the feedback channel (for rules integration mode)
         const lastSegment = topicParts[topicParts.length - 1]
-        if (!mongoose.Types.ObjectId.isValid(appId) || !mongoose.Types.ObjectId.isValid(gatewayId) || 'message' === lastSegment) {
+        if ('rules' === nconf.get('global.integrationmode') &&
+            (!mongoose.Types.ObjectId.isValid(appId) || !mongoose.Types.ObjectId.isValid(gatewayId) || 'message' === lastSegment)
+        ) {
             logger.debug('Republished messages or messages on the feedback channel are not handled (to prevent recursion)')
             return
         }
@@ -102,21 +128,41 @@ class MessageHandler {
             })
         }
 
+        if ('rules' === nconf.get('global.integrationmode')) {
 
-        Rule.find()
-        .where('application').eq(appId)
-        .where('topic').eq(topicName)
-        .then(rules => {
-            rules.forEach(r => {
-                // perform transformation
-                let t = new Transformer(r.transformation, message)
-                let tm = t.getTransformedMessage()
-                this.performTopicAction(r.action, r.scope, r.output, tm)
+            Rule.find()
+            .where('application').eq(appId)
+            .where('topic').eq(topicName)
+            .then(rules => {
+                rules.forEach(r => {
+                    // perform transformation
+                    let t = new Transformer(r.transformation, message)
+                    let tm = t.getTransformedMessage()
+                    this.performTopicAction(r.action, r.scope, r.output, tm)
+                })
             })
-        })
-        .catch(err => {
-            logger.error(err.message)
-        })
+            .catch(err => {
+                logger.error(err.message)
+            })
+
+        } else if ('integrations' === nconf.get('global.integrationmode')) {
+
+            Integration.find({ topic: topicName, status: 'enabled' })
+            .then(integrationList => {
+                integrationList.forEach(i => {
+                    logger.debug('Invoking integration', i._id.toString())
+                    i.pipeline.filter(s => 'enabled' === s.status).forEach(s => {
+                        logger.debug(`Calling module ${integrations[s.module.toString()].name} with arguments ${JSON.stringify(s.arguments)}`)
+                    })
+                })
+            })
+            .catch(err => {
+                logger.error(err.message)
+            })
+
+        } else {
+            logger.warn('Unsupported integration mode:', nconf.get('global.integrationmode'))
+        }
     }
 
     performTopicAction(action, scope, output, payload) {
