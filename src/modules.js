@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 const express = require('express')
-const { logger, responses, auth, utils } = require('./lib')
+const { logger, responses, auth, utils, constants } = require('./lib')
 const { ACCESS_LEVEL, Module, Integration } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
 
@@ -68,11 +68,18 @@ module.exports = function(app) {
             return Promise.all(integrationPromises)
         })
         .then(() => {
+            if ('enabled' === updtedModule.status) {
+                process.emit(constants.EVENTS.MODULE_ENABLE, updtedModule._id)
+            } else if ('disabled' === updtedModule.status) {
+                process.emit(constants.EVENTS.MODULE_DISABLE, updtedModule._id)
+            }
+        })
+        .then(() => {
             let data = {
-                id:updtedModule._id,
-                name:updtedModule.name,
-                description:updtedModule.description,
-                meta:updtedModule.meta,
+                id: updtedModule._id,
+                name: updtedModule.name,
+                description: updtedModule.description,
+                meta: updtedModule.meta,
                 status: updtedModule.status,
             }
             res.json(new SuccessResponse(data))

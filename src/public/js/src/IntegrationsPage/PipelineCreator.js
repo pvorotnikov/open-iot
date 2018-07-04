@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
+import _ from 'lodash'
 
 import { Segment, Icon, Button, Label, Form, Step, Divider, TextArea, Popup, List } from 'semantic-ui-react'
 
@@ -51,7 +52,7 @@ class PipelineCreator extends Component {
     onPipelineStepCreate() {
         const modules = this.props.modules.items
         const { module, args } = this.state.values
-        let parsedArguments = {}
+        let parsedArguments = []
         this.props.dispatch(alertActions.clear())
         if ('' !== args.trim()) {
             try {
@@ -67,7 +68,7 @@ class PipelineCreator extends Component {
 
         modules.forEach(m => {
             if (m.id === module) {
-                let newPipelineStep = m
+                let newPipelineStep = _.cloneDeep(m)
                 newPipelineStep.arguments = parsedArguments
                 this.setState({ values: {
                     ...this.state.values,

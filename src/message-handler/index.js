@@ -17,13 +17,65 @@ class MessageHandler {
 
         // listen for incoming bridged messages
         process.on(constants.EVENTS.BRIDGE_IN, e => this.bridgeMessage(e))
-        process.on(constants.EVENTS.MODULE_ENABLE, e => {
-            // TODO
-            logger.info(`Should disable module ${e}`)
+
+        process.on(constants.EVENTS.MODULE_DISABLE, e => {
+            logger.info(`Disabling module ${e}`)
+
+            // call plugin hook - stop
+            if (integrations[e].hasOwnProperty('stop')) {
+                integrations[e].stop()
+            }
+
+            // call plugin hook - unload
+            if (integrations[e].hasOwnProperty('unload')) {
+                integrations[e].unload()
+            }
+
+            // call plugin hook - cleanup
+            if (integrations[e].hasOwnProperty('cleanup')) {
+                integrations[e].cleanup()
+            }
+
+            delete integrations[e]
         })
-        process.on(constants.EVENTS.MODULE_ENABLE, e => {
-            // TODO
-            logger.info(`Should enable module ${e}`)
+        process.on(constants.EVENTS.MODULE_ENABLE, async e => {
+            logger.info(`Enabling module ${e}`)
+
+            let m = await Module.findById(e)
+            if (m) {
+
+                integrations[m._id] = require('../modules/' + m.name)
+                integrations[m._id]._name = m.name
+                if (!integrations[m._id].hasOwnProperty('process')) {
+                    logger.warn(`Module ${m.name} does not expose required interface.`)
+                    delete integrations[m._id]
+                }
+
+                // call plugin hook - prepare
+                if (integrations[m._id].hasOwnProperty('prepare')) {
+                    integrations[m._id].prepare()
+                }
+
+                // call plugin hook - load
+                if (integrations[m._id].hasOwnProperty('load')) {
+                    integrations[m._id].load()
+                }
+
+                // call plugin hook - getCapabilities
+                if (integrations[m._id].hasOwnProperty('getCapabilities')) {
+                    let cap = integrations[m._id].getCapabilities()
+                    integrations[m._id]._capabilities = cap
+                }
+
+                // call plugin hook - start
+                if (integrations[m._id].hasOwnProperty('start')) {
+                    integrations[m._id].start()
+                }
+
+            } else {
+                logger.error(`Module not found: ${e}`)
+            }
+
         })
     }
 
@@ -37,10 +89,31 @@ class MessageHandler {
             modules.filter(m => 'enabled' === m.status).forEach(m => {
                 logger.info(`Loading module module ${m.name} (${m._id})`)
                 integrations[m._id] = require('../modules/' + m.name)
-                integrations[m._id].name = m.name
-                if (!integrations[m._id].hasOwnProperty('init') || !integrations[m._id].hasOwnProperty('process')) {
+                integrations[m._id]._name = m.name
+                if (!integrations[m._id].hasOwnProperty('process')) {
                     logger.warn(`Module ${m.name} does not expose required interface.`)
                     delete integrations[m._id]
+                }
+
+                // call plugin hook - prepare
+                if (integrations[m._id].hasOwnProperty('prepare')) {
+                    integrations[m._id].prepare()
+                }
+
+                // call plugin hook - load
+                if (integrations[m._id].hasOwnProperty('load')) {
+                    integrations[m._id].load()
+                }
+
+                // call plugin hook - getCapabilities
+                if (integrations[m._id].hasOwnProperty('getCapabilities')) {
+                    let cap = integrations[m._id].getCapabilities()
+                    integrations[m._id]._capabilities = cap
+                }
+
+                // call plugin hook - start
+                if (integrations[m._id].hasOwnProperty('start')) {
+                    integrations[m._id].start()
                 }
             })
         }
@@ -152,7 +225,9 @@ class MessageHandler {
                 integrationList.forEach(i => {
                     logger.debug('Invoking integration', i._id.toString())
                     i.pipeline.filter(s => 'enabled' === s.status).forEach(s => {
-                        logger.debug(`Calling module ${integrations[s.module.toString()].name} with arguments ${JSON.stringify(s.arguments)}`)
+                        // call plugin hook - process
+                        logger.debug(`Calling module ${integrations[s.module.toString()]._name} with arguments ${JSON.stringify(s.arguments)}`)
+                        integrations[s.module.toString()].process.apply(null, s.arguments)
                     })
                 })
             })
