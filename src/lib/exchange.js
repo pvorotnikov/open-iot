@@ -195,7 +195,14 @@ function authorizeTopicSubscribeIntegrations(key, topic) {
 
         // analyze topic
         const [ appId, gwId, ...topicParts ] = topic.split('/')
-        const topicName = topicParts.join('/')
+        let topicName
+        if (mongoose.Types.ObjectId.isValid(gwId)) {
+            topicName = topicParts.join('/')
+        } else if (topicParts && topicParts.length) {
+            topicName = gwId + '/' + topicParts.join('/')
+        } else {
+            topicName = gwId
+        }
 
         // TODO: perform deeper analysis of the appId and gwId parts to evaluate subscription
 

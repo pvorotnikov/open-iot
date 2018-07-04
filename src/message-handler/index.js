@@ -1,4 +1,5 @@
 const nconf = require('nconf')
+const _ = require('lodash')
 const mongoose = require('mongoose')
 const mqtt = require('mqtt')
 const amqp = require('amqplib')
@@ -17,6 +18,7 @@ class MessageHandler {
 
         // listen for incoming bridged messages
         process.on(constants.EVENTS.BRIDGE_IN, e => this.bridgeMessage(e))
+        process.on(constants.EVENTS.MQTT_PUBLISH_MESSAGE, e => this.publishMessage(e))
 
         process.on(constants.EVENTS.MODULE_DISABLE, e => {
             logger.info(`Disabling module ${e}`)
@@ -220,15 +222,25 @@ class MessageHandler {
 
         } else if ('integrations' === nconf.get('global.integrationmode')) {
 
+            // create context that is passed to the invoked integration step
+            const context = {
+                appId,
+                gatewayId,
+                topic: topicName,
+                message,
+            }
+
             Integration.find({ topic: topicName, status: 'enabled' })
             .then(integrationList => {
                 integrationList.forEach(i => {
                     logger.debug('Invoking integration', i._id.toString())
-                    i.pipeline.filter(s => 'enabled' === s.status).forEach(s => {
+                    i.pipeline.filter(s => 'enabled' === s.status).reduce((accumulator, s) => {
                         // call plugin hook - process
                         logger.debug(`Calling module ${integrations[s.module.toString()]._name} with arguments ${JSON.stringify(s.arguments)}`)
-                        integrations[s.module.toString()].process.apply(null, s.arguments)
-                    })
+                        context.message = accumulator
+                        let newMessage = integrations[s.module.toString()].process.apply(null, s.arguments.concat([context]))
+                        return _.isUndefined(newMessage) ? accumulator : newMessage
+                    }, message)
                 })
             })
             .catch(err => {
@@ -270,6 +282,13 @@ class MessageHandler {
             this.mqttClient.publish(topic, payload, { retain: true })
         }
 
+    }
+
+    publishMessage(e) {
+        const { topic, payload } = e
+        if (this.mqttClient) {
+            this.mqttClient.publish(topic, payload)
+        }
     }
 }
 

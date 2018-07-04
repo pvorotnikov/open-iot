@@ -1,14 +1,15 @@
 #!/bin/bash
 
-APP_ID=5b34e107e22d520032efd2a8
-APP_KEY=f0559092
-APP_SECRET=96301bba000be3b5
-GATEWAY_ID=5b34e113e22d520032efd2a9
+APP_ID=5b3b1fca4b13e300323ef12e
+APP_KEY=cda978db
+APP_SECRET=7bd35142c115d0d6
+GATEWAY_ID=5b3b1fd64b13e300323ef12f
 
 mosquitto_sub \
     -h 127.0.0.1 \
     -p 1883 \
     -u $APP_KEY \
     -P $APP_SECRET \
-    -t $APP_ID/$GATEWAY_ID/test \
+    -t $APP_ID/$GATEWAY_ID/test2 \
+    -t $APP_ID/$GATEWAY_ID/test3 \
     -d

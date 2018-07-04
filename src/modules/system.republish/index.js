@@ -1,3 +1,5 @@
+const _ = require('lodash')
+
 function prepare() {
     console.log('system.republish.prepare() called')
 }
@@ -34,8 +36,24 @@ function cleanup() {
     console.log('system.republish.cleanup() called')
 }
 
-function process(arg1, arg2, arg3) {
-    console.log(arg1, arg2, arg3)
+function _process(destinationTopicTemplate, context) {
+    const { topic, message, appId, gatewayId } = context
+    const destinationTopic = processTemplateString(destinationTopicTemplate, { ':appId': appId, ':gatewayId': gatewayId })
+    console.log(`Republishing message from ${appId}/${gatewayId}/${topic} to ${destinationTopic}`)
+    process.emit('mqtt.publish.message', {
+        topic: destinationTopic,
+        payload: message,
+    })
+    return message
+}
+
+function processTemplateString(template, replacements) {
+    if (!_.isString(template)) return template
+    let result = template
+    for (let i in replacements) {
+        result = result.replace(i, replacements[i])
+    }
+    return result
 }
 
 module.exports = {
@@ -48,5 +66,5 @@ module.exports = {
     stop,
     unload,
     cleanup,
-    process,
+    process: _process,
 }
