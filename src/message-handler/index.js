@@ -89,33 +89,37 @@ class MessageHandler {
         if ('integrations' === nconf.get('global.integrationmode')) {
             let modules = await Module.find()
             modules.filter(m => 'enabled' === m.status).forEach(m => {
-                logger.info(`Loading module module ${m.name} (${m._id})`)
-                integrations[m._id] = require('../modules/' + m.name)
-                integrations[m._id]._name = m.name
-                if (!integrations[m._id].hasOwnProperty('process')) {
-                    logger.warn(`Module ${m.name} does not expose required interface.`)
-                    delete integrations[m._id]
-                }
+                try {
+                    logger.info(`Loading module module ${m.name} (${m._id})`)
+                    integrations[m._id] = require('../modules/' + m.name)
+                    integrations[m._id]._name = m.name
+                    if (!integrations[m._id].hasOwnProperty('process')) {
+                        logger.warn(`Module ${m.name} does not expose required interface.`)
+                        delete integrations[m._id]
+                    }
 
-                // call plugin hook - prepare
-                if (integrations[m._id].hasOwnProperty('prepare')) {
-                    integrations[m._id].prepare()
-                }
+                    // call plugin hook - prepare
+                    if (integrations[m._id].hasOwnProperty('prepare')) {
+                        integrations[m._id].prepare()
+                    }
 
-                // call plugin hook - load
-                if (integrations[m._id].hasOwnProperty('load')) {
-                    integrations[m._id].load()
-                }
+                    // call plugin hook - load
+                    if (integrations[m._id].hasOwnProperty('load')) {
+                        integrations[m._id].load()
+                    }
 
-                // call plugin hook - getCapabilities
-                if (integrations[m._id].hasOwnProperty('getCapabilities')) {
-                    let cap = integrations[m._id].getCapabilities()
-                    integrations[m._id]._capabilities = cap
-                }
+                    // call plugin hook - getCapabilities
+                    if (integrations[m._id].hasOwnProperty('getCapabilities')) {
+                        let cap = integrations[m._id].getCapabilities()
+                        integrations[m._id]._capabilities = cap
+                    }
 
-                // call plugin hook - start
-                if (integrations[m._id].hasOwnProperty('start')) {
-                    integrations[m._id].start()
+                    // call plugin hook - start
+                    if (integrations[m._id].hasOwnProperty('start')) {
+                        integrations[m._id].start()
+                    }
+                } catch (err) {
+                    logger.error(err.message)
                 }
             })
         }
