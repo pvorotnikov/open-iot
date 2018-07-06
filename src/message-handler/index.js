@@ -44,38 +44,43 @@ class MessageHandler {
             logger.info(`Enabling module ${e}`)
 
             let m = await Module.findById(e)
-            if (m) {
+            try {
+                if (m) {
 
-                integrations[m._id] = require('../modules/' + m.name)
-                integrations[m._id]._name = m.name
-                if (!integrations[m._id].hasOwnProperty('process')) {
-                    logger.warn(`Module ${m.name} does not expose required interface.`)
-                    delete integrations[m._id]
+                    integrations[m._id] = require('../modules/' + m.name)
+                    integrations[m._id]._name = m.name
+                    if (!integrations[m._id].hasOwnProperty('process')) {
+                        logger.warn(`Module ${m.name} does not expose required interface.`)
+                        delete integrations[m._id]
+                    }
+
+                    // call plugin hook - prepare
+                    if (integrations[m._id].hasOwnProperty('prepare')) {
+                        integrations[m._id].prepare()
+                    }
+
+                    // call plugin hook - load
+                    if (integrations[m._id].hasOwnProperty('load')) {
+                        integrations[m._id].load()
+                    }
+
+                    // call plugin hook - getCapabilities
+                    if (integrations[m._id].hasOwnProperty('getCapabilities')) {
+                        let cap = integrations[m._id].getCapabilities()
+                        integrations[m._id]._capabilities = cap
+                    }
+
+                    // call plugin hook - start
+                    if (integrations[m._id].hasOwnProperty('start')) {
+                        integrations[m._id].start()
+                    }
+
+                } else {
+                    logger.error(`Module not found: ${e}`)
                 }
 
-                // call plugin hook - prepare
-                if (integrations[m._id].hasOwnProperty('prepare')) {
-                    integrations[m._id].prepare()
-                }
-
-                // call plugin hook - load
-                if (integrations[m._id].hasOwnProperty('load')) {
-                    integrations[m._id].load()
-                }
-
-                // call plugin hook - getCapabilities
-                if (integrations[m._id].hasOwnProperty('getCapabilities')) {
-                    let cap = integrations[m._id].getCapabilities()
-                    integrations[m._id]._capabilities = cap
-                }
-
-                // call plugin hook - start
-                if (integrations[m._id].hasOwnProperty('start')) {
-                    integrations[m._id].start()
-                }
-
-            } else {
-                logger.error(`Module not found: ${e}`)
+            } catch (err) {
+                logger.error(err.message)
             }
 
         })
