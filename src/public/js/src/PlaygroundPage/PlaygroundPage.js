@@ -57,7 +57,9 @@ class PlaygroundPage extends Component {
     availableApps() {
         const { apps } = this.props
         if (apps.items) {
-            return apps.items.map(a => ({ text: a.name, value: a.id }))
+            return apps.items
+            .sort((a, b) => a.name > b.name ? 1 : a.name < b.name ? -1 : 0)
+            .map(a => ({ text: a.name, value: a.id }))
         } else {
             return []
         }
@@ -92,6 +94,7 @@ class PlaygroundPage extends Component {
                         .filter(r => r.scope === this.state.values.app)
                         .map(r => ({ text: r.output, value: r.output }))
                     )
+                    .sort((a, b) => a.text > b.text ? 1 : a.text < b.text ? -1 : 0)
                     .concat(
                         [{text: 'Feedback Channel', value: FEEDBACK_CHANNEL}]
                     )
@@ -103,6 +106,7 @@ class PlaygroundPage extends Component {
                 .concat(
                     rules.items.map(r => ({ text: r.topic, value: r.topic }))
                 )
+                .sort((a, b) => a.text > b.text ? 1 : a.text < b.text ? -1 : 0)
                 .concat(
                     [{text: 'Feedback Channel', value: FEEDBACK_CHANNEL}]
                 )
@@ -308,6 +312,7 @@ class PlaygroundPage extends Component {
                         <Form.Dropdown name='app'
                             placeholder='Choose an application'
                             selection
+                            search
                             value={ this.state.values.app }
                             options={ this.availableApps() }
                             onChange={ this.onAppChange.bind(this) } />
@@ -315,6 +320,7 @@ class PlaygroundPage extends Component {
                         <Form.Dropdown name='gateway'
                             placeholder='Choose a gateway'
                             selection
+                            search
                             value={ this.state.values.gateway }
                             options={ this.availableGateways() }
                             onChange={ this.onChange.bind(this) } />

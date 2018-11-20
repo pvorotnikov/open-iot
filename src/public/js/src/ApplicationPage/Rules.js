@@ -244,7 +244,9 @@ class Rules extends Component {
 
     renderRules() {
         const { rules } = this.props
-        const items = rules.items.map(r => {
+        const items = rules.items
+        .sort((a, b) => a.topic > b.topic ? 1 : a.topic < b.topic ? -1 : 0)
+        .map(r => {
 
             let actionStep = null
 
