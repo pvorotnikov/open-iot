@@ -15,16 +15,27 @@ chai.use(sinonChai)
 
 // mock mongoose
 const mongoose = require('mongoose')
-const Mockgoose = require('mockgoose').Mockgoose
-const mockgoose = new Mockgoose(mongoose)
+const { MongoMemoryServer } = require('mongodb-memory-server')
+const mongod = new MongoMemoryServer()
 
 const { logger } = require('./_utils')
 
 before(async () => {
+
     logger.info('Setting up DB')
-    await mockgoose.prepareStorage()
+    const uri = await mongod.getConnectionString()
+    const port = await mongod.getPort()
+    const dbPath = await mongod.getDbPath()
+    const dbName = await mongod.getDbName()
+    const mongooseOpts = {
+        autoReconnect: true,
+        reconnectTries: Number.MAX_VALUE,
+        reconnectInterval: 1000,
+        useNewUrlParser: true,
+    }
+
+    await mongoose.connect(uri, mongooseOpts)
     logger.info('Mongoose DB setup complete')
-    await mongoose.connect('mongodb://iot/db', { useNewUrlParser: true })
 
     // silent everything
     logger.transports[0].silent = true
