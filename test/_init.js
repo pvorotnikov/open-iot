@@ -24,7 +24,7 @@ before(async () => {
     logger.info('Setting up DB')
     await mockgoose.prepareStorage()
     logger.info('Mongoose DB setup complete')
-    await mongoose.connect('mongodb://iot/db')
+    await mongoose.connect('mongodb://iot/db', { useNewUrlParser: true })
 
     // silent everything
     logger.transports[0].silent = true
