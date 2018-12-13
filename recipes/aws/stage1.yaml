@@ -1,0 +1,419 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: A stack for deploying OpenIoT service in AWS Fargate.
+             This is stage1 of two-stage stack set and it creates
+             - public VPC with two subnets
+             - two security groups for the services
+             - public-facing NLB to register the services in
+             - six targets for TCP traffic
+             - S3 bucket to hold certificates and other data
+
+
+# ============================
+# Stack Mappings
+# ============================
+Mappings:
+  # Hard values for the subnet masks. These masks define
+  # the range of internal IP addresses that can be assigned.
+  # The VPC can have all IP's from 10.0.0.0 to 10.0.255.255
+  # There are two subnets which cover the ranges:
+  #
+  # 10.0.0.0 - 10.0.0.255
+  # 10.0.1.0 - 10.0.1.255
+  #
+  # If you need more IP addresses (perhaps you have so many
+  # instances that you run out) then you can customize these
+  # ranges to add more
+  SubnetConfig:
+    VPC:
+      CIDR: '10.0.0.0/16'
+    PublicOne:
+      CIDR: '10.0.0.0/24'
+    PublicTwo:
+      CIDR: '10.0.1.0/24'
+
+
+# ============================
+# Stack Resources
+# ============================
+Resources:
+
+  # ============================
+  # VPC
+  # ============================
+
+  # VPC in which containers will be networked.
+  # It has two public subnets
+  # We distribute the subnets across the first two available subnets
+  # for the region, for high availability.
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      CidrBlock: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
+
+  # Two public subnets, where containers can have public IP addresses
+  PublicSubnetOne:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 0
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap ['SubnetConfig', 'PublicOne', 'CIDR']
+      MapPublicIpOnLaunch: true
+
+  PublicSubnetTwo:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 1
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap ['SubnetConfig', 'PublicTwo', 'CIDR']
+      MapPublicIpOnLaunch: true
+
+  # Setup networking resources for the public subnets. Containers
+  # in the public subnets have public IP addresses and the routing table
+  # sends network traffic via the internet gateway.
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  GatewayAttachement:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachement
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetOneRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetOne
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetTwoRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetTwo
+      RouteTableId: !Ref PublicRouteTable
+
+  # ============================
+  # SECURITY GROUPS
+  # ============================
+
+  # ==============================================================
+  # A security group for the containers we will run in ECS.
+  # Two rules, allowing network traffic:
+  # * from all subnets within the VPC (to allow the NLB)
+  # * from other members of the security group
+  # ==============================================================
+  ECSSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Enable ingress from the VPC and ECSSecurityGroup
+      VpcId: !Ref VPC
+
+  ECSSecurityGroupIngressFromVPC:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      Description: Ingress from VPC
+      GroupId: !Ref ECSSecurityGroup
+      IpProtocol: -1
+      CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
+
+  ECSSecurityGroupIngressFromSelf:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      Description: Ingress from other containers in the same security group
+      GroupId: !Ref ECSSecurityGroup
+      IpProtocol: -1
+      SourceSecurityGroupId: !Ref ECSSecurityGroup
+
+  # ==============================================================
+  # A security group for the MongoDB service.
+  # One rule, allowing network traffic from ECSSecurityGroup.
+  # ==============================================================
+  MongoDBSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Enable ingress from ECSSecurityGroup
+      VpcId: !Ref VPC
+
+  MongoDBSecurityGroupIngressFromECS:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      Description: Ingress from ECSSecurityGroup
+      GroupId: !Ref MongoDBSecurityGroup
+      IpProtocol: -1
+      FromPort: 27017
+      ToPort: 27017
+      SourceSecurityGroupId: !Ref ECSSecurityGroup
+
+  # ============================
+  # LOAD BALANCER
+  # ============================
+
+  NLB:
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+    Properties:
+      Subnets:
+        - !Ref PublicSubnetOne
+        - !Ref PublicSubnetTwo
+      Type: network
+      Scheme: internet-facing
+
+
+  # MQTT Target
+  NLBMQTTTarget:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      Port: 1883
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPC
+
+  # MQTTS Target
+  NLBMQTTSTarget:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      Port: 8883
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPC
+
+  # HTTP Target
+  NLBHTTPTarget:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      Port: 80
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPC
+
+  # HTTPS Target
+  NLBHTTPSTarget:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      Port: 443
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPC
+
+  # WS Target
+  NLBWSTarget:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      Port: 15675
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPC
+
+  # WSS Target
+  NLBWSSTarget:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      Port: 15676
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPC
+
+  # Public listener on 1883
+  NLBMQTTListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      LoadBalancerArn: !Ref NLB
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref NLBMQTTTarget
+      Port: '1883'
+      Protocol: TCP
+
+  # Public listener on 8883
+  NLBMQTTSListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      LoadBalancerArn: !Ref NLB
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref NLBMQTTSTarget
+      Port: '8883'
+      Protocol: TCP
+
+  # Public listener on 80
+  NLBHTTPListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      LoadBalancerArn: !Ref NLB
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref NLBHTTPTarget
+      Port: '80'
+      Protocol: TCP
+
+  # Public listener on 443
+  NLBHTTPSListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      LoadBalancerArn: !Ref NLB
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref NLBHTTPSTarget
+      Port: '443'
+      Protocol: TCP
+
+  # Public listener on 15675
+  NLBWSListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      LoadBalancerArn: !Ref NLB
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref NLBWSTarget
+      Port: '15675'
+      Protocol: TCP
+
+  # Public listener on 15676
+  NLBWSSListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      LoadBalancerArn: !Ref NLB
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref NLBWSSTarget
+      Port: '15676'
+      Protocol: TCP
+
+  # ============================
+  # S3 Buckets
+  # ============================
+  DataBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties: {}
+
+
+# ============================
+# Stack Outputs
+# These are the values output by the CloudFormation template. Be careful
+# about changing any of them, because of them are exported with specific
+# names so that the other task related CF templates can use them.
+# ============================
+Outputs:
+
+  Name:
+    Description: Stage 1 Stack Name
+    Value: !Ref AWS::StackName
+    Export:
+      Name: !Sub ${AWS::StackName}-Name
+
+  # ============================
+  # VPC Properties
+  # ============================
+  VpcId:
+    Description: The ID of the VPC that this stack creates and is deployed in
+    Value: !Ref VPC
+    Export:
+      Name: !Sub "${AWS::StackName}-VpcId"
+
+  PublicSubnetOne:
+    Description: Public subnet one ID
+    Value: !Ref PublicSubnetOne
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnetOne"
+
+  PublicSubnetTwo:
+    Description: Public subnet two ID
+    Value: !Ref PublicSubnetTwo
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnetTwo"
+
+  # ============================
+  # Security groups
+  # ============================
+  ECSSecurityGroup:
+    Description: Security group ID for ECS
+    Value: !GetAtt ECSSecurityGroup.GroupId
+    Export:
+      Name: !Sub "${AWS::StackName}-ECSSecurityGroup"
+
+  MongoDBSecurityGroup:
+    Description: Security group ID for MongoDB
+    Value: !GetAtt MongoDBSecurityGroup.GroupId
+    Export:
+      Name: !Sub "${AWS::StackName}-MongoDBSecurityGroup"
+
+  # ============================
+  # Load balancer
+  # ============================
+  NLBMQTTTarget:
+    Description: The ARN of the MQTT target
+    Value: !Ref NLBMQTTTarget
+    Export:
+      Name: !Sub "${AWS::StackName}-NLBMQTTTarget"
+
+  NLBMQTTSTarget:
+    Description: The ARN of the MQTTS target
+    Value: !Ref NLBMQTTSTarget
+    Export:
+      Name: !Sub "${AWS::StackName}-NLBMQTTSTarget"
+
+  NLBHTTPTarget:
+    Description: The ARN of the HTTP target
+    Value: !Ref NLBHTTPTarget
+    Export:
+      Name: !Sub "${AWS::StackName}-NLBHTTPTarget"
+
+  NLBHTTPSTarget:
+    Description: The ARN of the HTTPS target
+    Value: !Ref NLBHTTPSTarget
+    Export:
+      Name: !Sub "${AWS::StackName}-NLBHTTPSTarget"
+
+  NLBWSTarget:
+    Description: The ARN of the WS target
+    Value: !Ref NLBWSTarget
+    Export:
+      Name: !Sub "${AWS::StackName}-NLBWSTarget"
+
+  NLBWSSTarget:
+    Description: The ARN of the WSS target
+    Value: !Ref NLBWSSTarget
+    Export:
+      Name: !Sub "${AWS::StackName}-NLBWSSTarget"
+
+
+  # ============================
+  # S3 Bucket
+  # ============================
+
+  DataBucket:
+    Description: Data bucket
+    Value: !Ref DataBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-DataBucket"
+
+
+  # ============================
+  # URLs
+  # ============================
+
+  ExternalUrl:
+    Description: The url of the load balancer
+    Value: !Sub "${NLB.DNSName}"
+    Export:
+      Name: !Sub "${AWS::StackName}-ExternalUrl"
