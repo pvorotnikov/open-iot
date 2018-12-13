@@ -158,7 +158,7 @@ const PipelineStep = mongoose.model('PipelineStep', pipelineStepSchema)
 const connection = function() {
     return new Promise((fulfill, reject) => {
         // set up connection
-        mongoose.connect(nconf.get('DB_CONNECTION'), { useMongoClient: true })
+        mongoose.connect(nconf.get('DB_CONNECTION'))
         .then((instance) => {
             logger.info('Connected to DB')
 

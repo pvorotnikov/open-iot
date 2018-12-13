@@ -20,16 +20,17 @@ const mockgoose = new Mockgoose(mongoose)
 
 const { logger } = require('./_utils')
 
-before(done => {
-    mockgoose.prepareStorage().then(() => {
-        logger.info('Mongoose DB setup complete')
-        mongoose.connect('mongodb://iot/db', { useMongoClient: true })
-        .then(instance => done())
-        .catch(err => done(err))
-    })
+before(async () => {
+    logger.info('Setting up DB')
+    await mockgoose.prepareStorage()
+    logger.info('Mongoose DB setup complete')
+    await mongoose.connect('mongodb://iot/db')
+
+    // silent everything
+    logger.transports[0].silent = true
 })
 
-after(done => {
-    done()
+after(async () => {
+    logger.transports[0].silent = false
 })
 
