@@ -1,0 +1,346 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: A stack for deploying OpenIoT service in AWS Fargate.
+             This is stage2 of two-stage stack set and it creates
+
+
+# ============================
+# Stack Parameters
+# ============================
+Parameters:
+
+  # ============================
+  # Parent Stack
+  # ============================
+
+  Stage1Name:
+    Type: String
+    Default: stage1
+    Description: The name of the stage1 stack.
+                 Necessary to locate and reference
+                 resources created by that stack.
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: '^[a-zA-Z][-a-zA-Z0-9]*$'
+
+  # ============================
+  # Task definition
+  # ============================
+
+  TaskCpu:
+    Type: Number
+    Description: >-
+      Amount of CPU for the container - options available:
+      https://aws.amazon.com/fargate/pricing/
+    Default: 256
+    MinValue: 256
+    MaxValue: 4096
+    ConstraintDescription: >-
+      Value must be between 256 and 4096 - see:
+      https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#task_size
+
+  TaskMemory:
+    Type: Number
+    Description: >-
+      Amount of memory for the container - options available:
+      https://aws.amazon.com/fargate/pricing/
+    Default: 512
+    MinValue: 512
+    MaxValue: 30720
+    ConstraintDescription: >-
+      Value must be between 512 and 30720 - see:
+      https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#task_size
+
+  TaskImageBroker:
+    Type: String
+    Default: pvorotnikov/open-iot-broker:latest
+    Description: The url of a docker image that contains the broker service
+
+  TaskImageUI:
+    Description: The url of a docker image that contains the UI service
+
+  TaskImageProxy:
+    Type: String
+    Default: pvorotnikov/open-iot-proxy:latest
+    Description: The url of a docker image that contains the proxy service
+
+  # ============================
+  # Env
+  # ============================
+
+  VirtualHost:
+    Type: String
+    Description: How to reach the proxy from Internet
+
+  BrokerHost:
+    Type: String
+    Description: How to reach the broker from within UI
+
+  EncryptionSecret:
+    Type: String
+    Description: Encryption secret
+    MinLength: 1
+    MaxLength: 60
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+
+  HandlerKey:
+    Type: String
+    Description: Handler key
+    MinLength: 1
+    MaxLength: 60
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+
+  HandlerSecret:
+    Type: String
+    Description: Handler secret
+    MinLength: 1
+    MaxLength: 60
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+
+  RabbitMQCookie:
+    Type: String
+    Description: RabbitMQ cookie secret
+    MinLength: 1
+    MaxLength: 60
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+
+
+# ============================
+# Stack Resources
+# ============================
+Resources:
+
+  # ============================
+  # ECS RESOURCES
+  # ============================
+
+  ECSCluster:
+    Type: 'AWS::ECS::Cluster'
+    Properties:
+      ClusterName: !Ref 'AWS::StackName'
+
+  # ============================
+  # OpenIoT Service and Task
+  # ============================
+
+  # The service. The service is a resource which allows you to run multiple
+  # copies of a type of task, and gather up their logs and metrics, as well
+  # as monitor the number of running tasks and replace any that have crashed
+
+  # IoTService:
+  #   Type: 'AWS::ECS::Service'
+  #   Properties:
+  #     ServiceName: !Sub ${AWS::StackName}
+  #     Cluster: !Ref ECSCluster
+  #     LaunchType: FARGATE
+  #     DeploymentConfiguration:
+  #       MaximumPercent: 200
+  #       MinimumHealthyPercent: 100
+  #     DesiredCount: 1
+  #     NetworkConfiguration:
+  #       AwsvpcConfiguration:
+  #         AssignPublicIp: ENABLED
+  #         SecurityGroups:
+  #           - Fn::ImportValue: !Sub ${Stage1Name}-ECSSecurityGroup
+  #         Subnets:
+  #           - Fn::ImportValue: !Sub ${Stage1Name}-PublicSubnetOne
+  #           - Fn::ImportValue: !Sub ${Stage1Name}-PublicSubnetTwo
+  #     TaskDefinition: !Ref IoTTask
+  #     LoadBalancers:
+  #       - ContainerName: proxy
+  #         ContainerPort: 1883
+  #         TargetGroupArn:
+  #           Fn::ImportValue: !Sub ${Stage1Name}-NLBMQTTTarget
+  #       - ContainerName: proxy
+  #         ContainerPort: 8883
+  #         TargetGroupArn:
+  #           Fn::ImportValue: !Sub ${Stage1Name}-NLBMQTTSTarget
+  #       - ContainerName: proxy
+  #         ContainerPort: 80
+  #         TargetGroupArn:
+  #           Fn::ImportValue: !Sub ${Stage1Name}-NLBHTTPTarget
+  #       - ContainerName: proxy
+  #         ContainerPort: 443
+  #         TargetGroupArn:
+  #           Fn::ImportValue: !Sub ${Stage1Name}-NLBHTTPSTarget
+  #       - ContainerName: proxy
+  #         ContainerPort: 15675
+  #         TargetGroupArn:
+  #           Fn::ImportValue: !Sub ${Stage1Name}-NLBWSTarget
+  #       - ContainerName: proxy
+  #         ContainerPort: 15676
+  #         TargetGroupArn:
+  #           Fn::ImportValue: !Sub ${Stage1Name}-NLBWSSTarget
+
+
+  # The task definition. This is a simple metadata description of what
+  # container to run, and what resource requirements it has.
+  IoTTask:
+    Type: 'AWS::ECS::TaskDefinition'
+    Properties:
+      Family: vcs-open-iot
+      Cpu: !Ref TaskCpu
+      Memory: !Ref TaskMemory
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !Ref ECSTaskExecutionRole
+      TaskRoleArn: !Ref IoTRole
+      ContainerDefinitions:
+        - Name: ui
+          Image: !Ref TaskImageUI
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              'awslogs-group': !Ref IoTLogGroup
+              'awslogs-region': !Ref AWS::Region
+              'awslogs-stream-prefix': ecs
+          Environment:
+            - Name: VIRTUAL_HOST
+              Value: !Ref VirtualHost
+            - Name: DB_CONNECTION
+              Value: mongodb://localhost/open-iot
+            - Name: ENCRYPTION_SECRET
+              Value: !Ref EncryptionSecret
+            - Name: HANDLER_KEY
+              Value: !Ref HandlerKey
+            - Name: HANDLER_SECRET
+              Value: !Ref HandlerSecret
+            - Name: BROKER_HOST
+              Value: !Ref BrokerHost
+        - Name: broker
+          Image: !Ref TaskImageBroker
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              'awslogs-group': !Ref IoTLogGroup
+              'awslogs-region': !Ref AWS::Region
+              'awslogs-stream-prefix': ecs
+          Environment:
+            - Name: RABBITMQ_ERLANG_COOKIE
+              Value: !Ref RabbitMQCookie
+        - Name: proxy
+          Image: !Ref TaskImageProxy
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              'awslogs-group': !Ref IoTLogGroup
+              'awslogs-region': !Ref AWS::Region
+              'awslogs-stream-prefix': ecs
+          PortMappings:
+            - ContainerPort: 1883
+            - ContainerPort: 8883
+            - ContainerPort: 80
+            - ContainerPort: 443
+            - ContainerPort: 15675
+            - ContainerPort: 15676
+
+
+  # ============================
+  # CW RESOURCES
+  # Note: Log groups are not automatically created by
+  # awslogs driver
+  # ============================
+  IoTLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /ecs/${AWS::StackName}
+      RetentionInDays: 14
+
+  # ============================
+  # ROLES
+  # ============================
+  ECSRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: ecs-service
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ec2:AttachNetworkInterface'
+                  - 'ec2:CreateNetworkInterface'
+                  - 'ec2:CreateNetworkInterfacePermission'
+                  - 'ec2:DeleteNetworkInterface'
+                  - 'ec2:DeleteNetworkInterfacePermission'
+                  - 'ec2:Describe*'
+                  - 'ec2:DetachNetworkInterface'
+                  - 'elasticloadbalancing:DeregisterInstancesFromLoadBalancer'
+                  - 'elasticloadbalancing:DeregisterTargets'
+                  - 'elasticloadbalancing:Describe*'
+                  - 'elasticloadbalancing:RegisterInstancesWithLoadBalancer'
+                  - 'elasticloadbalancing:RegisterTargets'
+                  - 'route53:ChangeResourceRecordSets'
+                  - 'route53:CreateHealthCheck'
+                  - 'route53:DeleteHealthCheck'
+                  - 'route53:Get*'
+                  - 'route53:List*'
+                  - 'route53:UpdateHealthCheck'
+                  - 'servicediscovery:DeregisterInstance'
+                  - 'servicediscovery:Get*'
+                  - 'servicediscovery:List*'
+                  - 'servicediscovery:RegisterInstance'
+                Resource: '*'
+
+  ECSTaskExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: AmazonECSTaskExecutionRolePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:GetDownloadUrlForLayer'
+                  - 'ecr:BatchGetImage'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+
+  IoTRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: api-service
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                    - 's3:*'
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:s3:::${Stage1Name}-DataBucket'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${Stage1Name}-DataBucket/*'
