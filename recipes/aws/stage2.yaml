@@ -23,43 +23,17 @@ Parameters:
     MaxLength: 255
     AllowedPattern: '^[a-zA-Z][-a-zA-Z0-9]*$'
 
-  # ============================
-  # Task definition
-  # ============================
-
-  TaskCpu:
-    Type: Number
-    Description: >-
-      Amount of CPU for the container - options available:
-      https://aws.amazon.com/fargate/pricing/
-    Default: 256
-    MinValue: 256
-    MaxValue: 4096
-    ConstraintDescription: >-
-      Value must be between 256 and 4096 - see:
-      https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#task_size
-
-  TaskMemory:
-    Type: Number
-    Description: >-
-      Amount of memory for the container - options available:
-      https://aws.amazon.com/fargate/pricing/
-    Default: 512
-    MinValue: 512
-    MaxValue: 30720
-    ConstraintDescription: >-
-      Value must be between 512 and 30720 - see:
-      https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#task_size
-
-  TaskImageBroker:
+  ImageBroker:
     Type: String
     Default: pvorotnikov/open-iot-broker:latest
     Description: The url of a docker image that contains the broker service
 
-  TaskImageUI:
+  ImageUI:
+    Type: String
+    Default: pvorotnikov/open-iot-ui:latest
     Description: The url of a docker image that contains the UI service
 
-  TaskImageProxy:
+  ImageProxy:
     Type: String
     Default: pvorotnikov/open-iot-proxy:latest
     Description: The url of a docker image that contains the proxy service
@@ -108,148 +82,629 @@ Parameters:
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
     ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
 
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+  MongoInstanceType:
+    Description: Mongo EC2 instance type
+    Type: String
+    Default: t2.small
+    AllowedValues:
+      - t1.micro
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m1.small
+      - m1.medium
+      - m1.large
+      - m1.xlarge
+      - m2.xlarge
+      - m2.2xlarge
+      - m2.4xlarge
+      - m3.medium
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - c1.medium
+      - c1.xlarge
+      - c3.large
+      - c3.xlarge
+      - c3.2xlarge
+      - c3.4xlarge
+      - c3.8xlarge
+      - c4.large
+      - c4.xlarge
+      - c4.2xlarge
+      - c4.4xlarge
+      - c4.8xlarge
+      - g2.2xlarge
+      - g2.8xlarge
+      - r3.large
+      - r3.xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i2.xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+      - d2.xlarge
+      - d2.2xlarge
+      - d2.4xlarge
+      - d2.8xlarge
+      - hi1.4xlarge
+      - hs1.8xlarge
+      - cr1.8xlarge
+      - cc2.8xlarge
+      - cg1.4xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+
+  IoTInstanceType:
+    Description: IoT EC2 instance type
+    Type: String
+    Default: t2.small
+    AllowedValues:
+      - t1.micro
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m1.small
+      - m1.medium
+      - m1.large
+      - m1.xlarge
+      - m2.xlarge
+      - m2.2xlarge
+      - m2.4xlarge
+      - m3.medium
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - c1.medium
+      - c1.xlarge
+      - c3.large
+      - c3.xlarge
+      - c3.2xlarge
+      - c3.4xlarge
+      - c3.8xlarge
+      - c4.large
+      - c4.xlarge
+      - c4.2xlarge
+      - c4.4xlarge
+      - c4.8xlarge
+      - g2.2xlarge
+      - g2.8xlarge
+      - r3.large
+      - r3.xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i2.xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+      - d2.xlarge
+      - d2.2xlarge
+      - d2.4xlarge
+      - d2.8xlarge
+      - hi1.4xlarge
+      - hs1.8xlarge
+      - cr1.8xlarge
+      - cc2.8xlarge
+      - cg1.4xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+
+
+Mappings:
+  AWSInstanceType2Arch:
+    t1.micro:
+      Arch: HVM64
+    t2.nano:
+      Arch: HVM64
+    t2.micro:
+      Arch: HVM64
+    t2.small:
+      Arch: HVM64
+    t2.medium:
+      Arch: HVM64
+    t2.large:
+      Arch: HVM64
+    m1.small:
+      Arch: HVM64
+    m1.medium:
+      Arch: HVM64
+    m1.large:
+      Arch: HVM64
+    m1.xlarge:
+      Arch: HVM64
+    m2.xlarge:
+      Arch: HVM64
+    m2.2xlarge:
+      Arch: HVM64
+    m2.4xlarge:
+      Arch: HVM64
+    m3.medium:
+      Arch: HVM64
+    m3.large:
+      Arch: HVM64
+    m3.xlarge:
+      Arch: HVM64
+    m3.2xlarge:
+      Arch: HVM64
+    m4.large:
+      Arch: HVM64
+    m4.xlarge:
+      Arch: HVM64
+    m4.2xlarge:
+      Arch: HVM64
+    m4.4xlarge:
+      Arch: HVM64
+    m4.10xlarge:
+      Arch: HVM64
+    c1.medium:
+      Arch: HVM64
+    c1.xlarge:
+      Arch: HVM64
+    c3.large:
+      Arch: HVM64
+    c3.xlarge:
+      Arch: HVM64
+    c3.2xlarge:
+      Arch: HVM64
+    c3.4xlarge:
+      Arch: HVM64
+    c3.8xlarge:
+      Arch: HVM64
+    c4.large:
+      Arch: HVM64
+    c4.xlarge:
+      Arch: HVM64
+    c4.2xlarge:
+      Arch: HVM64
+    c4.4xlarge:
+      Arch: HVM64
+    c4.8xlarge:
+      Arch: HVM64
+    g2.2xlarge:
+      Arch: HVMG2
+    g2.8xlarge:
+      Arch: HVMG2
+    r3.large:
+      Arch: HVM64
+    r3.xlarge:
+      Arch: HVM64
+    r3.2xlarge:
+      Arch: HVM64
+    r3.4xlarge:
+      Arch: HVM64
+    r3.8xlarge:
+      Arch: HVM64
+    i2.xlarge:
+      Arch: HVM64
+    i2.2xlarge:
+      Arch: HVM64
+    i2.4xlarge:
+      Arch: HVM64
+    i2.8xlarge:
+      Arch: HVM64
+    d2.xlarge:
+      Arch: HVM64
+    d2.2xlarge:
+      Arch: HVM64
+    d2.4xlarge:
+      Arch: HVM64
+    d2.8xlarge:
+      Arch: HVM64
+    hi1.4xlarge:
+      Arch: HVM64
+    hs1.8xlarge:
+      Arch: HVM64
+    cr1.8xlarge:
+      Arch: HVM64
+    cc2.8xlarge:
+      Arch: HVM64
+  AWSInstanceType2NATArch:
+    t1.micro:
+      Arch: NATHVM64
+    t2.nano:
+      Arch: NATHVM64
+    t2.micro:
+      Arch: NATHVM64
+    t2.small:
+      Arch: NATHVM64
+    t2.medium:
+      Arch: NATHVM64
+    t2.large:
+      Arch: NATHVM64
+    m1.small:
+      Arch: NATHVM64
+    m1.medium:
+      Arch: NATHVM64
+    m1.large:
+      Arch: NATHVM64
+    m1.xlarge:
+      Arch: NATHVM64
+    m2.xlarge:
+      Arch: NATHVM64
+    m2.2xlarge:
+      Arch: NATHVM64
+    m2.4xlarge:
+      Arch: NATHVM64
+    m3.medium:
+      Arch: NATHVM64
+    m3.large:
+      Arch: NATHVM64
+    m3.xlarge:
+      Arch: NATHVM64
+    m3.2xlarge:
+      Arch: NATHVM64
+    m4.large:
+      Arch: NATHVM64
+    m4.xlarge:
+      Arch: NATHVM64
+    m4.2xlarge:
+      Arch: NATHVM64
+    m4.4xlarge:
+      Arch: NATHVM64
+    m4.10xlarge:
+      Arch: NATHVM64
+    c1.medium:
+      Arch: NATHVM64
+    c1.xlarge:
+      Arch: NATHVM64
+    c3.large:
+      Arch: NATHVM64
+    c3.xlarge:
+      Arch: NATHVM64
+    c3.2xlarge:
+      Arch: NATHVM64
+    c3.4xlarge:
+      Arch: NATHVM64
+    c3.8xlarge:
+      Arch: NATHVM64
+    c4.large:
+      Arch: NATHVM64
+    c4.xlarge:
+      Arch: NATHVM64
+    c4.2xlarge:
+      Arch: NATHVM64
+    c4.4xlarge:
+      Arch: NATHVM64
+    c4.8xlarge:
+      Arch: NATHVM64
+    g2.2xlarge:
+      Arch: NATHVMG2
+    g2.8xlarge:
+      Arch: NATHVMG2
+    r3.large:
+      Arch: NATHVM64
+    r3.xlarge:
+      Arch: NATHVM64
+    r3.2xlarge:
+      Arch: NATHVM64
+    r3.4xlarge:
+      Arch: NATHVM64
+    r3.8xlarge:
+      Arch: NATHVM64
+    i2.xlarge:
+      Arch: NATHVM64
+    i2.2xlarge:
+      Arch: NATHVM64
+    i2.4xlarge:
+      Arch: NATHVM64
+    i2.8xlarge:
+      Arch: NATHVM64
+    d2.xlarge:
+      Arch: NATHVM64
+    d2.2xlarge:
+      Arch: NATHVM64
+    d2.4xlarge:
+      Arch: NATHVM64
+    d2.8xlarge:
+      Arch: NATHVM64
+    hi1.4xlarge:
+      Arch: NATHVM64
+    hs1.8xlarge:
+      Arch: NATHVM64
+    cr1.8xlarge:
+      Arch: NATHVM64
+    cc2.8xlarge:
+      Arch: NATHVM64
+  AWSRegionArch2AMI:
+    us-east-1:
+      HVM64: ami-0ff8a91507f77f867
+      HVMG2: ami-0a584ac55a7631c0c
+    us-west-2:
+      HVM64: ami-a0cfeed8
+      HVMG2: ami-0e09505bc235aa82d
+    us-west-1:
+      HVM64: ami-0bdb828fd58c52235
+      HVMG2: ami-066ee5fd4a9ef77f1
+    eu-west-1:
+      HVM64: ami-047bb4163c506cd98
+      HVMG2: ami-0a7c483d527806435
+    eu-west-2:
+      HVM64: ami-f976839e
+      HVMG2: NOT_SUPPORTED
+    eu-west-3:
+      HVM64: ami-0ebc281c20e89ba4b
+      HVMG2: NOT_SUPPORTED
+    eu-central-1:
+      HVM64: ami-0233214e13e500f77
+      HVMG2: ami-06223d46a6d0661c7
+    ap-northeast-1:
+      HVM64: ami-06cd52961ce9f0d85
+      HVMG2: ami-053cdd503598e4a9d
+    ap-northeast-2:
+      HVM64: ami-0a10b2721688ce9d2
+      HVMG2: NOT_SUPPORTED
+    ap-northeast-3:
+      HVM64: ami-0d98120a9fb693f07
+      HVMG2: NOT_SUPPORTED
+    ap-southeast-1:
+      HVM64: ami-08569b978cc4dfa10
+      HVMG2: ami-0be9df32ae9f92309
+    ap-southeast-2:
+      HVM64: ami-09b42976632b27e9b
+      HVMG2: ami-0a9ce9fecc3d1daf8
+    ap-south-1:
+      HVM64: ami-0912f71e06545ad88
+      HVMG2: ami-097b15e89dbdcfcf4
+    us-east-2:
+      HVM64: ami-0b59bfac6be064b78
+      HVMG2: NOT_SUPPORTED
+    ca-central-1:
+      HVM64: ami-0b18956f
+      HVMG2: NOT_SUPPORTED
+    sa-east-1:
+      HVM64: ami-07b14488da8ea02a0
+      HVMG2: NOT_SUPPORTED
+    cn-north-1:
+      HVM64: ami-0a4eaf6c4454eda75
+      HVMG2: NOT_SUPPORTED
+    cn-northwest-1:
+      HVM64: ami-6b6a7d09
+      HVMG2: NOT_SUPPORTED
+
 
 # ============================
 # Stack Resources
 # ============================
 Resources:
 
-  # ============================
-  # ECS RESOURCES
-  # ============================
+  MongoInstance:
+    Type: 'AWS::EC2::Instance'
+    Metadata:
+      'AWS::CloudFormation::Init':
+        configSets:
+          service_install:
+            - install_cfn
+            - install_docker
+            - install_service
+        install_cfn:
+          files:
+            /etc/cfn/cfn-hup.conf:
+              content: !Join
+                - ''
+                - - |
+                    [main]
+                  - stack=
+                  - !Ref 'AWS::StackId'
+                  - |+
 
-  ECSCluster:
-    Type: 'AWS::ECS::Cluster'
+                  - region=
+                  - !Ref 'AWS::Region'
+                  - |+
+
+              mode: '000400'
+              owner: root
+              group: root
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content: !Join
+                - ''
+                - - |
+                    [cfn-auto-reloader-hook]
+                  - |
+                    triggers=post.update
+                  - |
+                    path=Resources.MongoInstance.Metadata.AWS::CloudFormation::Init
+                  - 'action=/opt/aws/bin/cfn-init -v '
+                  - '         --stack '
+                  - !Ref 'AWS::StackName'
+                  - '         --resource MongoInstance '
+                  - '         --configsets service_install '
+                  - '         --region '
+                  - !Ref 'AWS::Region'
+                  - |+
+
+              mode: '000400'
+              owner: root
+              group: root
+          services:
+            sysvinit:
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - /etc/cfn/cfn-hup.conf
+                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+        install_docker:
+          packages:
+            yum:
+              git: []
+              docker: []
+          sources:
+            /var/www/html: 'http://wordpress.org/latest.tar.gz'
+          files:
+            /tmp/setup.mysql:
+              content: !Join
+                - ''
+                - - 'CREATE DATABASE '
+                  - !Ref DBName
+                  - |
+                    ;
+                  - CREATE USER '
+                  - !Ref DBUser
+                  - '''@''localhost'' IDENTIFIED BY '''
+                  - !Ref DBPassword
+                  - |
+                    ';
+                  - 'GRANT ALL ON '
+                  - !Ref DBName
+                  - .* TO '
+                  - !Ref DBUser
+                  - |
+                    '@'localhost';
+                  - |
+                    FLUSH PRIVILEGES;
+              mode: '000400'
+              owner: root
+              group: root
+            /tmp/create-wp-config:
+              content: !Join
+                - ''
+                - - |
+                    #!/bin/bash -xe
+                  - >
+                    cp /var/www/html/wordpress/wp-config-sample.php
+                    /var/www/html/wordpress/wp-config.php
+                  - sed -i "s/'database_name_here'/'
+                  - !Ref DBName
+                  - |
+                    '/g" wp-config.php
+                  - sed -i "s/'username_here'/'
+                  - !Ref DBUser
+                  - |
+                    '/g" wp-config.php
+                  - sed -i "s/'password_here'/'
+                  - !Ref DBPassword
+                  - |
+                    '/g" wp-config.php
+              mode: '000500'
+              owner: root
+              group: root
+          services:
+            sysvinit:
+              httpd:
+                enabled: 'true'
+                ensureRunning: 'true'
+              mysqld:
+                enabled: 'true'
+                ensureRunning: 'true'
+        configure_wordpress:
+          commands:
+            01_set_mysql_root_password:
+              command: !Join
+                - ''
+                - - mysqladmin -u root password '
+                  - !Ref DBRootPassword
+                  - ''''
+              test: !Join
+                - ''
+                - - '$(mysql '
+                  - !Ref DBName
+                  - ' -u root --password='''
+                  - !Ref DBRootPassword
+                  - ''' >/dev/null 2>&1 </dev/null); (( $? != 0 ))'
+            02_create_database:
+              command: !Join
+                - ''
+                - - mysql -u root --password='
+                  - !Ref DBRootPassword
+                  - ''' < /tmp/setup.mysql'
+              test: !Join
+                - ''
+                - - '$(mysql '
+                  - !Ref DBName
+                  - ' -u root --password='''
+                  - !Ref DBRootPassword
+                  - ''' >/dev/null 2>&1 </dev/null); (( $? != 0 ))'
+            03_configure_wordpress:
+              command: /tmp/create-wp-config
+              cwd: /var/www/html/wordpress
     Properties:
-      ClusterName: !Ref 'AWS::StackName'
+      InstanceType: !Ref MongoInstanceType
+      SubnetId:
+        Fn::ImportValue: !Sub ${Stage1Name}-PublicSubnetOne
+      SecurityGroupIds:
+        - Fn::ImportValue: !Sub ${Stage1Name}-MongoSecurityGroup
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap
+        - AWSRegionArch2AMI
+        - !Ref 'AWS::Region'
+        - !FindInMap
+          - AWSInstanceType2Arch
+          - !Ref MongoInstanceType
+          - Arch
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-MongoDB
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - |
+              #!/bin/bash -xe
+            - |
+              yum update -y aws-cfn-bootstrap
+            - '/opt/aws/bin/cfn-init -v '
+            - '         --stack '
+            - !Ref 'AWS::StackName'
+            - '         --resource MongoInstance '
+            - '         --configsets service_install '
+            - '         --region '
+            - !Ref 'AWS::Region'
+            - |+
 
-  # ============================
-  # OpenIoT Service and Task
-  # ============================
+            - '/opt/aws/bin/cfn-signal -e $? '
+            - '         --stack '
+            - !Ref 'AWS::StackName'
+            - '         --resource MongoInstance '
+            - '         --region '
+            - !Ref 'AWS::Region'
+            - |+
 
-  # The service. The service is a resource which allows you to run multiple
-  # copies of a type of task, and gather up their logs and metrics, as well
-  # as monitor the number of running tasks and replace any that have crashed
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
 
-  # IoTService:
-  #   Type: 'AWS::ECS::Service'
-  #   Properties:
-  #     ServiceName: !Sub ${AWS::StackName}
-  #     Cluster: !Ref ECSCluster
-  #     LaunchType: FARGATE
-  #     DeploymentConfiguration:
-  #       MaximumPercent: 200
-  #       MinimumHealthyPercent: 100
-  #     DesiredCount: 1
-  #     NetworkConfiguration:
-  #       AwsvpcConfiguration:
-  #         AssignPublicIp: ENABLED
-  #         SecurityGroups:
-  #           - Fn::ImportValue: !Sub ${Stage1Name}-ECSSecurityGroup
-  #         Subnets:
-  #           - Fn::ImportValue: !Sub ${Stage1Name}-PublicSubnetOne
-  #           - Fn::ImportValue: !Sub ${Stage1Name}-PublicSubnetTwo
-  #     TaskDefinition: !Ref IoTTask
-  #     LoadBalancers:
-  #       - ContainerName: proxy
-  #         ContainerPort: 1883
-  #         TargetGroupArn:
-  #           Fn::ImportValue: !Sub ${Stage1Name}-NLBMQTTTarget
-  #       - ContainerName: proxy
-  #         ContainerPort: 8883
-  #         TargetGroupArn:
-  #           Fn::ImportValue: !Sub ${Stage1Name}-NLBMQTTSTarget
-  #       - ContainerName: proxy
-  #         ContainerPort: 80
-  #         TargetGroupArn:
-  #           Fn::ImportValue: !Sub ${Stage1Name}-NLBHTTPTarget
-  #       - ContainerName: proxy
-  #         ContainerPort: 443
-  #         TargetGroupArn:
-  #           Fn::ImportValue: !Sub ${Stage1Name}-NLBHTTPSTarget
-  #       - ContainerName: proxy
-  #         ContainerPort: 15675
-  #         TargetGroupArn:
-  #           Fn::ImportValue: !Sub ${Stage1Name}-NLBWSTarget
-  #       - ContainerName: proxy
-  #         ContainerPort: 15676
-  #         TargetGroupArn:
-  #           Fn::ImportValue: !Sub ${Stage1Name}-NLBWSSTarget
-
-
-  # The task definition. This is a simple metadata description of what
-  # container to run, and what resource requirements it has.
-  IoTTask:
-    Type: 'AWS::ECS::TaskDefinition'
+  IoTInstance:
+    Type: 'AWS::EC2::Instance'
     Properties:
-      Family: vcs-open-iot
-      Cpu: !Ref TaskCpu
-      Memory: !Ref TaskMemory
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
-      ExecutionRoleArn: !Ref ECSTaskExecutionRole
-      TaskRoleArn: !Ref IoTRole
-      ContainerDefinitions:
-        - Name: ui
-          Image: !Ref TaskImageUI
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              'awslogs-group': !Ref IoTLogGroup
-              'awslogs-region': !Ref AWS::Region
-              'awslogs-stream-prefix': ecs
-          Environment:
-            - Name: VIRTUAL_HOST
-              Value: !Ref VirtualHost
-            - Name: DB_CONNECTION
-              Value: mongodb://localhost/open-iot
-            - Name: ENCRYPTION_SECRET
-              Value: !Ref EncryptionSecret
-            - Name: HANDLER_KEY
-              Value: !Ref HandlerKey
-            - Name: HANDLER_SECRET
-              Value: !Ref HandlerSecret
-            - Name: BROKER_HOST
-              Value: !Ref BrokerHost
-        - Name: broker
-          Image: !Ref TaskImageBroker
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              'awslogs-group': !Ref IoTLogGroup
-              'awslogs-region': !Ref AWS::Region
-              'awslogs-stream-prefix': ecs
-          Environment:
-            - Name: RABBITMQ_ERLANG_COOKIE
-              Value: !Ref RabbitMQCookie
-        - Name: proxy
-          Image: !Ref TaskImageProxy
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              'awslogs-group': !Ref IoTLogGroup
-              'awslogs-region': !Ref AWS::Region
-              'awslogs-stream-prefix': ecs
-          PortMappings:
-            - ContainerPort: 1883
-            - ContainerPort: 8883
-            - ContainerPort: 80
-            - ContainerPort: 443
-            - ContainerPort: 15675
-            - ContainerPort: 15676
+      InstanceType: !Ref IoTInstanceType
+      SubnetId:
+        Fn::ImportValue: !Sub ${Stage1Name}-PublicSubnetTwo
+      SecurityGroupIds:
+        - Fn::ImportValue: !Sub ${Stage1Name}-IoTSecurityGroup
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap
+        - AWSRegionArch2AMI
+        - !Ref 'AWS::Region'
+        - !FindInMap
+          - AWSInstanceType2Arch
+          - !Ref IoTInstanceType
+          - Arch
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-IoT
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
 
-
-  # ============================
-  # CW RESOURCES
-  # Note: Log groups are not automatically created by
-  # awslogs driver
-  # ============================
-  IoTLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub /ecs/${AWS::StackName}
-      RetentionInDays: 14
 
   # ============================
   # ROLES

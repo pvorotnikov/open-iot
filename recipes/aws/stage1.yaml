@@ -118,52 +118,52 @@ Resources:
   # ============================
 
   # ==============================================================
-  # A security group for the containers we will run in ECS.
+  # A security group for the EC2 instance that will host the IoT.
   # Two rules, allowing network traffic:
   # * from all subnets within the VPC (to allow the NLB)
   # * from other members of the security group
   # ==============================================================
-  ECSSecurityGroup:
+  IoTSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: Enable ingress from the VPC and ECSSecurityGroup
+      GroupDescription: Enable ingress from the VPC and IoTSecurityGroup
       VpcId: !Ref VPC
 
-  ECSSecurityGroupIngressFromVPC:
+  IoTSecurityGroupIngressFromVPC:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       Description: Ingress from VPC
-      GroupId: !Ref ECSSecurityGroup
+      GroupId: !Ref IoTSecurityGroup
       IpProtocol: -1
       CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
 
-  ECSSecurityGroupIngressFromSelf:
+  IoTSecurityGroupIngressFromSelf:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       Description: Ingress from other containers in the same security group
-      GroupId: !Ref ECSSecurityGroup
+      GroupId: !Ref IoTSecurityGroup
       IpProtocol: -1
-      SourceSecurityGroupId: !Ref ECSSecurityGroup
+      SourceSecurityGroupId: !Ref IoTSecurityGroup
 
   # ==============================================================
   # A security group for the MongoDB service.
-  # One rule, allowing network traffic from ECSSecurityGroup.
+  # One rule, allowing network traffic from IoTSecurityGroup.
   # ==============================================================
-  MongoDBSecurityGroup:
+  MongoSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: Enable ingress from ECSSecurityGroup
+      GroupDescription: Enable ingress from IoTSecurityGroup
       VpcId: !Ref VPC
 
-  MongoDBSecurityGroupIngressFromECS:
+  MongoSecurityGroupIngressFromIoT:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
-      Description: Ingress from ECSSecurityGroup
-      GroupId: !Ref MongoDBSecurityGroup
+      Description: Ingress from IoTSecurityGroup
+      GroupId: !Ref MongoSecurityGroup
       IpProtocol: -1
       FromPort: 27017
       ToPort: 27017
-      SourceSecurityGroupId: !Ref ECSSecurityGroup
+      SourceSecurityGroupId: !Ref IoTSecurityGroup
 
   # ============================
   # LOAD BALANCER
@@ -185,7 +185,7 @@ Resources:
     Properties:
       Port: 1883
       Protocol: TCP
-      TargetType: ip
+      TargetType: instance
       VpcId: !Ref VPC
 
   # MQTTS Target
@@ -194,7 +194,7 @@ Resources:
     Properties:
       Port: 8883
       Protocol: TCP
-      TargetType: ip
+      TargetType: instance
       VpcId: !Ref VPC
 
   # HTTP Target
@@ -203,7 +203,7 @@ Resources:
     Properties:
       Port: 80
       Protocol: TCP
-      TargetType: ip
+      TargetType: instance
       VpcId: !Ref VPC
 
   # HTTPS Target
@@ -212,7 +212,7 @@ Resources:
     Properties:
       Port: 443
       Protocol: TCP
-      TargetType: ip
+      TargetType: instance
       VpcId: !Ref VPC
 
   # WS Target
@@ -221,7 +221,7 @@ Resources:
     Properties:
       Port: 15675
       Protocol: TCP
-      TargetType: ip
+      TargetType: instance
       VpcId: !Ref VPC
 
   # WSS Target
@@ -230,7 +230,7 @@ Resources:
     Properties:
       Port: 15676
       Protocol: TCP
-      TargetType: ip
+      TargetType: instance
       VpcId: !Ref VPC
 
   # Public listener on 1883
@@ -345,17 +345,17 @@ Outputs:
   # ============================
   # Security groups
   # ============================
-  ECSSecurityGroup:
-    Description: Security group ID for ECS
-    Value: !GetAtt ECSSecurityGroup.GroupId
+  IoTSecurityGroup:
+    Description: Security group ID for IoT
+    Value: !GetAtt IoTSecurityGroup.GroupId
     Export:
-      Name: !Sub "${AWS::StackName}-ECSSecurityGroup"
+      Name: !Sub "${AWS::StackName}-IoTSecurityGroup"
 
-  MongoDBSecurityGroup:
+  MongoSecurityGroup:
     Description: Security group ID for MongoDB
-    Value: !GetAtt MongoDBSecurityGroup.GroupId
+    Value: !GetAtt MongoSecurityGroup.GroupId
     Export:
-      Name: !Sub "${AWS::StackName}-MongoDBSecurityGroup"
+      Name: !Sub "${AWS::StackName}-MongoSecurityGroup"
 
   # ============================
   # Load balancer
