@@ -121,9 +121,10 @@ Resources:
 
   # ==============================================================
   # A security group for the EC2 instance that will host the IoT.
-  # Two rules, allowing network traffic:
+  # Three rules, allowing network traffic:
   # * from all subnets within the VPC (to allow the NLB)
   # * from other members of the security group
+  # * SSH traffic from the Internet
   # ==============================================================
   IoTSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
@@ -147,9 +148,21 @@ Resources:
       IpProtocol: -1
       SourceSecurityGroupId: !Ref IoTSecurityGroup
 
+  IoTSecurityGroupSSHIngress:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      Description: Ingress SSH traffic from Internet
+      GroupId: !Ref IoTSecurityGroup
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 0.0.0.0/0
+
   # ==============================================================
   # A security group for the MongoDB service.
-  # One rule, allowing network traffic from IoTSecurityGroup.
+  # Two rules, allowing network traffic:
+  # * from IoTSecurityGroup,
+  # * SSH traffic from the Internet
   # ==============================================================
   MongoSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
@@ -166,6 +179,16 @@ Resources:
       FromPort: 27017
       ToPort: 27017
       SourceSecurityGroupId: !Ref IoTSecurityGroup
+
+  MongoSecurityGroupSSHIngress:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      Description: Ingress SSH traffic from Internet
+      GroupId: !Ref MongoSecurityGroup
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 0.0.0.0/0
 
   # ============================
   # LOAD BALANCER
