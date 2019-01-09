@@ -6,7 +6,7 @@ const bodyParser = require('body-parser')
 const hat = require('hat')
 const mongoose = require('mongoose')
 
-const { User, Application, Gateway, Device, Token, Rule, Setting, Plugin } = require('../src/models')
+const { User, Application, Gateway, Device, Token, Rule, Setting, Module, Integration, PipelineStep, Plugin, } = require('../src/models')
 const { logger } = require('../src/lib')
 
 function cleanDb() {
@@ -18,6 +18,9 @@ function cleanDb() {
         Token.remove({}),
         Rule.remove({}),
         Setting.remove({}),
+        Module.remove({}),
+        Integration.remove({}),
+        PipelineStep.remove({}),
         Plugin.remove({})
     ])
 }

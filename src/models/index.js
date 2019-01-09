@@ -4,6 +4,7 @@ const utils = require('../lib/utils')
 const nconf = require('nconf')
 const { ACCESS_LEVEL } = require('./constants')
 const defaults = require('./defaults')
+const modules = require('./modules')
 const mongoose = require('mongoose')
 mongoose.Promise = Promise
 
@@ -108,6 +109,32 @@ const settingSchema = new Schema({
     updated: { type: Date, default: Date.now },
 })
 
+const moduleSchema = new Schema({
+    name: { type: String, required: true },
+    description: { type: String, required: true },
+    meta: { type: Object, default: {} },
+    status: { type: String, enum: ['enabled', 'disabled', 'missing'], default: 'enabled' },
+    created: { type: Date, default: Date.now },
+    updated: { type: Date, default: Date.now },
+})
+
+const pipelineStepSchema = new Schema({
+    module: { type: Schema.Types.ObjectId, ref: 'Module' },
+    status: { type: String, enum: ['enabled', 'disabled', 'missing'], default: 'enabled' },
+    arguments: { type: Object, default: {} },
+    created: { type: Date, default: Date.now },
+    updated: { type: Date, default: Date.now },
+})
+
+const integrationSchema = new Schema({
+    user: { type: Schema.Types.ObjectId, ref: 'User' },
+    topic: String,
+    pipeline: [pipelineStepSchema],
+    status: { type: String, enum: ['enabled', 'disabled'], default: 'enabled' },
+    created: { type: Date, default: Date.now },
+    updated: { type: Date, default: Date.now },
+})
+
 const pluginSchema = new Schema({
     name: String,
     description: String,
@@ -127,6 +154,9 @@ const Device = mongoose.model('Device', deviceSchema)
 const Token = mongoose.model('Token', tokenSchema)
 const Rule = mongoose.model('Rule', ruleSchema)
 const Setting = mongoose.model('Setting', settingSchema)
+const Integration = mongoose.model('Integration', integrationSchema)
+const Module = mongoose.model('Module', moduleSchema)
+const PipelineStep = mongoose.model('PipelineStep', pipelineStepSchema)
 const Plugin = mongoose.model('Plugin', pluginSchema)
 
 /* ================================
@@ -137,13 +167,14 @@ const Plugin = mongoose.model('Plugin', pluginSchema)
 const connection = function() {
     return new Promise((fulfill, reject) => {
         // set up connection
-        mongoose.connect(nconf.get('DB_CONNECTION'), { useMongoClient: true })
+        mongoose.connect(nconf.get('DB_CONNECTION'), { useNewUrlParser: true })
         .then((instance) => {
             logger.info('Connected to DB')
 
             Promise.all([
                 defaults.user(User), // create default user for the first time
-                defaults.settings(Setting) // create default settings
+                defaults.settings(Setting), // create default settings
+                modules.index(Module, Integration)
             ])
             .then(() => fulfill(instance))
         })
@@ -164,5 +195,9 @@ module.exports = {
     Token,
     Rule,
     Setting,
+
+    Integration,
+    Module,
+    PipelineStep,
     Plugin,
 }

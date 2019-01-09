@@ -95,7 +95,7 @@ class ApplicationPage extends Component {
                         <Loader active={this.props.loading} inline size='small' />
                         <Header.Subheader>{app.id && `ID: ${app.id}`}</Header.Subheader>
                         <Header.Subheader>
-                            Alias: <EditableText text={app.alias} onUpdate={(value) => this.onEditableTextUpdate('alias', value.toLowerCase().replace(/\s/g, ''))} />
+                            Alias: <EditableText text={app.alias || ''} onUpdate={(value) => this.onEditableTextUpdate('alias', value.toLowerCase().replace(/\s/g, ''))} />
                         </Header.Subheader>
                     </Header.Content>
                 </Header>

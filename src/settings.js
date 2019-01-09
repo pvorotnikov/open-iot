@@ -36,7 +36,7 @@ module.exports = function(app) {
 
     })
 
-    // fetch all settings
+    // update settings
     router.put('/:key', auth.protect(ACCESS_LEVEL.ADMIN), (req, res, next) => {
 
         const { value } = req.body

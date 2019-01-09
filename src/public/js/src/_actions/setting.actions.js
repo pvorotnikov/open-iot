@@ -7,6 +7,7 @@ export const settingActions = {
     getAll,
     update,
     getEnableRegistrations,
+    getIntegrationMode,
 }
 
 /**
@@ -75,4 +76,27 @@ function getEnableRegistrations() {
     function request() { return { type: settingConstants.GET_ENABLE_REGISTRATIONS_REQUEST } }
     function success(setting) { return { type: settingConstants.GET_ENABLE_REGISTRATIONS_SUCCESS, setting } }
     function failure(error) { return { type: settingConstants.GET_ENABLE_REGISTRATIONS_FAILURE, error } }
+}
+
+function getIntegrationMode() {
+    return dispatch => {
+        dispatch(request())
+
+        // perform async operation
+        settingService.getAll()
+        .then(settings => {
+            let mode = 'rules'
+            settings.forEach(s => {
+                if ('global.integrationmode' === s.key) mode = s.value
+            })
+            dispatch(success(mode))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+        })
+    }
+
+    function request() { return { type: settingConstants.GET_INTEGRATION_MODE_REQUEST } }
+    function success(mode) { return { type: settingConstants.GET_INTEGRATION_MODE_SUCCESS, mode } }
+    function failure(error) { return { type: settingConstants.GET_INTEGRATION_MODE_FAILURE, error } }
 }

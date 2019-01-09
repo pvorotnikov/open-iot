@@ -1,3 +1,4 @@
+const nconf = require('nconf')
 const express = require('express')
 const router = express.Router()
 const { logger, exchange } = require('./lib')
@@ -19,7 +20,7 @@ router.post('/user', (req, res, next) => {
         res.send('allow')
     })
     .catch((err) => {
-        logger.error(err.message)
+        logger.error(`Connection denied for app ${username}: ${err.message}`)
         res.send('deny')
     })
 })
@@ -41,48 +42,11 @@ router.post('/resource', (req, res, next) => {
     // resource - the type of resource (exchange, queue, topic)
     // name - the name of the resource
     // permission - the access level to the resource (configure, write, read)
+
     const { username, vhost, resource, name, permission } = req.body
+    // logger.debug(`Request from ${username} to ${permission} ${resource}: ${name}`)
 
-    if ('topic' === resource) {
-
-        logger.debug(`Request to ${permission} ${resource}: ${name}`)
-
-        switch (permission) {
-
-            case 'write':
-                exchange.authorizeTopicPublish(username, name)
-                .then(() => {
-                    logger.debug('...allowed')
-                    res.send('allow')
-                })
-                .catch(err => {
-                    logger.error('...denied:', err.message)
-                    res.send('deny')
-                })
-                break
-
-            case 'read':
-                exchange.authorizeTopicSubscribe(username, name)
-                .then(reason => {
-                    logger.debug('...allowed:', reason)
-                    res.send('allow')
-                })
-                .catch(err => {
-                    logger.error('...denied:', err.message)
-                    res.send('deny')
-                })
-                break
-
-            default:
-                logger.error('...denied', `Unhandled permission: ${permission}`)
-                res.send('deny')
-                break
-        }
-
-    } else {
-        res.send('allow')
-    }
-
+    return res.send('allow')
 })
 
 // authorize topic action
@@ -95,7 +59,55 @@ router.post('/topic', (req, res, next) => {
     // routing_key - the routing key of a published message (when the permission is write) or routing key of the queue binding (when the permission is read)
     const { username, vhost, resource, name, permission, routing_key } = req.body
 
-    res.send('allow')
+    const topic = routing_key.replace(/\./g, '/')
+    let promise = null
+
+    logger.debug(`Request from ${username} to ${permission} ${resource}: ${topic} (${nconf.get('global.integrationmode')})`)
+
+    switch (permission) {
+
+        case 'write':
+            if ('rules' === nconf.get('global.integrationmode')) {
+                promise = exchange.authorizeTopicPublish(username, topic)
+            } else if ('integrations' === nconf.get('global.integrationmode')) {
+                promise = exchange.authorizeTopicPublishIntegrations(username, topic)
+            } else {
+                return res.send('deny')
+            }
+            promise.then(appName => {
+                logger.debug('...allowed:', appName)
+                res.send('allow')
+            })
+            .catch(err => {
+                logger.error('...denied:', err.message)
+                res.send('deny')
+            })
+            break
+
+        case 'read':
+            if ('rules' === nconf.get('global.integrationmode')) {
+                promise = exchange.authorizeTopicSubscribe(username, topic)
+            } else if ('integrations' === nconf.get('global.integrationmode')) {
+                promise = exchange.authorizeTopicSubscribeIntegrations(username, topic)
+            } else {
+                return res.send('deny')
+            }
+            promise.then(appName => {
+                logger.debug('...allowed:', appName)
+                res.send('allow')
+            })
+            .catch(err => {
+                logger.error('...denied:', err.message)
+                res.send('deny')
+            })
+            break
+
+        default:
+            logger.error('...denied', `Unhandled permission: ${permission}`)
+            res.send('deny')
+            break
+    }
+
 })
 
 module.exports = router

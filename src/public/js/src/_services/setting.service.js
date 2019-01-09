@@ -11,7 +11,7 @@ function getAll() {
     const requestOptions = {
         method: 'GET',
     }
-    return new Request().send('/api/settings', requestOptions)
+    return new Request(false).send('/api/settings', requestOptions)
 }
 
 function update(key, value) {

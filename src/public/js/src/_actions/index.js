@@ -5,4 +5,6 @@ export * from './gateway.actions'
 export * from './rule.actions'
 export * from './scope.actions'
 export * from './setting.actions'
+export * from './module.actions'
+export * from './integration.actions'
 export * from './todo.actions' // TODO: remove this eventually

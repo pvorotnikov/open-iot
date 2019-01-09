@@ -1,7 +1,7 @@
 const nconf = require('nconf')
 const Promise = require('bluebird')
 const mongoose = require('mongoose')
-const { Application, Gateway, Rule } = require('../models')
+const { Application, Gateway, Rule, Integration } = require('../models')
 const logger = require('./logger')
 
 /* =========================================
@@ -36,7 +36,7 @@ function authenticateApp(key, secret) {
 }
 
 /**
- * Authorize publish on a topic
+ * Authorize publish on a topic using rules mode
  * @param  {String} key
  * @param  {String} topic
  * @return {Promise}
@@ -52,7 +52,7 @@ function authorizeTopicPublish(key, topic, track=true) {
                 storeStats('out', appId, gwId)
             }
 
-            return fulfill()
+            return fulfill('Message Handler')
         }
 
         // analyze topic
@@ -75,7 +75,7 @@ function authorizeTopicPublish(key, topic, track=true) {
                     if (track) {
                         storeStats('out', appId, gwId)
                     }
-                    return fulfill()
+                    return fulfill(app.name)
                 }
 
                 // verify that the topic is registered within the application
@@ -87,7 +87,7 @@ function authorizeTopicPublish(key, topic, track=true) {
                         if (track) {
                             storeStats('in', appId, gwId)
                         }
-                        fulfill('in', appId, gwId)
+                        fulfill(app.name)
                     } else {
                         reject(new Error(`Topic ${topicName} is not registered within app ${appId}`))
                     }
@@ -101,7 +101,53 @@ function authorizeTopicPublish(key, topic, track=true) {
 }
 
 /**
- * Authorize subscription to a topic
+ * Authorize publish on a topic using itegrations mode
+ * @param  {String} key
+ * @param  {String} topic
+ * @return {Promise}
+ */
+function authorizeTopicPublishIntegrations(key, topic, track=true) {
+    return new Promise((fulfill, reject) => {
+
+        if (key === nconf.get('HANDLER_KEY')) {
+            return fulfill('Message Handler')
+        }
+
+        // analyze topic
+        const [ appId, gwId, ...topicParts ] = topic.split('/')
+        const topicName = topicParts.join('/')
+
+        // TODO: prevent publishing on topics that have invalid appId or gwId
+
+        // evaluate it is valid application
+        Application.findById(appId)
+        .where('key').eq(key)
+        .then(app => {
+            if (!app) {
+                reject(new Error('Application id and key do not match'))
+            } else {
+                // evaluate it is valid topic
+                Integration.findOne({ topic: topicName })
+                .then(integration => {
+                    if (!integration) {
+                        reject(new Error(`Unknown topic: ${topicName} (${app.name})`))
+                    } else {
+                        fulfill(app.name)
+                    }
+                })
+                .catch(err => {
+                    reject(err)
+                })
+            }
+        })
+        .catch(err => {
+            reject(err)
+        })
+    })
+}
+
+/**
+ * Authorize subscription to a topic using rules mode
  * @param  {String} key
  * @param  {String} topic
  * @return {Promise}
@@ -110,7 +156,7 @@ function authorizeTopicSubscribe(key, topic) {
     return new Promise((fulfill, reject) => {
 
         if (key === nconf.get('HANDLER_KEY')) {
-            return fulfill('message handler')
+            return fulfill('Message Handler')
         }
 
         // analyze topic
@@ -125,7 +171,60 @@ function authorizeTopicSubscribe(key, topic) {
                 // TODO: in sharing scenario this should branch in permissions evaluation
                 reject(new Error('Application id and key do not match'))
             } else {
-                fulfill('own topic')
+                fulfill(app.name)
+            }
+        })
+        .catch(err => {
+            reject(err)
+        })
+    })
+}
+
+/**
+ * Authorize subscription to a topic using integrations mode
+ * @param  {String} key
+ * @param  {String} topic
+ * @return {Promise}
+ */
+function authorizeTopicSubscribeIntegrations(key, topic) {
+    return new Promise((fulfill, reject) => {
+
+        if (key === nconf.get('HANDLER_KEY')) {
+            return fulfill('Message Handler')
+        }
+
+        // analyze topic
+        const [ appId, gwId, ...topicParts ] = topic.split('/')
+        let topicName
+        if (mongoose.Types.ObjectId.isValid(gwId)) {
+            topicName = topicParts.join('/')
+        } else if (topicParts && topicParts.length) {
+            topicName = gwId + '/' + topicParts.join('/')
+        } else {
+            topicName = gwId
+        }
+
+        // TODO: perform deeper analysis of the appId and gwId parts to evaluate subscription
+
+        // evaluate it is valid application
+        Application.findById(appId)
+        .where('key').eq(key)
+        .then(app => {
+            if (!app) {
+                reject(new Error('Application id and key do not match'))
+            } else {
+                // evaluate it is valid topic
+                Integration.findOne({ topic: topicName })
+                .then(integration => {
+                    if (!integration) {
+                        reject(new Error(`Unknown topic: ${topicName} (${app.name})`))
+                    } else {
+                        fulfill(app.name)
+                    }
+                })
+                .catch(err => {
+                    reject(err)
+                })
             }
         })
         .catch(err => {
@@ -159,5 +258,7 @@ function storeStats(traffic, appId, gwId) {
 module.exports = {
     authenticateApp,
     authorizeTopicPublish,
+    authorizeTopicPublishIntegrations,
     authorizeTopicSubscribe,
+    authorizeTopicSubscribeIntegrations,
 }

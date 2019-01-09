@@ -30,12 +30,15 @@ describe('Models', function() {
         models.Token.should.be.a('function')
         models.Rule.should.be.a('function')
         models.Setting.should.be.a('function')
+        models.Module.should.be.a('function')
+        models.Integration.should.be.a('function')
+        models.PipelineStep.should.be.a('function')
 
         models.ACCESS_LEVEL.should.be.an('object')
         models.connection.should.be.a('function')
     })
 
-    it('should remove user', done => {
+    it('should create and remove user', done => {
         new models.User({
             firstName: 'Test',
             lastName: 'User',
@@ -53,7 +56,7 @@ describe('Models', function() {
         .finally(() => done())
     })
 
-    it('should remove application', done => {
+    it('should create and remove application', done => {
         new models.Application({
             name: 'Test',
             alias: 'test',
@@ -71,7 +74,7 @@ describe('Models', function() {
         .finally(() => done())
     })
 
-    it('should remove gateway', done => {
+    it('should create and remove gateway', done => {
         new models.Gateway({
             name: 'Test',
             alias: 'test',
@@ -87,7 +90,7 @@ describe('Models', function() {
         .finally(() => done())
     })
 
-    it('should remove rule', done => {
+    it('should create and remove rule', done => {
         new models.Rule({
             topic: 'test',
             transformation: null,
@@ -105,7 +108,7 @@ describe('Models', function() {
         .finally(() => done())
     })
 
-    it('should remove device', done => {
+    it('should create and remove device', done => {
         new models.Device({
             name: 'Test',
             description: 'Test Device',
@@ -120,7 +123,7 @@ describe('Models', function() {
         .finally(() => done())
     })
 
-    it('should remove token', done => {
+    it('should create and remove token', done => {
         new models.Token({
             type: 'test',
             value: 'test-token',
@@ -135,11 +138,58 @@ describe('Models', function() {
         .finally(() => done())
     })
 
-    it('should remove setting', done => {
+    it('should create and remove setting', done => {
         new models.Setting({
             key: 'test',
             value: 'test-setting',
             description: 'Test Setting',
+        }).save()
+        .then(r => {
+            r.should.be.an('object')
+            return r.remove()
+        })
+        .then(r => {
+            r.should.be.an('object')
+        })
+        .finally(() => done())
+    })
+
+    it('should create and remove module', done => {
+        new models.Module({
+            name: 'com.example.test',
+            description: 'test-module',
+            meta: {},
+            status: 'enabled',
+        }).save()
+        .then(r => {
+            r.should.be.an('object')
+            return r.remove()
+        })
+        .then(r => {
+            r.should.be.an('object')
+        })
+        .finally(() => done())
+    })
+
+    it('should create and remove integration', done => {
+        new models.Integration({
+            topic: 'test',
+            pipeline: [],
+        }).save()
+        .then(r => {
+            r.should.be.an('object')
+            return r.remove()
+        })
+        .then(r => {
+            r.should.be.an('object')
+        })
+        .finally(() => done())
+    })
+
+    it('should create and remove pipeline step', done => {
+        new models.PipelineStep({
+            status: 'enabled',
+            arguments: {},
         }).save()
         .then(r => {
             r.should.be.an('object')

@@ -15,37 +15,33 @@ chai.use(sinonChai)
 
 // mock mongoose
 const mongoose = require('mongoose')
-const Mockgoose = require('mockgoose').Mockgoose
-const mockgoose = new Mockgoose(mongoose)
+const { MongoMemoryServer } = require('mongodb-memory-server')
+const mongod = new MongoMemoryServer()
 
 const { logger } = require('./_utils')
 
-let enableLogger = nconf.get('TEST_LOGGER')
+before(async () => {
 
-before(done => {
-
-    if ('true' !== enableLogger) {
-        sinon.stub(logger, 'debug')
-        sinon.stub(logger, 'info')
-        sinon.stub(logger, 'warn')
-        sinon.stub(logger, 'error')
+    logger.info('Setting up DB')
+    const uri = await mongod.getConnectionString()
+    const port = await mongod.getPort()
+    const dbPath = await mongod.getDbPath()
+    const dbName = await mongod.getDbName()
+    const mongooseOpts = {
+        autoReconnect: true,
+        reconnectTries: Number.MAX_VALUE,
+        reconnectInterval: 1000,
+        useNewUrlParser: true,
     }
 
-    mockgoose.prepareStorage().then(() => {
-        logger.info('Mongoose DB setup complete')
-        mongoose.connect('mongodb://iot/db', { useMongoClient: true })
-        .then(instance => done())
-        .catch(err => done(err))
-    })
+    await mongoose.connect(uri, mongooseOpts)
+    logger.info('Mongoose DB setup complete')
+
+    // silent everything
+    logger.transports[0].silent = true
 })
 
-after(done => {
-    if ('true' !== enableLogger) {
-        logger.debug.restore()
-        logger.info.restore()
-        logger.warn.restore()
-        logger.error.restore()
-    }
-    done()
+after(async () => {
+    logger.transports[0].silent = false
 })
 
