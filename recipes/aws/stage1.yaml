@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: A stack for deploying OpenIoT service in AWS Fargate.
+Description: A stack for deploying OpenIoT service in AWS ECS.
              This is stage1 of two-stage stack set and it creates
              - public VPC with two subnets
              - two security groups for the services
@@ -42,10 +42,10 @@ Resources:
   # VPC
   # ============================
 
-  # VPC in which containers will be networked.
-  # It has two public subnets
-  # We distribute the subnets across the first two available subnets
-  # for the region, for high availability.
+  # VPC in which EC2 and containers will be networked.
+  # It has two public subnets.
+  # We distribute the subnets across the first two availability
+  # zones for the region, for high availability.
   VPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -54,6 +54,7 @@ Resources:
       CidrBlock: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
 
   # Two public subnets, where containers can have public IP addresses
+  # This subnet is located in the first availability zone
   PublicSubnetOne:
     Type: AWS::EC2::Subnet
     Properties:
@@ -65,6 +66,7 @@ Resources:
       CidrBlock: !FindInMap ['SubnetConfig', 'PublicOne', 'CIDR']
       MapPublicIpOnLaunch: true
 
+  # This subnet is located in the second availability zone
   PublicSubnetTwo:
     Type: AWS::EC2::Subnet
     Properties:
