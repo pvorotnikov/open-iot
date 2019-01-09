@@ -21,27 +21,21 @@ describe('Authentication', function() {
     const storeTokens = auth.__get__('storeTokens')
     const createToken = auth.__get__('createToken')
 
-    before(done => {
-        cleanDb()
-        .then(() => {
-            return Promise.all([
-                new User({
-                    firstName: 'Test',
-                    lastName: 'User',
-                    email: 'test@test.com',
-                    password: utils.generatePassword('test'),
-                }).save()
-            ])
-        })
-        .then(res => {
-            user = res[0]
-            done()
-        })
+    before(async () => {
+        await cleanDb()
+        const res = await Promise.all([
+            new User({
+                firstName: 'Test',
+                lastName: 'User',
+                email: 'test@test.com',
+                password: utils.generatePassword('test'),
+            }).save()
+        ])
+        user = res[0]
     })
 
-    after(done => {
-        cleanDb()
-        .then(res => done())
+    after(async () => {
+        await cleanDb()
     })
 
     afterEach(() => {
@@ -57,7 +51,7 @@ describe('Authentication', function() {
 
     describe('Create', function() {
 
-        it('should create tokens', () => {
+        it('should create tokens', async () => {
 
             const storeTokensSpy = sinon.spy(storeTokens)
             auth.__set__('storeTokens', storeTokensSpy)
