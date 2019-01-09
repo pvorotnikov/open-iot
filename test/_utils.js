@@ -5,18 +5,7 @@ const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
 
-const {
-    User,
-    Application,
-    Gateway,
-    Device,
-    Token,
-    Rule,
-    Setting,
-    Module,
-    Integration,
-    PipelineStep
-} = require('../src/models')
+const { User, Application, Gateway, Device, Token, Rule, Setting, Module, Integration, PipelineStep, Plugin, } = require('../src/models')
 const { logger } = require('../src/lib')
 
 function cleanDb() {
@@ -30,7 +19,8 @@ function cleanDb() {
         Setting.remove({}),
         Module.remove({}),
         Integration.remove({}),
-        PipelineStep.remove({})
+        PipelineStep.remove({}),
+        Plugin.remove({})
     ])
 }
 
@@ -42,6 +32,7 @@ function expressApp(routes) {
     const app = express()
 
     app.use(bodyParser.json())
+    app.use(bodyParser.raw({ type: 'application/zip' }))
     app.use(bodyParser.urlencoded({ extended: false }))
     app.use(cookieParser())
 

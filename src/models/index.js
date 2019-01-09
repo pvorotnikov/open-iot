@@ -135,6 +135,14 @@ const integrationSchema = new Schema({
     updated: { type: Date, default: Date.now },
 })
 
+const pluginSchema = new Schema({
+    name: String,
+    description: String,
+    enabled: { type: Boolean, default: false },
+    created: { type: Date, default: Date.now },
+    updated: { type: Date, default: Date.now },
+})
+
 /* ================================
  * Models
  * ================================
@@ -149,6 +157,7 @@ const Setting = mongoose.model('Setting', settingSchema)
 const Integration = mongoose.model('Integration', integrationSchema)
 const Module = mongoose.model('Module', moduleSchema)
 const PipelineStep = mongoose.model('PipelineStep', pipelineStepSchema)
+const Plugin = mongoose.model('Plugin', pluginSchema)
 
 /* ================================
  * Database
@@ -190,4 +199,5 @@ module.exports = {
     Integration,
     Module,
     PipelineStep,
+    Plugin,
 }
