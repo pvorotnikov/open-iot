@@ -25,8 +25,8 @@ describe('Plugins', function() {
             { firstName: 'Admin', lastName: 'Admin', email: 'admin', password: utils.generatePassword('admin'), accessLevel: ACCESS_LEVEL.ADMIN, },
         ])
         const [user, admin] = users
-        userAuthorization = 'Basic ' + new Buffer(user.key + ':' + user.secret).toString('base64')
-        adminAuthorization = 'Basic ' + new Buffer(admin.key + ':' + admin.secret).toString('base64')
+        userAuthorization = 'Basic ' + Buffer.from(user.key + ':' + user.secret).toString('base64')
+        adminAuthorization = 'Basic ' + Buffer.from(admin.key + ':' + admin.secret).toString('base64')
     }
 
     /* ============================
@@ -44,42 +44,40 @@ describe('Plugins', function() {
             await Promise.all([ cleanDb(), createUsers(), Plugin.insertMany(plugins) ])
         })
 
-        it('should not get all plugins - insufficient credentials', done => {
-            request(app)
+        it('should not get all plugins - insufficient credentials', async () => {
+            const res = await request(app)
             .get('/api/plugins')
             .set('Authorization', userAuthorization)
-            .expect(403, done)
+
+            res.status.should.equal(403)
+            res.body.status.should.equal('error')
         })
 
-        it('should not get all plugins - db error', done => {
+        it('should not get all plugins - db error', async () => {
             const pluginStub = sinon.stub(Plugin, 'find').rejects(new Error('plugin-find'))
-            request(app)
+            const res = await request(app)
             .get('/api/plugins')
             .set('Authorization', adminAuthorization)
-            .expect(500)
-            .end((err, res) => {
-                pluginStub.restore()
-                if (err) return done(err)
-                done()
-            })
+
+            pluginStub.restore()
+
+            res.status.should.equal(500)
+            res.body.status.should.equal('error')
         })
 
-        it('should get all plugins', done => {
-            request(app)
+        it('should get all plugins', async () => {
+            const res = await request(app)
             .get('/api/plugins')
             .set('Authorization', adminAuthorization)
-            .expect(200)
-            .end((err, res) => {
-                if (err) return done(err)
-                res.body.data.length.should.equal(2)
-                res.body.data.forEach(p => {
-                    p.should.have.all.keys('id', 'name', 'description', 'enabled')
-                    p.id.should.be.a('string')
-                    p.name.should.be.a('string')
-                    p.description.should.be.a('string')
-                    p.enabled.should.be.a('boolean')
-                })
-                done()
+
+            res.status.should.equal(200)
+            res.body.data.length.should.equal(2)
+            res.body.data.forEach(p => {
+                p.should.have.all.keys('id', 'name', 'description', 'enabled')
+                p.id.should.be.a('string')
+                p.name.should.be.a('string')
+                p.description.should.be.a('string')
+                p.enabled.should.be.a('boolean')
             })
         })
 
@@ -96,44 +94,22 @@ describe('Plugins', function() {
             await Promise.all([ cleanDb(), createUsers() ])
         })
 
-        it('should create a plugins', done => {
-            request(app)
+        it('should create a plugins', async () => {
+            const res = await request(app)
             .post('/api/plugins')
             .set('Authorization', adminAuthorization)
             .set('Content-Type', 'application/zip')
             .send(fs.readFileSync(`${__dirname}/data/com.example.plugin1-v1.0.0.zip`))
-            .expect(200)
-            .end((err, res) => {
-                if (err) return done(err)
-                res.body.data.should.be.an('object')
-                res.body.data.should.have.all.keys('id', 'name', 'description', 'enabled')
-                res.body.data.id.should.be.a('string')
-                res.body.data.name.should.be.a('string')
-                res.body.data.description.should.be.a('string')
-                res.body.data.enabled.should.be.a('boolean')
-                done()
-            })
+
+            res.status.should.equal(200)
+            res.body.data.should.be.an('object')
+            res.body.data.should.have.all.keys('id', 'name', 'description', 'enabled')
+            res.body.data.id.should.be.a('string')
+            res.body.data.name.should.be.a('string')
+            res.body.data.description.should.be.a('string')
+            res.body.data.enabled.should.be.a('boolean')
+
         })
-
-        // it('should not create a plugin - insufficient credentials', done => {
-        //     request(app)
-        //     .post('/api/plugins')
-        //     .set('Authorization', userAuthorization)
-        //     .expect(403, done)
-        // })
-
-        // it('should not create a plugin - db error', done => {
-        //     const pluginStub = sinon.stub(Plugin.prototype, 'save').rejects(new Error('plugin-save'))
-        //     request(app)
-        //     .post('/api/plugins')
-        //     .set('Authorization', adminAuthorization)
-        //     .expect(500)
-        //     .end((err, res) => {
-        //         pluginStub.restore()
-        //         if (err) return done(err)
-        //         done()
-        //     })
-        // })
 
     })
 

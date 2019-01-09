@@ -19,10 +19,9 @@ module.exports = function(app) {
     app.use('/api/plugins', router)
 
     // fetch all available plugins and their statuses
-    router.get('/', auth.protect(ACCESS_LEVEL.ADMIN), (req, res, next) => {
-
-        Plugin.find()
-        .then(plugins => {
+    router.get('/', auth.protect(ACCESS_LEVEL.ADMIN), async (req, res, next) => {
+        try {
+            const plugins = await Plugin.find()
             let data = plugins.map(p => ({
                 id: p._id,
                 name: p.name,
@@ -30,11 +29,10 @@ module.exports = function(app) {
                 enabled: p.enabled,
             }))
             res.json({ status: 'ok', data })
-        })
-        .catch(err => {
-            res.status(500).json(new ErrorResponse(err.message))
-        })
 
+        } catch (err) {
+            res.status(500).json(new ErrorResponse(err.message))
+        }
     })
 
     /**
@@ -42,17 +40,17 @@ module.exports = function(app) {
      */
     router.post('/', auth.protect(ACCESS_LEVEL.ADMIN), async (req, res, next) => {
 
-        const pluginSource = TEMP_DIR
-        await installPlugin(req.body, pluginSource)
-        const pluginName = await validatePlugin()
+        try {
+            const pluginSource = TEMP_DIR
+            await installPlugin(req.body, pluginSource)
+            const pluginName = await validatePlugin()
 
-        let plugin = new Plugin({
-            name: 'bla',
-            description: 'bla',
-            enabled: false,
-        })
-        plugin.save()
-        .then(plugin => {
+            let plugin = await new Plugin({
+                name: 'bla',
+                description: 'bla',
+                enabled: false,
+            }).save()
+
             let data = {
                 id: plugin._id,
                 name: plugin.name,
@@ -60,10 +58,10 @@ module.exports = function(app) {
                 enabled: plugin.enabled,
             }
             res.json({ status: 'ok', data })
-        })
-        .catch(err => {
+
+        } catch (err) {
             res.status(500).json(new ErrorResponse(err.message))
-        })
+        }
 
     })
 
@@ -87,15 +85,10 @@ module.exports = function(app) {
         logger.info('-> Waiting for service to restart...')
     }
 
-    function validatePlugin(pluginSource) {
-        return new Promise((fulfill,  reject) => {
-
-            let name = 'com.example.plugin1'
-            let description = 'Plugin 1'
-
-            fulfill(name, description)
-
-        })
+    async function validatePlugin(pluginSource) {
+        let name = 'com.example.plugin1'
+        let description = 'Plugin 1'
+        return name
     }
 
 } // module.exports
