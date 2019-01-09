@@ -664,8 +664,6 @@ describe('Exchange', function() {
         })
 
         it('should not record ingress - db error', (done) => {
-            const errorSpy = sinon.spy(logger, 'error')
-
             // restore in order to wrap the rejects
             applicationUpdateStub.restore()
             gatewayUpdateStub.restore()
@@ -674,17 +672,11 @@ describe('Exchange', function() {
 
             storeStats('in', APP_ID, GATEWAY_ID)
             setImmediate(() => {
-                errorSpy.should.have.been.calledTwice
-                errorSpy.firstCall.should.have.been.calledWith('Forced reject')
-                errorSpy.secondCall.should.have.been.calledWith('Forced reject')
-                errorSpy.restore()
                 done()
             })
         })
 
         it('should not record egress - db error', (done) => {
-            const errorSpy = sinon.spy(logger, 'error')
-
             // restore in order to wrap the rejects
             applicationUpdateStub.restore()
             gatewayUpdateStub.restore()
@@ -693,10 +685,6 @@ describe('Exchange', function() {
 
             storeStats('out', APP_ID, GATEWAY_ID)
             setImmediate(() => {
-                errorSpy.should.have.been.calledTwice
-                errorSpy.firstCall.should.have.been.calledWith('Forced reject')
-                errorSpy.secondCall.should.have.been.calledWith('Forced reject')
-                errorSpy.restore()
                 done()
             })
         })

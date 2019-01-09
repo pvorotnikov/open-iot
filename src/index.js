@@ -18,6 +18,7 @@ const settings = require('./settings')
 const publish = require('./publish')
 const modules = require('./modules')
 const integrations = require('./integrations')
+const plugins = require('./plugins')
 const MessageHandler = require('./message-handler')
 const { AwsIotBridge } = require('./bridge')
 
@@ -60,6 +61,7 @@ const app = express()
 // setup middleware
 app.use(morgan('combined', { 'stream': logger.stream, skip: (req, res) => { return res.statusCode < 400 } }))
 app.use(bodyParser.json())
+app.use(bodyParser.raw({ type: 'application/zip' }))
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
@@ -75,6 +77,7 @@ settings(app)
 app.use('/api/publish', publish)
 modules(app)
 integrations(app)
+plugins(app)
 
 // catch 404 and forward it to error handler
 app.use((req, res, next) => {
