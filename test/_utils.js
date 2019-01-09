@@ -3,7 +3,6 @@ const Promise = require('bluebird')
 const express = require('express')
 const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser')
-const hat = require('hat')
 const mongoose = require('mongoose')
 
 const { User, Application, Gateway, Device, Token, Rule, Setting, Module, Integration, PipelineStep, Plugin, } = require('../src/models')
@@ -25,6 +24,10 @@ function cleanDb() {
     ])
 }
 
+/**
+ * Create new express app, as close to the
+ * real one as possible.
+ */
 function expressApp(routes) {
     const app = express()
 
@@ -39,10 +42,16 @@ function expressApp(routes) {
     return app
 }
 
+/**
+ * Generate new ObjectId
+ */
 function objectId() {
     return mongoose.Types.ObjectId()
 }
 
+/**
+ * Return true if the argument is an ObjectId
+ */
 function isObjectId(objId) {
     mongoose.Types.ObjectId.isValid(objId)
 }
