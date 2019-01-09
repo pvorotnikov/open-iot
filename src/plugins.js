@@ -1,12 +1,12 @@
 const express = require('express')
 const validator = require('validator')
-const unzip = require('unzip')
 const { logger, responses, auth, utils } = require('./lib')
 const { ACCESS_LEVEL, Plugin } = require('./models')
 const { SuccessResponse, ErrorResponse } = responses
 const util = require('util')
 const fs = require('fs')
 const hat = require('hat')
+const AdmZip = require('adm-zip')
 
 const TEMP_DIR = __dirname + '/temp'
 if (!fs.existsSync(TEMP_DIR)){
@@ -71,40 +71,20 @@ module.exports = function(app) {
     /**
      * Perform plugin installation. Essentially this is unzipping the
      * plugin in a directory that is named after the plugin name.
-     * @param {String} buf buffer with the file contents
+     * @param {Buffer} buf buffer with the file contents
      * @param {String} destination where to put the unzipped content
      * @return {Promise<>}
      */
-    function installPlugin(buf, destination) {
-        return new Promise((fulfill, reject) => {
+    async function installPlugin(buf, destination) {
+        let writeFile = util.promisify(fs.writeFile)
+        let uniqueId = hat(32)
+        let zipFile = `${destination}/${uniqueId}.zip`
 
-            let writeFile = util.promisify(fs.writeFile)
-            let uniqueId = hat(32)
-            let zipFile = `${destination}/${uniqueId}.zip`
+        await writeFile(zipFile, buf)
 
-            writeFile(zipFile, buf)
-            .then(() => {
-
-                const readStream = fs.createReadStream(zipFile)
-                const writeStrem = unzip.Extract({ path: `${destination}/${uniqueId}` })
-
-                writeStrem.on('close', () => {
-                    logger.info('-> Waiting for service to restart...')
-                    fulfill()
-                })
-
-                writeStrem.on('error', err => {
-                    reject(err)
-                })
-
-                readStream.pipe(writeStrem)
-
-            })
-            .catch(err => {
-                reject(err)
-            })
-
-        })
+        const zip = new AdmZip(zipFile)
+        zip.extractAllTo(`${destination}/${uniqueId}`, true) // overwrite=True
+        logger.info('-> Waiting for service to restart...')
     }
 
     function validatePlugin(pluginSource) {

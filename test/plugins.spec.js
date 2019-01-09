@@ -16,40 +16,18 @@ const plugins = require('../src/plugins')
 
 describe('Plugins', function() {
 
-    let app
+    const app = expressApp([plugins])
     let userAuthorization, adminAuthorization
 
-    function createUsers() {
-        return new Promise((fulfill, reject) => {
-            User.insertMany([
-                {
-                    firstName: 'User',
-                    lastName: 'User',
-                    email: 'user',
-                    password: utils.generatePassword('user'),
-                },
-                {
-                    firstName: 'Admin',
-                    lastName: 'Admin',
-                    email: 'admin',
-                    password: utils.generatePassword('admin'),
-                    accessLevel: ACCESS_LEVEL.ADMIN,
-                },
-            ])
-            .then(users => {
-                const [user, admin] = users
-                userAuthorization = 'Basic ' + new Buffer(user.key + ':' + user.secret).toString('base64')
-                adminAuthorization = 'Basic ' + new Buffer(admin.key + ':' + admin.secret).toString('base64')
-                fulfill()
-            })
-            .catch(err => reject(err))
-        })
+    async function createUsers() {
+        const users = await User.insertMany([
+            { firstName: 'User', lastName: 'User', email: 'user', password: utils.generatePassword('user'), },
+            { firstName: 'Admin', lastName: 'Admin', email: 'admin', password: utils.generatePassword('admin'), accessLevel: ACCESS_LEVEL.ADMIN, },
+        ])
+        const [user, admin] = users
+        userAuthorization = 'Basic ' + new Buffer(user.key + ':' + user.secret).toString('base64')
+        adminAuthorization = 'Basic ' + new Buffer(admin.key + ':' + admin.secret).toString('base64')
     }
-
-    before(() => {
-        // create app
-        app = expressApp([plugins])
-    })
 
     /* ============================
      * GET PLUGINS
@@ -58,19 +36,12 @@ describe('Plugins', function() {
 
     describe('Get plugins', function() {
 
-        before(done => {
+        before(async () => {
             let plugins = [
-                {
-                    name: 'com.example.plugin1',
-                    description: 'Plugin 1',
-                },
-                {
-                    name: 'com.example.plugin2',
-                    description: 'Plugin 2',
-                }
+                { name: 'com.example.plugin1', description: 'Plugin 1', },
+                { name: 'com.example.plugin2', description: 'Plugin 2', }
             ]
-            Promise.all([ cleanDb(), createUsers(), Plugin.insertMany(plugins) ])
-            .then(res => done())
+            await Promise.all([ cleanDb(), createUsers(), Plugin.insertMany(plugins) ])
         })
 
         it('should not get all plugins - insufficient credentials', done => {
@@ -121,9 +92,8 @@ describe('Plugins', function() {
 
     describe('Create plugin', function() {
 
-        before(done => {
-            Promise.all([ cleanDb(), createUsers() ])
-            .then(res => done())
+        before(async () => {
+            await Promise.all([ cleanDb(), createUsers() ])
         })
 
         it('should create a plugins', done => {

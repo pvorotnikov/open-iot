@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/pvorotnikov/open-ui#readme",
   "dependencies": {
+    "adm-zip": "^0.4.13",
     "amqplib": "^0.5.3",
     "aws-iot-device-sdk": "^2.2.1",
     "bcrypt": "^3.0.2",
@@ -57,7 +58,6 @@
     "redux-thunk": "^2.2.0",
     "semantic-ui-css": "^2.2.12",
     "semantic-ui-react": "^0.75.1",
-    "unzip": "^0.1.11",
     "uuid": "^3.3.2",
     "validator": "^10.9.0",
     "winston": "^3.1.0"
