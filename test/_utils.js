@@ -10,17 +10,17 @@ const { logger } = require('../src/lib')
 
 function cleanDb() {
     return Promise.all([
-        User.remove({}),
-        Application.remove({}),
-        Gateway.remove({}),
-        Device.remove({}),
-        Token.remove({}),
-        Rule.remove({}),
-        Setting.remove({}),
-        Module.remove({}),
-        Integration.remove({}),
-        PipelineStep.remove({}),
-        Plugin.remove({})
+        User.deleteMany({}),
+        Application.deleteMany({}),
+        Gateway.deleteMany({}),
+        Device.deleteMany({}),
+        Token.deleteMany({}),
+        Rule.deleteMany({}),
+        Setting.deleteMany({}),
+        Module.deleteMany({}),
+        Integration.deleteMany({}),
+        PipelineStep.deleteMany({}),
+        Plugin.deleteMany({})
     ])
 }
 

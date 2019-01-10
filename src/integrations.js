@@ -12,12 +12,13 @@ module.exports = function(app) {
     /**
      * Fetch all integrations.
      */
-    router.get('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+    router.get('/', auth.protect(ACCESS_LEVEL.USER), async (req, res, next) => {
 
-        Integration.find()
-        .where('user').eq(req.user._id)
-        .then((integrations) => {
-            let data = integrations.map(i => ({
+        try {
+            const integrations = await Integration.find()
+            .where('user').eq(req.user._id)
+
+            const data = integrations.map(i => ({
                 id: i._id,
                 topic: i.topic,
                 pipeline: i.pipeline.map(s => ({
@@ -30,11 +31,10 @@ module.exports = function(app) {
                 updated: i.updated,
             }))
             res.json(new SuccessResponse(data))
-        })
-        .catch(err => {
-            res.status(500).json(new ErrorResponse(err.message))
-        })
 
+        } catch (err) {
+            res.status(500).json(new ErrorResponse(err.message))
+        }
     })
 
     /**

@@ -236,19 +236,19 @@ function authorizeTopicSubscribeIntegrations(key, topic) {
 function storeStats(traffic, appId, gwId) {
     if ('in' === traffic) {
 
-        Application.findByIdAndUpdate(appId, { $inc: { statsIn: 1 } })
+        Application.findOneAndUpdate(appId, { $inc: { statsIn: 1 } })
         .catch(err => logger.error(err.message))
 
-        Gateway.findByIdAndUpdate(gwId, { $inc: { statsIn: 1 } })
+        Gateway.findOneAndUpdate(gwId, { $inc: { statsIn: 1 } })
         .catch(err => logger.error(err.message))
 
     } else if ('out' === traffic) {
 
-        Application.findByIdAndUpdate(appId, { $inc: { statsOut: 1 } })
+        Application.findOneAndUpdate(appId, { $inc: { statsOut: 1 } })
         .catch(err => logger.error(err.message))
 
         if ('message' !== gwId && mongoose.Types.ObjectId.isValid(gwId)) {
-            Gateway.findByIdAndUpdate(gwId, { $inc: { statsOut: 1 } })
+            Gateway.findOneAndUpdate(gwId, { $inc: { statsOut: 1 } })
             .catch(err => logger.error(err.message))
         }
 

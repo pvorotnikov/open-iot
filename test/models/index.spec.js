@@ -12,14 +12,12 @@ const models = require('../../src/models')
 
 describe('Models', function() {
 
-    before(done => {
-        cleanDb()
-        .then(res => done())
+    before(async () => {
+        await cleanDb()
     })
 
-    after(done => {
-        cleanDb()
-        .then(res => done())
+    after(async () => {
+        await cleanDb()
     })
 
     it('should export models', () => {
@@ -33,6 +31,7 @@ describe('Models', function() {
         models.Module.should.be.a('function')
         models.Integration.should.be.a('function')
         models.PipelineStep.should.be.a('function')
+        models.Plugin.should.be.a('function')
 
         models.ACCESS_LEVEL.should.be.an('object')
         models.connection.should.be.a('function')

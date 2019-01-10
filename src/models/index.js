@@ -29,7 +29,7 @@ const userSchema = new Schema({
 })
 userSchema.pre('remove', function(next) {
     logger.info('Cascade removing applications attached to user ' + this._id)
-    Application.remove({user: this._id}).exec()
+    Application.deleteMany({user: this._id}).exec()
     next()
 })
 
@@ -48,10 +48,10 @@ const applicationSchema = new Schema({
 })
 applicationSchema.pre('remove', function(next) {
     logger.info('Cascade removing gateways attached to application ' + this._id)
-    Gateway.remove({application: this._id}).exec()
+    Gateway.deleteMany({application: this._id}).exec()
     logger.info('Cascade removing rules attached to or associated with application ' + this._id)
-    Rule.remove({application: this._id}).exec()
-    Rule.remove({scope: this._id}).exec()
+    Rule.deleteMany({application: this._id}).exec()
+    Rule.deleteMany({scope: this._id}).exec()
     next()
 })
 
@@ -195,7 +195,6 @@ module.exports = {
     Token,
     Rule,
     Setting,
-
     Integration,
     Module,
     PipelineStep,

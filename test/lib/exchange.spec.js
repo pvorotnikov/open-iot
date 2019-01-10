@@ -618,8 +618,8 @@ describe('Exchange', function() {
         let gatewayUpdateStub
 
         beforeEach(() => {
-            applicationUpdateStub = sinon.stub(Application, 'findByIdAndUpdate').resolves()
-            gatewayUpdateStub = sinon.stub(Gateway, 'findByIdAndUpdate').resolves()
+            applicationUpdateStub = sinon.stub(Application, 'findOneAndUpdate').resolves()
+            gatewayUpdateStub = sinon.stub(Gateway, 'findOneAndUpdate').resolves()
         })
 
         afterEach(() => {
@@ -667,8 +667,8 @@ describe('Exchange', function() {
             // restore in order to wrap the rejects
             applicationUpdateStub.restore()
             gatewayUpdateStub.restore()
-            applicationUpdateStub = sinon.stub(Application, 'findByIdAndUpdate').rejects(new Error('Forced reject'))
-            gatewayUpdateStub = sinon.stub(Gateway, 'findByIdAndUpdate').rejects(new Error('Forced reject'))
+            applicationUpdateStub = sinon.stub(Application, 'findOneAndUpdate').rejects(new Error('Forced reject'))
+            gatewayUpdateStub = sinon.stub(Gateway, 'findOneAndUpdate').rejects(new Error('Forced reject'))
 
             storeStats('in', APP_ID, GATEWAY_ID)
             setImmediate(() => {
@@ -680,8 +680,8 @@ describe('Exchange', function() {
             // restore in order to wrap the rejects
             applicationUpdateStub.restore()
             gatewayUpdateStub.restore()
-            applicationUpdateStub = sinon.stub(Application, 'findByIdAndUpdate').rejects(new Error('Forced reject'))
-            gatewayUpdateStub = sinon.stub(Gateway, 'findByIdAndUpdate').rejects(new Error('Forced reject'))
+            applicationUpdateStub = sinon.stub(Application, 'findOneAndUpdate').rejects(new Error('Forced reject'))
+            gatewayUpdateStub = sinon.stub(Gateway, 'findOneAndUpdate').rejects(new Error('Forced reject'))
 
             storeStats('out', APP_ID, GATEWAY_ID)
             setImmediate(() => {

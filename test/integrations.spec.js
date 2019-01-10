@@ -15,9 +15,9 @@ const { utils } = require('../src/lib')
 const { User, Module, Integration, ACCESS_LEVEL } = require('../src/models')
 const integrations = require('../src/integrations')
 
-describe('Modules', function() {
+describe('Integrations', function() {
 
-    let app
+    const app = expressApp([integrations])
     let managerAuthorization
 
     function createManager() {
@@ -37,11 +37,6 @@ describe('Modules', function() {
         })
     }
 
-    before(() => {
-        // create app
-        app = expressApp([integrations])
-    })
-
     /* ============================
      * INTEGRATION LIST
      * ============================
@@ -49,9 +44,8 @@ describe('Modules', function() {
 
     describe('Integration list', function() {
 
-        before(done => {
-            Promise.all([ cleanDb(), createManager() ])
-            .then(res => done()).catch(err => done(err))
+        before(async () => {
+            await Promise.all([ cleanDb(), createManager() ])
         })
 
         it('should fetch all integrations', done => {
@@ -120,9 +114,8 @@ describe('Modules', function() {
 
     describe('Create integration', function() {
 
-        before(done => {
-            Promise.all([ cleanDb(), createManager() ])
-            .then(res => done()).catch(err => done(err))
+        before(async () => {
+            await Promise.all([ cleanDb(), createManager() ])
         })
 
         it('should create integration', done => {
@@ -183,9 +176,8 @@ describe('Modules', function() {
 
     describe('Delete integration', function() {
 
-        before(done => {
-            Promise.all([ cleanDb(), createManager() ])
-            .then(res => done()).catch(err => done(err))
+        before(async () => {
+            await Promise.all([ cleanDb(), createManager() ])
         })
 
         it('should delete integration', done => {
@@ -256,9 +248,8 @@ describe('Modules', function() {
 
     describe('Enable/disable integration', function() {
 
-        before(done => {
-            Promise.all([ cleanDb(), createManager() ])
-            .then(res => done()).catch(err => done(err))
+        before(async () => {
+            await Promise.all([ cleanDb(), createManager() ])
         })
 
         it('should enable integration', done => {
