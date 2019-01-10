@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const express = require('express')
 const { logger, responses, auth, utils, constants } = require('./lib')
 const { ACCESS_LEVEL, Module, Integration } = require('./models')
-const { SuccessResponse, ErrorResponse } = responses
+const { SuccessResponse, ErrorResponse, HTTPError, } = responses
 
 module.exports = function(app) {
 
@@ -25,10 +25,10 @@ module.exports = function(app) {
                 meta: m.meta,
                 status: m.status,
             }))
-            res.json({ status: 'ok', data })
+            res.json(new SuccessResponse(data))
         })
         .catch((err) => {
-            res.status(500).json(new ErrorResponse(err.message))
+            res.status(err.status || 500).json(new ErrorResponse(err.message))
         })
 
     })
@@ -46,7 +46,7 @@ module.exports = function(app) {
 
         Module.findOne({ _id: req.params.moduleId })
         .then(m => {
-            if (!m) throw new Error(`Invalid module: ${req.params.moduleId}`)
+            if (!m) throw new HTTPError(`Invalid module: ${req.params.moduleId}`, 404)
             m.status = status
             m.updated = Date.now()
             updtedModule = m
@@ -85,7 +85,7 @@ module.exports = function(app) {
             res.json(new SuccessResponse(data))
         })
         .catch(err => {
-            res.status(500).json(new ErrorResponse(err.message))
+            res.status(err.status || 500).json(new ErrorResponse(err.message))
         })
 
     })

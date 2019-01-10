@@ -191,15 +191,13 @@ describe('Modules', function() {
             })
         })
 
-        it('should not update module - module does not exist', done => {
-            Module.remove({ _id: moduleId })
-            .then(() => {
-                request(app)
-                .put('/api/modules/' + moduleId)
-                .send({ status: 'disabled' })
-                .set('Authorization', managerAuthorization)
-                .expect(500, done)
-            })
+        it('should not update module - module does not exist', async () => {
+            await Module.deleteOne({ _id: moduleId })
+            const res = await request(app)
+            .put('/api/modules/' + moduleId)
+            .send({ status: 'disabled' })
+            .set('Authorization', managerAuthorization)
+            res.status.should.equal(404)
         })
 
     })

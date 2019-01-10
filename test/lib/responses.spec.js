@@ -9,7 +9,7 @@ const expect = chai.expect
 
 const { logger } = require('../_utils')
 const { utils, responses } = require('../../src/lib')
-const { SuccessResponse, ErrorResponse } = responses
+const { SuccessResponse, ErrorResponse, HTTPError } = responses
 
 describe('Responses', function() {
 
@@ -45,6 +45,18 @@ describe('Responses', function() {
         response.status.should.equal('error')
         response.errorMessage.should.equal('test')
         response.data.should.deep.equal({ test: 321 })
+    })
+
+    it ('should create HTTP error with status 400', () => {
+        let error = new HTTPError('Test error', 400)
+        error.status.should.equal(400)
+        error.message.should.equal('Test error')
+    })
+
+    it ('should create default HTTP error with status 500', () => {
+        let error = new HTTPError()
+        error.status.should.equal(500)
+        error.message.should.equal('Error')
     })
 
 })

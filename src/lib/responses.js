@@ -13,7 +13,15 @@ class ErrorResponse {
     }
 }
 
+class HTTPError extends Error {
+    constructor(message='Error', status=500, fileName, lineNumber) {
+        super(message, fileName, lineNumber)
+        this.status = status
+    }
+}
+
 module.exports = {
     SuccessResponse,
     ErrorResponse,
+    HTTPError,
 }
