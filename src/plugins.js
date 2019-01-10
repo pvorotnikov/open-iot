@@ -1,17 +1,33 @@
+/* This route is responsible for accepting a zipped module
+ * called a plugin and unzipping it in a temporary directory.
+ * Once the plugin is unzipped, it is verified for consistency,
+ * i.e. various checks are performed whether all the necessary
+ * files are present - package.json, index.js.
+ * If the plugin is deemed fit and healthy it is moved to the
+ * modules directory and then it can be ivoked by the pipeline
+ * integration system.
+ */
+
 const express = require('express')
 const validator = require('validator')
-const { logger, responses, auth, utils } = require('./lib')
-const { ACCESS_LEVEL, Plugin } = require('./models')
-const { SuccessResponse, ErrorResponse } = responses
-const util = require('util')
+const _ = require('lodash')
 const fs = require('fs')
+const path = require('path')
 const hat = require('hat')
 const AdmZip = require('adm-zip')
+const { logger, responses, auth, utils } = require('./lib')
+const { ACCESS_LEVEL, Plugin } = require('./models')
+const { SuccessResponse, ErrorResponse, HTTPError, } = responses
 
-const TEMP_DIR = __dirname + '/temp'
+
+// paths
+const MODULES_DIR = path.join(__dirname, 'modules')
+const TEMP_DIR = path.join(__dirname, 'temp')
+// create temp dir if needed
 if (!fs.existsSync(TEMP_DIR)){
     fs.mkdirSync(TEMP_DIR);
 }
+
 
 module.exports = function(app) {
 
@@ -22,16 +38,15 @@ module.exports = function(app) {
     router.get('/', auth.protect(ACCESS_LEVEL.ADMIN), async (req, res, next) => {
         try {
             const plugins = await Plugin.find()
-            let data = plugins.map(p => ({
+            const data = plugins.map(p => ({
                 id: p._id,
                 name: p.name,
                 description: p.description,
-                enabled: p.enabled,
             }))
-            res.json({ status: 'ok', data })
+            res.json(new SuccessResponse(data))
 
         } catch (err) {
-            res.status(500).json(new ErrorResponse(err.message))
+            res.status(err.status || 500).json(new ErrorResponse(err.message))
         }
     })
 
@@ -41,54 +56,83 @@ module.exports = function(app) {
     router.post('/', auth.protect(ACCESS_LEVEL.ADMIN), async (req, res, next) => {
 
         try {
-            const pluginSource = TEMP_DIR
-            await installPlugin(req.body, pluginSource)
-            const pluginName = await validatePlugin()
+            const pluginTempName = await unzipPlugin(req.body, TEMP_DIR)
+            logger.info(`Unzipped plugin as ${pluginTempName}`)
 
-            let plugin = await new Plugin({
-                name: 'bla',
-                description: 'bla',
-                enabled: false,
+            // clean up ziped file
+            await utils.unlinkFile(path.join(TEMP_DIR, pluginTempName + '.zip'))
+
+            const { name, description } = await validatePlugin(path.join(TEMP_DIR, pluginTempName))
+            logger.info(`Plugin ${name} is valid.`)
+
+            // install plugin
+            await utils.renameFile(path.join(TEMP_DIR, pluginTempName), path.join(MODULES_DIR, name))
+
+            const plugin = await new Plugin({
+                name: name,
+                description: description,
             }).save()
 
-            let data = {
+            const data = {
                 id: plugin._id,
                 name: plugin.name,
                 description: plugin.description,
-                enabled: plugin.enabled,
             }
-            res.json({ status: 'ok', data })
+            res.json(new SuccessResponse(data))
 
         } catch (err) {
-            res.status(500).json(new ErrorResponse(err.message))
+            res.status(err.status || 500).json(new ErrorResponse(err.message))
         }
 
     })
 
 
     /**
-     * Perform plugin installation. Essentially this is unzipping the
-     * plugin in a directory that is named after the plugin name.
+     * Perform plugin unzipping in a directory
+     * that is named after the plugin name.
      * @param {Buffer} buf buffer with the file contents
      * @param {String} destination where to put the unzipped content
-     * @return {Promise<>}
+     * @return {Promise<String>}
      */
-    async function installPlugin(buf, destination) {
-        let writeFile = util.promisify(fs.writeFile)
+    async function unzipPlugin(buf, destination) {
         let uniqueId = hat(32)
         let zipFile = `${destination}/${uniqueId}.zip`
 
-        await writeFile(zipFile, buf)
+        // write the zip file in destination directory
+        await utils.writeFile(zipFile, buf)
 
+        // unzip the file
         const zip = new AdmZip(zipFile)
-        zip.extractAllTo(`${destination}/${uniqueId}`, true) // overwrite=True
-        logger.info('-> Waiting for service to restart...')
+        zip.extractAllTo(path.join(destination, uniqueId), true) // overwrite=True
+
+        return uniqueId
     }
 
+    /**
+     * Perform plugin validation.
+     * @param {String} plugin source
+     * @return {Promise<Object>}
+     */
     async function validatePlugin(pluginSource) {
-        let name = 'com.example.plugin1'
-        let description = 'Plugin 1'
-        return name
+        const hasManifest = await utils.fileExists(path.join(pluginSource, 'package.json'))
+        if (!hasManifest) {
+            throw new HTTPError('Plugin does not have package.json', 400)
+        }
+
+        const hasIndex = await utils.fileExists(path.join(pluginSource, 'index.js'))
+        if (!hasIndex) {
+            throw new HTTPError('Plugin does not have index.js', 400)
+        }
+
+        const manifest = require(path.join(pluginSource, 'package.json'))
+        const name = manifest.name
+        const description = manifest.description || null
+
+        if (_(name).isEmpty()) {
+            throw new HTTPError('Plugin name is required')
+        }
+
+        return { name, description }
     }
 
 } // module.exports

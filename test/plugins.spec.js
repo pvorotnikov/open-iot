@@ -73,11 +73,10 @@ describe('Plugins', function() {
             res.status.should.equal(200)
             res.body.data.length.should.equal(2)
             res.body.data.forEach(p => {
-                p.should.have.all.keys('id', 'name', 'description', 'enabled')
+                p.should.have.all.keys('id', 'name', 'description')
                 p.id.should.be.a('string')
                 p.name.should.be.a('string')
                 p.description.should.be.a('string')
-                p.enabled.should.be.a('boolean')
             })
         })
 
@@ -95,19 +94,62 @@ describe('Plugins', function() {
         })
 
         it('should create a plugins', async () => {
+
+            // stub fs operation
+            const renameFileStub = sinon.stub(utils, 'renameFile')
+            renameFileStub.resolves()
+
             const res = await request(app)
             .post('/api/plugins')
             .set('Authorization', adminAuthorization)
             .set('Content-Type', 'application/zip')
             .send(fs.readFileSync(`${__dirname}/data/com.example.plugin1-v1.0.0.zip`))
 
+            // restore stub
+            renameFileStub.restore()
+
             res.status.should.equal(200)
             res.body.data.should.be.an('object')
-            res.body.data.should.have.all.keys('id', 'name', 'description', 'enabled')
+            res.body.data.should.have.all.keys('id', 'name', 'description')
             res.body.data.id.should.be.a('string')
             res.body.data.name.should.be.a('string')
             res.body.data.description.should.be.a('string')
-            res.body.data.enabled.should.be.a('boolean')
+
+        })
+
+        it('should not create a plugins - missing manifest', async () => {
+
+            // stub fs operation
+            const fileExistsStub = sinon.stub(utils, 'fileExists')
+            fileExistsStub.callsFake(file => !file.endsWith('package.json'))
+
+            const res = await request(app)
+            .post('/api/plugins')
+            .set('Authorization', adminAuthorization)
+            .set('Content-Type', 'application/zip')
+            .send(fs.readFileSync(`${__dirname}/data/com.example.plugin1-v1.0.0.zip`))
+
+            // restore stub
+            fileExistsStub.restore()
+            res.status.should.equal(400)
+
+        })
+
+        it('should not create a plugins - missing index', async () => {
+
+            // stub fs operation
+            const fileExistsStub = sinon.stub(utils, 'fileExists')
+            fileExistsStub.callsFake(file => !file.endsWith('index.js'))
+
+            const res = await request(app)
+            .post('/api/plugins')
+            .set('Authorization', adminAuthorization)
+            .set('Content-Type', 'application/zip')
+            .send(fs.readFileSync(`${__dirname}/data/com.example.plugin1-v1.0.0.zip`))
+
+            // restore stub
+            fileExistsStub.restore()
+            res.status.should.equal(400)
 
         })
 

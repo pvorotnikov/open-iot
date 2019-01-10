@@ -138,7 +138,6 @@ const integrationSchema = new Schema({
 const pluginSchema = new Schema({
     name: String,
     description: String,
-    enabled: { type: Boolean, default: false },
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
 })
@@ -164,25 +163,22 @@ const Plugin = mongoose.model('Plugin', pluginSchema)
  * ================================
  */
 
-const connection = function() {
-    return new Promise((fulfill, reject) => {
-        // set up connection
-        mongoose.connect(nconf.get('DB_CONNECTION'), { useNewUrlParser: true })
-        .then((instance) => {
-            logger.info('Connected to DB')
+const connection = async function() {
+    try {
 
-            Promise.all([
-                defaults.user(User), // create default user for the first time
-                defaults.settings(Setting), // create default settings
-                modules.index(Module, Integration)
-            ])
-            .then(() => fulfill(instance))
-        })
-        .catch((err) => {
-            logger.error('MongoDB connection error:', err.message)
-            reject(err)
-        })
-    })
+        const instance = await mongoose.connect(nconf.get('DB_CONNECTION'), { useNewUrlParser: true })
+        logger.info('Connected to DB')
+        await Promise.all([
+            defaults.user(User), // create default user for the first time
+            defaults.settings(Setting), // create default settings
+            modules.index(Module, Integration)
+        ])
+        return instance
+
+    } catch (err) {
+        logger.error('MongoDB connection error:', err.message)
+        throw err
+    }
 }
 
 module.exports = {
