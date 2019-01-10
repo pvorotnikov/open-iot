@@ -94,7 +94,7 @@ module.exports = function(app) {
 
             } else {        // enable bridge
 
-                Setting.count({
+                Setting.countDocuments({
                     $and: [
                         // include all aws bridge settings...
                         { key: { $in: [

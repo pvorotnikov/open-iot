@@ -80,7 +80,7 @@ describe('Settings', function() {
 
     describe('Get settings', function() {
 
-        before(done => {
+        before(async () => {
             let settings = [
                 {
                     key: 'scope.immutable.setting',
@@ -94,47 +94,42 @@ describe('Settings', function() {
                     description: 'Test mutable setting',
                 }
             ]
-            Promise.all([ cleanDb(), createUsers(), Setting.insertMany(settings) ])
-            .then(res => done())
+            await Promise.all([ cleanDb(), createUsers(), Setting.insertMany(settings) ])
         })
 
-        it('should get all settings', done => {
-            request(app)
+        it('should get all settings', async () => {
+            const res = await request(app)
             .get('/api/settings')
             .set('Authorization', adminAuthorization)
             .expect(200)
-            .end((err, res) => {
-                if (err) return done(err)
-                res.body.data.length.should.equal(2)
-                res.body.data.forEach(u => {
-                    u.should.have.all.keys('key', 'value', 'description', 'updated', 'readOnly')
-                    u.key.should.be.a('string')
-                    u.description.should.be.a('string')
-                    u.updated.should.be.a('string')
-                    u.readOnly.should.be.a('boolean')
-                })
-                done()
+
+            res.status.should.equal(200)
+            res.body.data.length.should.equal(2)
+            res.body.data.forEach(u => {
+                u.should.have.all.keys('key', 'value', 'description', 'updated', 'readOnly')
+                u.key.should.be.a('string')
+                u.description.should.be.a('string')
+                u.updated.should.be.a('string')
+                u.readOnly.should.be.a('boolean')
             })
         })
 
-        it('should not get all settings - insufficient credentials', done => {
-            request(app)
+        it('should not get all settings - insufficient credentials', async () => {
+            const res = await request(app)
             .get('/api/settings')
             .set('Authorization', userAuthorization)
-            .expect(403, done)
+
+            res.status.should.equal(403)
         })
 
-        it('should not get all settings - db error', done => {
+        it('should not get all settings - db error', async () => {
             const settingStub = sinon.stub(Setting, 'find').rejects(new Error('setting-find'))
-            request(app)
+            const res = await request(app)
             .get('/api/settings')
             .set('Authorization', adminAuthorization)
-            .expect(500)
-            .end((err, res) => {
-                settingStub.restore()
-                if (err) return done(err)
-                done()
-            })
+
+            settingStub.restore()
+            res.status.should.equal(500)
         })
 
     })
@@ -146,7 +141,7 @@ describe('Settings', function() {
 
     describe('Put settings', function() {
 
-        before(done => {
+        before(async () => {
             let settings = [
                 {
                     key: 'scope.immutable.setting',
@@ -160,63 +155,59 @@ describe('Settings', function() {
                     description: 'Test mutable setting',
                 }
             ]
-            Promise.all([ cleanDb(), createUsers(), Setting.insertMany(settings) ])
-            .then(res => done())
+            await Promise.all([ cleanDb(), createUsers(), Setting.insertMany(settings) ])
         })
 
-        it('should update settings', done => {
-            request(app)
+        it('should update settings', async () => {
+            const res = await request(app)
             .put('/api/settings/scope.mutable.setting')
             .set('Authorization', adminAuthorization)
             .send({ value: 'new value' })
-            .expect(200)
-            .end((err, res) => {
-                if (err) return done(err)
-                res.body.data.should.have.all.keys('key', 'value', 'description', 'updated', 'readOnly')
-                res.body.data.key.should.be.a('string')
-                res.body.data.description.should.be.a('string')
-                res.body.data.updated.should.be.a('string')
-                res.body.data.readOnly.should.be.a('boolean')
-                done()
-            })
+
+            res.status.should.equal(200)
+            res.body.data.should.have.all.keys('key', 'value', 'description', 'updated', 'readOnly')
+            res.body.data.key.should.be.a('string')
+            res.body.data.description.should.be.a('string')
+            res.body.data.updated.should.be.a('string')
+            res.body.data.readOnly.should.be.a('boolean')
         })
 
-        it('should not update settings - insufficient credentials', done => {
-            request(app)
+        it('should not update settings - insufficient credentials', async () => {
+            const res = await request(app)
             .put('/api/settings/scope.mutable.setting')
             .set('Authorization', userAuthorization)
             .send({ value: 'new value' })
-            .expect(403, done)
+
+            res.status.should.equal(403)
         })
 
-        it('should not update settings - immutable setting', done => {
-            request(app)
+        it('should not update settings - immutable setting', async () => {
+            const res = await request(app)
             .put('/api/settings/scope.immutable.setting')
             .set('Authorization', adminAuthorization)
             .send({ value: 'new value' })
-            .expect(500, done)
+
+            res.status.should.equal(500)
         })
 
-        it('should not update settings - does not exist', done => {
-            request(app)
+        it('should not update settings - does not exist', async () => {
+            const res = await request(app)
             .put('/api/settings/scope.dummy.setting')
             .set('Authorization', adminAuthorization)
             .send({ value: 'new value' })
-            .expect(500, done)
+
+            res.status.should.equal(500)
         })
 
-        it('should not update settings - db error', done => {
+        it('should not update settings - db error', async () => {
             const settingStub = sinon.stub(Setting, 'findOne').rejects(new Error('setting-find'))
-            request(app)
+            const res = await request(app)
             .put('/api/settings/scope.mutable.setting')
             .set('Authorization', adminAuthorization)
             .send({ value: 'new value' })
-            .expect(500)
-            .end((err, res) => {
-                settingStub.restore()
-                if (err) return done(err)
-                done()
-            })
+
+            settingStub.restore()
+            res.status.should.equal(500)
         })
 
     })
@@ -229,7 +220,7 @@ describe('Settings', function() {
 
     describe('AWS bridge enabling', function() {
 
-        before(done => {
+        before(async () => {
             let settings = [
                 { description: 'aws', key: 'bridge.aws.enabled', value: false, },
                 { description: 'aws', key: 'bridge.aws.endpoint', value: 'A', },
@@ -238,66 +229,55 @@ describe('Settings', function() {
                 { description: 'aws', key: 'bridge.aws.privatekey', value: 'D', },
                 { description: 'aws', key: 'bridge.aws.ca', value: 'E', },
             ]
-            Promise.all([ cleanDb(), createUsers(), Setting.insertMany(settings) ])
-            .then(res => done())
+            await Promise.all([ cleanDb(), createUsers(), Setting.insertMany(settings) ])
         })
 
-        it('should enable AWS bridge', done => {
-            request(app)
+        it('should enable AWS bridge', async () => {
+            const res = await request(app)
             .put('/api/settings/bridge.aws.enabled')
             .set('Authorization', adminAuthorization)
             .send({ value: true })
-            .expect(200)
-            .end((err, res) => {
-                if (err) return done(err)
-                res.body.data.should.have.all.keys('key', 'value', 'description', 'updated', 'readOnly')
-                res.body.data.key.should.equal('bridge.aws.enabled')
-                res.body.data.value.should.equal(true)
-                done()
-            })
+
+            res.status.should.equal(200)
+            res.body.data.should.have.all.keys('key', 'value', 'description', 'updated', 'readOnly')
+            res.body.data.key.should.equal('bridge.aws.enabled')
+            res.body.data.value.should.equal(true)
         })
 
-        it('should disable AWS bridge', done => {
-            request(app)
+        it('should disable AWS bridge', async () => {
+            const res = await request(app)
             .put('/api/settings/bridge.aws.enabled')
             .set('Authorization', adminAuthorization)
             .send({ value: false })
-            .expect(200)
-            .end((err, res) => {
-                if (err) return done(err)
-                res.body.data.should.have.all.keys('key', 'value', 'description', 'updated', 'readOnly')
-                res.body.data.key.should.equal('bridge.aws.enabled')
-                res.body.data.value.should.equal(false)
-                done()
-            })
+
+            res.status.should.equal(200)
+            res.body.data.should.have.all.keys('key', 'value', 'description', 'updated', 'readOnly')
+            res.body.data.key.should.equal('bridge.aws.enabled')
+            res.body.data.value.should.equal(false)
         })
 
-        it('should not disable AWS bridge - db error', done => {
+        it('should not disable AWS bridge - db error', async () => {
             const settingStub = sinon.stub(Setting.prototype, 'save').rejects(new Error('setting-save'))
-            request(app)
+
+            const res = await request(app)
             .put('/api/settings/bridge.aws.enabled')
             .set('Authorization', adminAuthorization)
             .send({ value: false })
-            .expect(500)
-            .end((err, res) => {
-                settingStub.restore()
-                if (err) return done(err)
-                done()
-            })
+
+            settingStub.restore()
+            res.status.should.equal(500)
         })
 
-        it('should not enable AWS bridge - missing settings', done => {
-            const settingStub = sinon.stub(Setting, 'count').resolves(4)
-            request(app)
+        it('should not enable AWS bridge - missing settings', async () => {
+            const settingStub = sinon.stub(Setting, 'countDocuments').resolves(4)
+
+            const res = await request(app)
             .put('/api/settings/bridge.aws.enabled')
             .set('Authorization', adminAuthorization)
             .send({ value: true })
-            .expect(500)
-            .end((err, res) => {
-                settingStub.restore()
-                if (err) return done(err)
-                done()
-            })
+
+            settingStub.restore()
+            res.status.should.equal(500)
         })
 
     })
