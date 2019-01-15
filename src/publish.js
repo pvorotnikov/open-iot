@@ -1,4 +1,5 @@
 const mqtt = require('mqtt')
+const _ = require('lodash')
 const nconf = require('nconf')
 const express = require('express')
 const Promise = require('bluebird')
@@ -29,7 +30,10 @@ router.post('/:appId/:gatewayId/*', auth.basic(), (req, res, next) => {
         return res.status(400).json(new ErrorResponse('The payload cannot be converted to JSON string'))
     }
 
-    sendMessage(key, secret, `${appId}/${gatewayId}/${topic}`, message)
+    const qos = _(req.query.qos).isNumber() && req.query.qos <= 2 && req.query.qos >= 0 ? req.query.qos : 0
+    const retain = Boolean(req.query.retain)
+
+    sendMessage(key, secret, `${appId}/${gatewayId}/${topic}`, message, { qos, retain })
     .then(() => {
         res.json(new SuccessResponse())
     })
@@ -38,7 +42,7 @@ router.post('/:appId/:gatewayId/*', auth.basic(), (req, res, next) => {
     })
 })
 
-function sendMessage(key, secret, topic, message) {
+function sendMessage(key, secret, topic, message, options={}) {
     return new Promise((fulfill, reject) => {
 
         const client = mqtt.connect({
@@ -50,7 +54,7 @@ function sendMessage(key, secret, topic, message) {
         client.on('connect', () => {
             exchange.authorizeTopicPublish(key, topic, false) // don't track this authorization
             .then(() => {
-                client.publish(topic, message, err => {
+                client.publish(topic, message, options, err => {
                     if (err) reject(err)
                     else fulfill()
                 })
