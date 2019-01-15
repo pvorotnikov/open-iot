@@ -66,7 +66,7 @@ function sendMessage(key, secret, topic, message, options={}) {
         client.on('connect', () => {
             exchange.authorizeTopicPublish(key, topic, false) // don't track this authorization
             .then(() => {
-                const publish = util.promisify(client.publish)
+                const publish = util.promisify(client.publish).bind(client)
                 return publish(topic, message, options)
             })
             .then(() => {
