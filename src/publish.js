@@ -1,46 +1,58 @@
-const mqtt = require('mqtt')
-const _ = require('lodash')
 const nconf = require('nconf')
 const express = require('express')
+const mqtt = require('mqtt')
+const _ = require('lodash')
 const Promise = require('bluebird')
-const router = express.Router()
+const util = require('util')
 const { logger, responses, auth, exchange } = require('./lib')
 const { Application, Gateway, Rule } = require('./models')
-const { SuccessResponse, ErrorResponse } = responses
+const { SuccessResponse, ErrorResponse, HTTPError } = responses
 
-/* ================================
- * App middleware
- * ================================
- */
+module.exports = function(app) {
 
-router.post('/:appId/:gatewayId/*', auth.basic(), (req, res, next) => {
-    const key = req.user.username
-    const secret = req.user.password
-    const appId = req.params.appId
-    const gatewayId = req.params.gatewayId
-    const topic = req.params['0']
-    if ('' === topic) {
-        return res.status(400).json(new ErrorResponse('You need to specify a topic'))
-    }
+    const router = express.Router()
+    app.use('/api/publish', router)
 
-    let message = ''
-    try {
-        message = JSON.stringify(req.body)
-    } catch(err) {
-        return res.status(400).json(new ErrorResponse('The payload cannot be converted to JSON string'))
-    }
+    router.post('/:appId/:gatewayId/*', auth.basic(), async (req, res, next) => {
 
-    const qos = _(req.query.qos).isNumber() && req.query.qos <= 2 && req.query.qos >= 0 ? req.query.qos : 0
-    const retain = Boolean(req.query.retain)
+        try {
 
-    sendMessage(key, secret, `${appId}/${gatewayId}/${topic}`, message, { qos, retain })
-    .then(() => {
-        res.json(new SuccessResponse())
+            const key = req.user.username
+            const secret = req.user.password
+            const appId = req.params.appId
+            const gatewayId = req.params.gatewayId
+            const topic = req.params['0']
+
+            // validate topic
+            if ('' === topic) {
+                throw new HTTPError('You need to specify a topic', 400)
+            }
+
+            // build message
+            let message = ''
+            try {
+                message = JSON.stringify(req.body)
+            } catch(err) {
+                throw new HTTPError('The payload cannot be converted to JSON string', 400)
+            }
+
+            // build options
+            const qosN = parseInt(req.query.qos)
+            const qos = qosN <= 2 && qosN >= 0 ? qosN : 0
+            const retain = Boolean(req.query.retain)
+
+            await sendMessage(key, secret, `${appId}/${gatewayId}/${topic}`, message, { qos, retain })
+            res.json(new SuccessResponse())
+
+        } catch (err) {
+            res.status(err.status || 500).json(new ErrorResponse(err.message))
+        }
+
     })
-    .catch(err => {
-        res.status(400).json(new ErrorResponse(err.message))
-    })
-})
+
+
+
+} // module.exports
 
 function sendMessage(key, secret, topic, message, options={}) {
     return new Promise((fulfill, reject) => {
@@ -54,10 +66,11 @@ function sendMessage(key, secret, topic, message, options={}) {
         client.on('connect', () => {
             exchange.authorizeTopicPublish(key, topic, false) // don't track this authorization
             .then(() => {
-                client.publish(topic, message, options, err => {
-                    if (err) reject(err)
-                    else fulfill()
-                })
+                const publish = util.promisify(client.publish)
+                return publish(topic, message, options)
+            })
+            .then(() => {
+                fulfill()
             })
             .catch(err => {
                 reject(err)
@@ -72,5 +85,3 @@ function sendMessage(key, secret, topic, message, options={}) {
         })
     })
 }
-
-module.exports = router
