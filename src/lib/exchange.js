@@ -1,5 +1,4 @@
 const nconf = require('nconf')
-const Promise = require('bluebird')
 const mongoose = require('mongoose')
 const { Application, Gateway, Rule, Integration } = require('../models')
 const logger = require('./logger')
@@ -11,247 +10,204 @@ const logger = require('./logger')
 
 /**
  * Authenticate connecting user
+ * @async
  * @param  {String} key
  * @param  {String} secret
- * @return {Promise}
+ * @return {Promise<String>}
  */
-function authenticateApp(key, secret) {
-    return new Promise((fulfill, reject) => {
+async function authenticateApp(key, secret) {
 
-        if (key === nconf.get('HANDLER_KEY') && secret === nconf.get('HANDLER_SECRET')) {
-            return fulfill('Message Handler')
-        }
+    if (key === nconf.get('HANDLER_KEY') && secret === nconf.get('HANDLER_SECRET')) {
+        return 'Message Handler'
+    }
 
-        Application.findOne()
-        .where('key').eq(key)
-        .where('secret').eq(secret)
-        .then(app => {
-            if (!app) reject(new Error(`Invalid key or secret: ${key}`))
-            else fulfill(app.name)
-        })
-        .catch(err => {
-            reject(err)
-        })
-    })
+    const app = await Application.findOne()
+    .where('key').eq(key)
+    .where('secret').eq(secret)
+    if (!app) {
+        throw new Error(`Invalid key or secret: ${key}`)
+    }
+
+    return app.name
 }
 
 /**
  * Authorize publish on a topic using rules mode
+ * @async
  * @param  {String} key
  * @param  {String} topic
- * @return {Promise}
+ * @param  {Boolean} track - whether to track the request
+ * @return {Promise<String>}
  */
-function authorizeTopicPublish(key, topic, track=true) {
-    return new Promise((fulfill, reject) => {
+async function authorizeTopicPublish(key, topic, track=true) {
 
-        if (key === nconf.get('HANDLER_KEY')) {
+    if (key === nconf.get('HANDLER_KEY')) {
 
-            // check if this is a message on a feedback channel
-            if (topic.endsWith('message') && track) {
-                const [ appId, gwId, ...topicParts ] = topic.split('/')
-                storeStats('out', appId, gwId)
-            }
-
-            return fulfill('Message Handler')
+        // check if this is a message on a feedback channel
+        if (topic.endsWith('message') && track) {
+            const [ appId, gwId, ...topicParts ] = topic.split('/')
+            storeStats('out', appId, gwId)
         }
 
-        // analyze topic
-        const [ appId, gwId, ...topicParts ] = topic.split('/')
-        const topicName = topicParts.join('/')
+        return 'Message Handler'
+    }
 
-        // allow publishing only on registered topics
-        Application.findById(appId)
-        .where('key').eq(key)
-        .then(app => {
-            if (!app) {
-                reject(new Error('Application id and key do not match'))
-            } else {
+    // analyze topic
+    const [ appId, gwId, ...topicParts ] = topic.split('/')
+    const topicName = topicParts.join('/')
 
-                // always allow publishing on the feedback channel
-                // note that when the second segment is 'message' this
-                // means that we are publishing on the app-wide feedback
-                // aka application broadcast
-                if ('message' === topicName || 'message' === gwId) {
-                    if (track) {
-                        storeStats('out', appId, gwId)
-                    }
-                    return fulfill(app.name)
-                }
+    // allow publishing only on registered topics
+    const app = await Application.findById(appId).where('key').eq(key)
+    if (!app) {
+        throw new Error('Application id and key do not match')
+    }
 
-                // verify that the topic is registered within the application
-                Rule.findOne()
-                .where('application').eq(app._id)
-                .where('topic').eq(topicName)
-                .then(rule => {
-                    if (rule) {
-                        if (track) {
-                            storeStats('in', appId, gwId)
-                        }
-                        fulfill(app.name)
-                    } else {
-                        reject(new Error(`Topic ${topicName} is not registered within app ${appId}`))
-                    }
-                })
-            }
-        })
-        .catch(err => {
-            reject(err)
-        })
-    })
+    // always allow publishing on the feedback channel
+    // note that when the second segment is 'message' this
+    // means that we are publishing on the app-wide feedback
+    // aka application broadcast
+    if ('message' === topicName || 'message' === gwId) {
+        if (track) {
+            storeStats('out', appId, gwId)
+        }
+        return app.name
+    }
+
+    // verify that the topic is registered within the application
+    const rule = await Rule.findOne()
+    .where('application').eq(app._id)
+    .where('topic').eq(topicName)
+    if (!rule) {
+        throw new Error(`Topic ${topicName} is not registered within app ${appId}`)
+    }
+
+    if (track) {
+        storeStats('in', appId, gwId)
+    }
+
+    return app.name
 }
 
 /**
  * Authorize publish on a topic using itegrations mode
+ * @async
  * @param  {String} key
  * @param  {String} topic
- * @return {Promise}
+ * @param  {Boolean} track - whether to track the request
+ * @return {Promise<String>}
  */
-function authorizeTopicPublishIntegrations(key, topic, track=true) {
-    return new Promise((fulfill, reject) => {
+async function authorizeTopicPublishIntegrations(key, topic, track=true) {
 
-        if (key === nconf.get('HANDLER_KEY')) {
-            return fulfill('Message Handler')
-        }
+    if (key === nconf.get('HANDLER_KEY')) {
+        return 'Message Handler'
+    }
 
-        // analyze topic
-        const [ appId, gwId, ...topicParts ] = topic.split('/')
-        const topicName = topicParts.join('/')
+    // analyze topic
+    const [ appId, gwId, ...topicParts ] = topic.split('/')
+    const topicName = topicParts.join('/')
 
-        // TODO: prevent publishing on topics that have invalid appId or gwId
+    // TODO: prevent publishing on topics that have invalid appId or gwId
 
-        // evaluate it is valid application
-        Application.findById(appId)
-        .where('key').eq(key)
-        .then(app => {
-            if (!app) {
-                reject(new Error('Application id and key do not match'))
-            } else {
-                // evaluate it is valid topic
-                Integration.findOne({ topic: topicName })
-                .then(integration => {
-                    if (!integration) {
-                        reject(new Error(`Unknown topic: ${topicName} (${app.name})`))
-                    } else {
-                        fulfill(app.name)
-                    }
-                })
-                .catch(err => {
-                    reject(err)
-                })
-            }
-        })
-        .catch(err => {
-            reject(err)
-        })
-    })
+    // evaluate it is valid application
+    const app = await Application.findById(appId).where('key').eq(key)
+    if (!app) {
+        throw new Error('Application id and key do not match')
+    }
+
+    // evaluate it is valid topic
+    const integration = await Integration.findOne({ topic: topicName })
+    if (!integration) {
+        throw new Error(`Unknown topic: ${topicName} (${app.name})`)
+    }
+
+    return app.name
 }
 
 /**
  * Authorize subscription to a topic using rules mode
+ * @async
  * @param  {String} key
  * @param  {String} topic
- * @return {Promise}
+ * @return {Promise<String>}
  */
-function authorizeTopicSubscribe(key, topic) {
-    return new Promise((fulfill, reject) => {
+async function authorizeTopicSubscribe(key, topic) {
 
-        if (key === nconf.get('HANDLER_KEY')) {
-            return fulfill('Message Handler')
-        }
+    if (key === nconf.get('HANDLER_KEY')) {
+        return 'Message Handler'
+    }
 
-        // analyze topic
-        const [ appId, gwId, ...topicParts ] = topic.split('/')
-        const topicName = topicParts.join('/')
+    // analyze topic
+    const [ appId, gwId, ...topicParts ] = topic.split('/')
+    const topicName = topicParts.join('/')
 
-        // allow subscription to own topics
-        Application.findById(appId)
-        .where('key').eq(key)
-        .then(app => {
-            if (!app) {
-                // TODO: in sharing scenario this should branch in permissions evaluation
-                reject(new Error('Application id and key do not match'))
-            } else {
-                fulfill(app.name)
-            }
-        })
-        .catch(err => {
-            reject(err)
-        })
-    })
+    // allow subscription to own topics
+    const app = await Application.findById(appId).where('key').eq(key)
+    if (!app) {
+        // TODO: in sharing scenario this should branch in permissions evaluation
+        throw new Error('Application id and key do not match')
+    }
+
+    return app.name
 }
 
 /**
  * Authorize subscription to a topic using integrations mode
+ * @async
  * @param  {String} key
  * @param  {String} topic
- * @return {Promise}
+ * @return {Promise<String>}
  */
-function authorizeTopicSubscribeIntegrations(key, topic) {
-    return new Promise((fulfill, reject) => {
+async function authorizeTopicSubscribeIntegrations(key, topic) {
 
-        if (key === nconf.get('HANDLER_KEY')) {
-            return fulfill('Message Handler')
-        }
+    if (key === nconf.get('HANDLER_KEY')) {
+        return 'Message Handler'
+    }
 
-        // analyze topic
-        const [ appId, gwId, ...topicParts ] = topic.split('/')
-        let topicName
-        if (mongoose.Types.ObjectId.isValid(gwId)) {
-            topicName = topicParts.join('/')
-        } else if (topicParts && topicParts.length) {
-            topicName = gwId + '/' + topicParts.join('/')
-        } else {
-            topicName = gwId
-        }
+    // analyze topic
+    const [ appId, gwId, ...topicParts ] = topic.split('/')
+    let topicName
+    if (mongoose.Types.ObjectId.isValid(gwId)) {
+        topicName = topicParts.join('/')
+    } else if (topicParts && topicParts.length) {
+        topicName = gwId + '/' + topicParts.join('/')
+    } else {
+        topicName = gwId
+    }
 
-        // TODO: perform deeper analysis of the appId and gwId parts to evaluate subscription
+    // TODO: perform deeper analysis of the appId and gwId parts to evaluate subscription
 
-        // evaluate it is valid application
-        Application.findById(appId)
-        .where('key').eq(key)
-        .then(app => {
-            if (!app) {
-                reject(new Error('Application id and key do not match'))
-            } else {
-                // evaluate it is valid topic
-                Integration.findOne({ topic: topicName })
-                .then(integration => {
-                    if (!integration) {
-                        reject(new Error(`Unknown topic: ${topicName} (${app.name})`))
-                    } else {
-                        fulfill(app.name)
-                    }
-                })
-                .catch(err => {
-                    reject(err)
-                })
-            }
-        })
-        .catch(err => {
-            reject(err)
-        })
-    })
+    // evaluate it is valid application
+    const app = await Application.findById(appId).where('key').eq(key)
+    if (!app) {
+        throw new Error('Application id and key do not match')
+    }
+
+    // evaluate it is valid topic
+    const integration = await Integration.findOne({ topic: topicName })
+    if (!integration) {
+        throw new Error(`Unknown topic: ${topicName} (${app.name})`)
+    }
+
+    return app.name
 }
 
-function storeStats(traffic, appId, gwId) {
-    if ('in' === traffic) {
+async function storeStats(traffic, appId, gwId) {
+    try {
+        if ('in' === traffic) {
 
-        Application.findOneAndUpdate(appId, { $inc: { statsIn: 1 } })
-        .catch(err => logger.error(err.message))
+            await Application.findOneAndUpdate(appId, { $inc: { statsIn: 1 } })
+            await Gateway.findOneAndUpdate(gwId, { $inc: { statsIn: 1 } })
 
-        Gateway.findOneAndUpdate(gwId, { $inc: { statsIn: 1 } })
-        .catch(err => logger.error(err.message))
+        } else if ('out' === traffic) {
 
-    } else if ('out' === traffic) {
+            await Application.findOneAndUpdate(appId, { $inc: { statsOut: 1 } })
+            if ('message' !== gwId && mongoose.Types.ObjectId.isValid(gwId)) {
+                await Gateway.findOneAndUpdate(gwId, { $inc: { statsOut: 1 } })
+            }
 
-        Application.findOneAndUpdate(appId, { $inc: { statsOut: 1 } })
-        .catch(err => logger.error(err.message))
-
-        if ('message' !== gwId && mongoose.Types.ObjectId.isValid(gwId)) {
-            Gateway.findOneAndUpdate(gwId, { $inc: { statsOut: 1 } })
-            .catch(err => logger.error(err.message))
         }
-
+    } catch (err) {
+        logger.error(err.message)
     }
 }
 

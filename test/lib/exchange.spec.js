@@ -177,7 +177,7 @@ describe('Exchange', function() {
      * ============================
      */
 
-    describe('Publish', function() {
+    describe('Publish (rules)', function() {
 
         const storeStats = exchange.__get__('storeStats')
 
@@ -185,60 +185,45 @@ describe('Exchange', function() {
             exchange.__set__('storeStats', storeStats)
         })
 
-        it('should publish - message handler, regular topic', done => {
-            exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), 'test', true)
-            .then(res => {
-                expect(res).to.equal('Message Handler')
-            })
-            .finally(() => done())
+        it('should publish - message handler, regular topic', async () => {
+            const res = await exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), 'test', true)
+            expect(res).to.equal('Message Handler')
         })
 
-        it('should publish - message handler, application feedback topic', done => {
+        it('should publish - message handler, application feedback topic', async () => {
 
             const storeStatsSpy = sinon.spy(storeStats)
             exchange.__set__('storeStats', storeStatsSpy)
 
-            exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), `${APP_ID}/message`, true)
-            .then(res => {
-                storeStatsSpy.should.have.been.calledWith('out', APP_ID.toString(), 'message')
-            })
-            .finally(() => done())
+            const res = await exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), `${APP_ID}/message`, true)
+            storeStatsSpy.should.have.been.calledWith('out', APP_ID.toString(), 'message')
         })
 
-        it('should publish - message handler, application deep feedback topic', done => {
+        it('should publish - message handler, application deep feedback topic', async () => {
 
             const storeStatsSpy = sinon.spy(storeStats)
             exchange.__set__('storeStats', storeStatsSpy)
 
-            exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), `${APP_ID}/topic/tree/message`, true)
-            .then(res => {
-                storeStatsSpy.should.have.been.calledWith('out', APP_ID.toString(), 'topic')
-            })
-            .finally(() => done())
+            const res = await exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), `${APP_ID}/topic/tree/message`, true)
+            storeStatsSpy.should.have.been.calledWith('out', APP_ID.toString(), 'topic')
         })
 
-        it('should publish - message handler, gateway feedback topic', done => {
+        it('should publish - message handler, gateway feedback topic', async () => {
 
             const storeStatsSpy = sinon.spy(storeStats)
             exchange.__set__('storeStats', storeStatsSpy)
 
-            exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), `${APP_ID}/${GATEWAY_ID}/message`, true)
-            .then(res => {
-                storeStatsSpy.should.have.been.calledWith('out', APP_ID.toString(), GATEWAY_ID.toString())
-            })
-            .finally(() => done())
+            const res = await exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), `${APP_ID}/${GATEWAY_ID}/message`, true)
+            storeStatsSpy.should.have.been.calledWith('out', APP_ID.toString(), GATEWAY_ID.toString())
         })
 
-        it('should publish - message handler, gateway deep feedback topic', done => {
+        it('should publish - message handler, gateway deep feedback topic', async () => {
 
             const storeStatsSpy = sinon.spy(storeStats)
             exchange.__set__('storeStats', storeStatsSpy)
 
-            exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), `${APP_ID}/${GATEWAY_ID}/topic/tree/message`, true)
-            .then(res => {
-                storeStatsSpy.should.have.been.calledWith('out', APP_ID.toString(), GATEWAY_ID.toString())
-            })
-            .finally(() => done())
+            const res =await exchange.authorizeTopicPublish(nconf.get('HANDLER_KEY'), `${APP_ID}/${GATEWAY_ID}/topic/tree/message`, true)
+            storeStatsSpy.should.have.been.calledWith('out', APP_ID.toString(), GATEWAY_ID.toString())
         })
 
 
@@ -447,24 +432,18 @@ describe('Exchange', function() {
      * ============================
      */
 
-    describe('Subscribe', function() {
+    describe('Subscribe (rules)', function() {
 
-        it('should subscribe - message handler', done => {
-            exchange.authorizeTopicSubscribe(nconf.get('HANDLER_KEY'), 'test-topic')
-            .then(res => {
-                res.should.be.a('string')
-                res.should.equal('Message Handler')
-            })
-            .finally(() => done())
+        it('should subscribe - message handler', async () => {
+            const res = await exchange.authorizeTopicSubscribe(nconf.get('HANDLER_KEY'), 'test-topic')
+            res.should.be.a('string')
+            res.should.equal('Message Handler')
         })
 
-        it('should subscribe - own topic', done => {
-            exchange.authorizeTopicSubscribe(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
-            .then(res => {
-                res.should.be.a('string')
-                res.should.equal('Test')
-            })
-            .finally(() => done())
+        it('should subscribe - own topic', async () => {
+            const res = await exchange.authorizeTopicSubscribe(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
+            res.should.be.a('string')
+            res.should.equal('Test')
         })
 
         it('should not subscribe - wrong key', done => {
@@ -507,24 +486,16 @@ describe('Exchange', function() {
 
     describe('Subscribe (integrations)', function() {
 
-        it('should subscribe - message handler', done => {
-            exchange.authorizeTopicSubscribeIntegrations(nconf.get('HANDLER_KEY'), 'test-topic')
-            .then(res => {
-                res.should.be.a('string')
-                res.should.equal('Message Handler')
-                done()
-            })
-            .catch(err => done(err))
+        it('should subscribe - message handler', async () => {
+            const res = await exchange.authorizeTopicSubscribeIntegrations(nconf.get('HANDLER_KEY'), 'test-topic')
+            res.should.be.a('string')
+            res.should.equal('Message Handler')
         })
 
-        it('should subscribe - registered topic', done => {
-            exchange.authorizeTopicSubscribeIntegrations(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
-            .then(res => {
-                res.should.be.a('string')
-                res.should.equal('Test')
-                done()
-            })
-            .catch(err => done(err))
+        it('should subscribe - registered topic', async () => {
+            const res = await exchange.authorizeTopicSubscribeIntegrations(APP_KEY, `${APP_ID}/${GATEWAY_ID}/test`)
+            res.should.be.a('string')
+            res.should.equal('Test')
         })
 
         it('should not subscribe - wrong key', done => {
@@ -627,66 +598,60 @@ describe('Exchange', function() {
             gatewayUpdateStub.restore()
         })
 
-        it('should record ingress for app and gateway', () => {
-            storeStats('in', APP_ID, GATEWAY_ID)
+        it('should record ingress for app and gateway', async () => {
+            await storeStats('in', APP_ID, GATEWAY_ID)
             applicationUpdateStub.should.have.been.calledOnce
             applicationUpdateStub.should.have.been.calledWith(APP_ID, { $inc: { statsIn: 1 } })
             gatewayUpdateStub.should.have.been.calledOnce
             gatewayUpdateStub.should.have.been.calledWith(GATEWAY_ID, { $inc: { statsIn: 1 } })
         })
 
-        it('should record egress for app and gateway', () => {
-            storeStats('out', APP_ID, GATEWAY_ID)
+        it('should record egress for app and gateway', async () => {
+            await storeStats('out', APP_ID, GATEWAY_ID)
             applicationUpdateStub.should.have.been.calledOnce
             applicationUpdateStub.should.have.been.calledWith(APP_ID, { $inc: { statsOut: 1 } })
             gatewayUpdateStub.should.have.been.calledOnce
             gatewayUpdateStub.should.have.been.calledWith(GATEWAY_ID, { $inc: { statsOut: 1 } })
         })
 
-        it('should record egress only for app', () => {
-            storeStats('out', APP_ID, 'message')
+        it('should record egress only for app', async () => {
+            await storeStats('out', APP_ID, 'message')
             applicationUpdateStub.should.have.been.calledOnce
             applicationUpdateStub.should.have.been.calledWith(APP_ID, { $inc: { statsOut: 1 } })
             gatewayUpdateStub.should.not.have.been.called
         })
 
-        it('should record egress only for app - deep topic', () => {
-            storeStats('out', APP_ID, 'topic/tree/message')
+        it('should record egress only for app - deep topic', async () => {
+            await storeStats('out', APP_ID, 'topic/tree/message')
             applicationUpdateStub.should.have.been.calledOnce
             applicationUpdateStub.should.have.been.calledWith(APP_ID, { $inc: { statsOut: 1 } })
             gatewayUpdateStub.should.not.have.been.called
         })
 
-        it('should not record anything', () => {
-            storeStats(null, APP_ID, GATEWAY_ID)
+        it('should not record anything', async () => {
+            await storeStats(null, APP_ID, GATEWAY_ID)
             applicationUpdateStub.should.not.have.been.called
             gatewayUpdateStub.should.not.have.been.called
         })
 
-        it('should not record ingress - db error', (done) => {
+        it('should not record ingress - db error', async () => {
             // restore in order to wrap the rejects
             applicationUpdateStub.restore()
             gatewayUpdateStub.restore()
             applicationUpdateStub = sinon.stub(Application, 'findOneAndUpdate').rejects(new Error('Forced reject'))
             gatewayUpdateStub = sinon.stub(Gateway, 'findOneAndUpdate').rejects(new Error('Forced reject'))
 
-            storeStats('in', APP_ID, GATEWAY_ID)
-            setImmediate(() => {
-                done()
-            })
+            await storeStats('in', APP_ID, GATEWAY_ID)
         })
 
-        it('should not record egress - db error', (done) => {
+        it('should not record egress - db error', async () => {
             // restore in order to wrap the rejects
             applicationUpdateStub.restore()
             gatewayUpdateStub.restore()
             applicationUpdateStub = sinon.stub(Application, 'findOneAndUpdate').rejects(new Error('Forced reject'))
             gatewayUpdateStub = sinon.stub(Gateway, 'findOneAndUpdate').rejects(new Error('Forced reject'))
 
-            storeStats('out', APP_ID, GATEWAY_ID)
-            setImmediate(() => {
-                done()
-            })
+            await storeStats('out', APP_ID, GATEWAY_ID)
         })
 
     })
