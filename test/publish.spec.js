@@ -36,27 +36,61 @@ describe('Publish', function() {
 
     describe('Publish message', function() {
 
+        let originalSendMessage
+
         before(async () => {
             await Promise.all([ cleanDb(), createUsers() ])
+            originalSendMessage = publish.__get__('sendMessage')
         })
 
-        it('should publish message', done => {
+        afterEach(() => {
+            publish.__set__('sendMessage', originalSendMessage)
+        })
 
-            const sendMessageStub = sinon.stub()
-            sendMessageStub.callsFake(() => Promise.resolve())
-            const originalSendMessage = publish.__get__('sendMessage')
-            publish.__set__('sendMessage', sendMessageStub)
+        it('should publish JSON message', async () => {
 
-            request(app)
+            const sendMessageMock = sinon.mock()
+            sendMessageMock.once().resolves()
+            publish.__set__('sendMessage', sendMessageMock)
+
+            const res = await request(app)
             .post('/api/publish/appid/gwid/test/topic?qos=1')
             .set('Authorization', adminAuthorization)
             .send({ foo: 'bar' })
-            .expect(200)
-            .end((err, res) => {
-                publish.__set__('sendMessage', originalSendMessage)
-                if (err) done(err)
-                done()
-            })
+
+            sendMessageMock.verify()
+            res.status.should.equal(200)
+        })
+
+        it('should publish text message', async () => {
+
+            const sendMessageMock = sinon.mock()
+            sendMessageMock.once().resolves()
+            publish.__set__('sendMessage', sendMessageMock)
+
+            const res = await request(app)
+            .post('/api/publish/appid/gwid/test/topic?qos=1')
+            .set('Authorization', adminAuthorization)
+            .send(Buffer.from('test message'))
+
+            sendMessageMock.verify()
+            res.status.should.equal(200)
+
+        })
+
+        it('should not publish message - send error', async () => {
+
+            const sendMessageMock = sinon.mock()
+            sendMessageMock.once().rejects()
+            publish.__set__('sendMessage', sendMessageMock)
+
+            const res = await request(app)
+            .post('/api/publish/appid/gwid/test/topic?qos=1')
+            .set('Authorization', adminAuthorization)
+            .send({ foo: 'bar' })
+
+            sendMessageMock.verify()
+            res.status.should.equal(500)
 
         })
 
