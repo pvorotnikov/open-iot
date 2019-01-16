@@ -1,5 +1,7 @@
 FROM node:10
 
+ENV MONGOMS_VERSION=4.0.5
+
 # ----------------------
 # create application structure
 # ----------------------
