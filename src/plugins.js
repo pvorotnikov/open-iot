@@ -23,7 +23,9 @@ const { SuccessResponse, ErrorResponse, HTTPError, } = responses
 // paths
 const MODULES_DIR = path.join(__dirname, 'modules')
 const TEMP_DIR = path.join(__dirname, 'temp')
+
 // create temp dir if needed
+/* istanbul ignore if  */
 if (!fs.existsSync(TEMP_DIR)){
     fs.mkdirSync(TEMP_DIR);
 }

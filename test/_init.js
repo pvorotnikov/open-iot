@@ -11,7 +11,9 @@ const chai = require('chai')
 const sinon = require('sinon')
 const sinonMongoose = require('sinon-mongoose')
 const sinonChai = require('sinon-chai')
+const chaiAsPromised = require('chai-as-promised')
 chai.use(sinonChai)
+chai.use(chaiAsPromised)
 
 // mock mongoose
 const mongoose = require('mongoose')

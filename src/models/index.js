@@ -163,6 +163,7 @@ const Plugin = mongoose.model('Plugin', pluginSchema)
  * ================================
  */
 
+/* istanbul ignore next */
 const connection = async function() {
     try {
 

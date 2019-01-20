@@ -23,12 +23,7 @@ module.exports = function(app) {
             const topic = req.params['0']
 
             // build message
-            let message = ''
-            try {
-                message = JSON.stringify(req.body)
-            } catch(err) {
-                message = Buffer.from(req.body)
-            }
+            let message = JSON.stringify(req.body)
 
             // build options
             const qosN = parseInt(req.query.qos)
@@ -48,6 +43,7 @@ module.exports = function(app) {
 
 } // module.exports
 
+/* istanbul ignore next */
 function sendMessage(key, secret, topic, message, options={}) {
     return new Promise((fulfill, reject) => {
 
