@@ -151,10 +151,10 @@ const pluginSchema = new Schema({
 
 const messageSchema = new Schema({
     topic: String,
-    payload: String,
+    payload: Buffer,
     application: { type: Schema.Types.ObjectId, ref: 'Application' },
     gateway: { type: Schema.Types.ObjectId, ref: 'Gateway' },
-    created: { type: Date, default: Date.now },
+    created: { type: Date, default: Date.now, expires: 24 * 3600 },
     updated: { type: Date, default: Date.now },
 })
 

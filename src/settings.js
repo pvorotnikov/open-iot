@@ -37,29 +37,33 @@ module.exports = function(app) {
     })
 
     // update settings
-    router.put('/:key', auth.protect(ACCESS_LEVEL.ADMIN), (req, res, next) => {
+    router.put('/:key', auth.protect(ACCESS_LEVEL.ADMIN), async (req, res, next) => {
 
-        const { value } = req.body
+        try {
 
-        Setting.findOne({ key: req.params.key })
-        .then(setting => {
+            const { value } = req.body
+
+            const setting = await Setting.findOne({ key: req.params.key })
+
             if (!setting) throw new Error(`Invalid setting: ${req.params.key}`)
-
             if (setting.readOnly) throw new Error(`Setting ${req.params.key} is read-only`)
 
-            if ('bridge.aws.enabled' === req.params.key) {
-                return enableAWSBridge(setting, value)
-            } else {
-                setting.value = value
-                setting.updated = Date.now()
-                return setting.save()
+            switch (req.params.key) {
+                case 'bridge.aws.enabled':
+                    await enableAWSBridge(setting, value)
+                    break
+
+                default:
+                    setting.value = value
+                    setting.updated = Date.now()
+                    await setting.save()
+                    break
             }
-        })
-        .then(setting => {
 
             // update configuration value
             nconf.set(req.params.key, value)
 
+            // return response
             let data = {
                 key: setting.key,
                 value: setting.value,
@@ -68,11 +72,10 @@ module.exports = function(app) {
                 readOnly: setting.readOnly,
             }
             res.json(new SuccessResponse(data))
-        })
-        .catch(err => {
-            res.status(500).json(new ErrorResponse(err.message))
-        })
 
+        } catch (err) {
+            res.status(500).json(new ErrorResponse(err.message))
+        }
     })
 
     function enableAWSBridge(setting, state) {
