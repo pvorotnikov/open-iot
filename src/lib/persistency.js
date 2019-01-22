@@ -3,7 +3,7 @@
  */
 const mongoose = require('mongoose')
 const logger = require('./logger')
-const { Message, } = require('../models')
+const models = require('../models')
 
 async function storeMessage(topic, payload) {
     try {
@@ -22,7 +22,7 @@ async function storeMessage(topic, payload) {
         }
 
         // store message
-        const message = new Message({
+        const message = new models.Message({
             topic: topicName,
             payload,
             application: appId,

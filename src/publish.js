@@ -13,12 +13,20 @@ module.exports = function(app) {
     const router = express.Router()
     app.use('/api/publish', router)
 
+    /**
+     * Publish message on behalf of the user. This method is not protected
+     * although it requires basic authentication. The username:password
+     * pair from the headers is takens as is and is used as credentials
+     * for the MQTT connection to the broker. No verification of the
+     * credentials is performed at this stage. The credentials are
+     * verified by the broker (and this service per definition)
+     */
     router.post('/:appId/*', auth.basic(), async (req, res, next) => {
 
         try {
 
-            const key = req.user.username
-            const secret = req.user.password
+            const key = req.application.key
+            const secret = req.application.secret
             const appId = req.params.appId
             const topic = req.params['0']
 

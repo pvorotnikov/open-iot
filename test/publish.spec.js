@@ -6,28 +6,18 @@ const sinon = require('sinon')
 const should = chai.should()
 const expect = chai.expect
 const rewire = require('rewire')
-const EventEmitter = require('events')
+
+const hat = require('hat')
 
 const { cleanDb, expressApp } = require('./_utils')
 
 const { utils } = require('../src/lib')
-const { User, ACCESS_LEVEL } = require('../src/models')
+const { User, Application, ACCESS_LEVEL } = require('../src/models')
 const publish = rewire('../src/publish')
 
 describe('Publish', function() {
 
     const app = expressApp([publish])
-    let userAuthorization, adminAuthorization
-
-    async function createUsers() {
-        const users = await User.insertMany([
-            { firstName: 'User', lastName: 'User', email: 'user', password: utils.generatePassword('user'), },
-            { firstName: 'Admin', lastName: 'Admin', email: 'admin', password: utils.generatePassword('admin'), accessLevel: ACCESS_LEVEL.ADMIN, },
-        ])
-        const [user, admin] = users
-        userAuthorization = 'Basic ' + Buffer.from(user.key + ':' + user.secret).toString('base64')
-        adminAuthorization = 'Basic ' + Buffer.from(admin.key + ':' + admin.secret).toString('base64')
-    }
 
     /* ============================
      * PUBLISH MESSAGE
@@ -36,11 +26,34 @@ describe('Publish', function() {
 
     describe('Publish message', function() {
 
+        let user, application
         let originalSendMessage, sendMessageMock
+        let userAuthorization
 
         before(async () => {
-            await Promise.all([ cleanDb(), createUsers() ])
+            await cleanDb()
+            user = await new User({
+                firstName: 'Test',
+                lastName: 'User',
+                email: 'test@test.com',
+                password: utils.generatePassword('test'),
+            }).save()
+            application = await new Application({
+                user: user._id,
+                name: 'Test app',
+                alias: 'testapp',
+                description: 'test app description',
+                key: hat(32),
+                secret: hat(64),
+            }).save()
             originalSendMessage = publish.__get__('sendMessage')
+            userAuthorization = `Basic ${Buffer.from(
+                `${application.key}:${application.secret}`
+            ).toString('base64')}`
+        })
+
+        after(async () => {
+            await cleanDb()
         })
 
         beforeEach(() => {
@@ -51,6 +64,8 @@ describe('Publish', function() {
         afterEach(() => {
             publish.__set__('sendMessage', originalSendMessage)
         })
+
+
 
         it('should publish JSON message with default QoS', async () => {
 
