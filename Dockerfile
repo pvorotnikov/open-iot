@@ -1,24 +1,40 @@
-FROM node:10
-
-ENV MONGOMS_VERSION=4.0.5
-
-# ----------------------
-# create application structure
-# ----------------------
-RUN mkdir -p /usr/app/src
-
-# ----------------------
-# install dependencies
-# create caching layer
-# ----------------------
+# -----------------------------------
+# Dependencies stage
+# This stage is responsible
+# for caching production dependencies
+# -----------------------------------
+FROM node:10 AS dependencies
+RUN mkdir - /usr/app
 COPY ["package.json", "package-lock.json", ".babelrc", "/usr/app/"]
-COPY ["src", "/usr/app/src/"]
-RUN cd /usr/app && npm install --unsafe-perm
-RUN cd /usr/app && npm run build
+RUN cd /usr/app && npm install --production
 
-# ----------------------
+
+# -----------------------------------
+# Builder stage
+# This stage is responsible
+# for building the frontend
+# -----------------------------------
+FROM node:10 AS builder
+ENV MONGOMS_VERSION=4.0.5
+RUN mkdir -p /usr/app/src/public
+COPY --from=dependencies ["/usr/app", "/usr/app/"]
+COPY ["src/public", "/usr/app/src/public/"]
+RUN cd /usr/app && npm install --unsafe-perm && npm run build
+
+
+# -----------------------------------
+# Runner stage
+# -----------------------------------
+FROM node:10 AS runner
+
+# create application structure from local files and from other stages
+RUN mkdir -p /usr/app/src
+COPY --from=dependencies ["/usr/app", "/usr/app/"]
+COPY --from=builder ["/usr/app/src/public", "/usr/app/src/public/"]
+COPY ["src", "/usr/app/src/"]
+RUN rm -Rf /usr/app/src/public/js/src
+
 # create entry point
-# ----------------------
 EXPOSE 8080
 WORKDIR /usr/app
 CMD ["npm", "start"]
