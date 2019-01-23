@@ -4,8 +4,8 @@ const mqtt = require('mqtt')
 const _ = require('lodash')
 const Promise = require('bluebird')
 const util = require('util')
+
 const { logger, responses, auth, exchange } = require('./lib')
-const { Application, Gateway, Rule } = require('./models')
 const { SuccessResponse, ErrorResponse, HTTPError } = responses
 
 module.exports = function(app) {
