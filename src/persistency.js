@@ -48,7 +48,15 @@ module.exports = function(app) {
             }
 
             const messages = await query
-            res.json(new SuccessResponse(messages))
+            const data = messages.map(m => ({
+                topic: m.topic,
+                application: m.application,
+                gateway: m.gateway,
+                payload: m.payload,
+                created: m.created,
+                updated: m.updated,
+            }))
+            res.json(new SuccessResponse(data))
 
         } catch (err) {
             res.status(err.status || 500).json(new ErrorResponse(err.message))

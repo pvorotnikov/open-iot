@@ -151,7 +151,7 @@ const pluginSchema = new Schema({
 
 const messageSchema = new Schema({
     topic: String,
-    payload: Buffer,
+    payload: Schema.Types.Mixed,
     application: { type: Schema.Types.ObjectId, ref: 'Application' },
     gateway: { type: Schema.Types.ObjectId, ref: 'Gateway' },
     created: { type: Date, default: Date.now, expires: 24 * 3600 },

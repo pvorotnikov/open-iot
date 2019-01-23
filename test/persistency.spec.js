@@ -59,6 +59,12 @@ describe('Persistency', function() {
             const appId = objectId().toString()
             const gwId = objectId().toString()
 
+            const response = new models.Message({
+                application: appId,
+                gateway: gwId,
+                topic: 'test/topic',
+                payload: 'payload'
+            })
             const MessageMock = sinon.mock(models.Message)
             MessageMock.expects('find')
             .chain('where').withArgs('application')
@@ -67,7 +73,7 @@ describe('Persistency', function() {
             .chain('eq').withArgs(gwId)
             .chain('where').withArgs('topic')
             .chain('eq').withArgs('test/topic')
-            .resolves([new models.Message()])
+            .resolves([response])
 
             const res = await request(app)
             .get(`/api/persistency/${appId}/${gwId}/test/topic`)
@@ -85,6 +91,13 @@ describe('Persistency', function() {
 
             const appId = objectId().toString()
 
+            const response = new models.Message({
+                application: appId,
+                gateway: null,
+                topic: 'test/topic',
+                payload: 'payload'
+            })
+
             const MessageMock = sinon.mock(models.Message)
             MessageMock.expects('find')
             .chain('where').withArgs('application')
@@ -93,7 +106,7 @@ describe('Persistency', function() {
             .chain('eq').withArgs(null)
             .chain('where').withArgs('topic')
             .chain('eq').withArgs('test/topic')
-            .resolves([new models.Message()])
+            .resolves([response])
 
             const res = await request(app)
             .get(`/api/persistency/${appId}/test/topic`)
@@ -111,6 +124,13 @@ describe('Persistency', function() {
 
             const appId = objectId().toString()
 
+            const response = new models.Message({
+                application: appId,
+                gateway: null,
+                topic: 'test/topic',
+                payload: 'payload'
+            })
+
             const MessageMock = sinon.mock(models.Message)
             MessageMock.expects('find')
             .chain('where').withArgs('application')
@@ -119,7 +139,7 @@ describe('Persistency', function() {
             .chain('eq').withArgs(null)
             .chain('where').withArgs('topic')
             .chain('eq').withArgs('topic')
-            .resolves([new models.Message()])
+            .resolves([response])
 
             const res = await request(app)
             .get(`/api/persistency/${appId}/topic`)
@@ -138,6 +158,13 @@ describe('Persistency', function() {
             const appId = objectId().toString()
             const gwId = objectId().toString()
 
+            const response = new models.Message({
+                application: appId,
+                gateway: gwId,
+                topic: 'test/topic',
+                payload: 'payload'
+            })
+
             const MessageMock = sinon.mock(models.Message)
             MessageMock.expects('find')
             .chain('where').withArgs('application')
@@ -146,7 +173,7 @@ describe('Persistency', function() {
             .chain('eq').withArgs(gwId)
             .chain('where').withArgs('topic')
             .chain('eq').withArgs('')
-            .resolves([new models.Message()])
+            .resolves([response])
 
             const res = await request(app)
             .get(`/api/persistency/${appId}/${gwId}`)
@@ -165,6 +192,13 @@ describe('Persistency', function() {
             const appId = objectId().toString()
             const gwId = objectId().toString()
 
+            const response = new models.Message({
+                application: appId,
+                gateway: gwId,
+                topic: 'test/topic',
+                payload: 'payload'
+            })
+
             const MessageMock = sinon.mock(models.Message)
             MessageMock.expects('find')
             .chain('where').withArgs('application')
@@ -173,7 +207,7 @@ describe('Persistency', function() {
             .chain('eq').withArgs(gwId)
             .chain('where').withArgs('topic')
             .chain('eq').withArgs('')
-            .resolves([new models.Message()])
+            .resolves([response])
 
             const res = await request(app)
             .get(`/api/persistency/${appId}/${gwId}/`)
