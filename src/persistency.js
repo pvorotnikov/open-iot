@@ -48,14 +48,25 @@ module.exports = function(app) {
             }
 
             const messages = await query
-            const data = messages.map(m => ({
-                topic: m.topic,
-                application: m.application,
-                gateway: m.gateway,
-                payload: m.payload,
-                created: m.created,
-                updated: m.updated,
-            }))
+            const data = messages.map(m => {
+
+                // form payload
+                let payload = m.payload.toString('base64')
+                try {
+                    payload = JSON.parse(m.payload.toString())
+                } catch (err) {
+                    logger.debug('Payload is not JSON. Returning base64 encoded buffer')
+                }
+
+                return {
+                    topic: m.topic,
+                    application: m.application,
+                    gateway: m.gateway,
+                    payload: payload,
+                    created: m.created,
+                    updated: m.updated,
+                }
+            })
             res.json(new SuccessResponse(data))
 
         } catch (err) {

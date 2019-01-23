@@ -63,7 +63,7 @@ describe('Persistency', function() {
                 application: appId,
                 gateway: gwId,
                 topic: 'test/topic',
-                payload: 'payload'
+                payload: Buffer.from('payload')
             })
             const MessageMock = sinon.mock(models.Message)
             MessageMock.expects('find')
@@ -95,7 +95,7 @@ describe('Persistency', function() {
                 application: appId,
                 gateway: null,
                 topic: 'test/topic',
-                payload: 'payload'
+                payload: Buffer.from('payload')
             })
 
             const MessageMock = sinon.mock(models.Message)
@@ -128,7 +128,7 @@ describe('Persistency', function() {
                 application: appId,
                 gateway: null,
                 topic: 'test/topic',
-                payload: 'payload'
+                payload: Buffer.from('{"foo":"bar"}')
             })
 
             const MessageMock = sinon.mock(models.Message)
@@ -162,7 +162,7 @@ describe('Persistency', function() {
                 application: appId,
                 gateway: gwId,
                 topic: 'test/topic',
-                payload: 'payload'
+                payload: Buffer.from('payload')
             })
 
             const MessageMock = sinon.mock(models.Message)
@@ -196,7 +196,7 @@ describe('Persistency', function() {
                 application: appId,
                 gateway: gwId,
                 topic: 'test/topic',
-                payload: 'payload'
+                payload: Buffer.from('payload')
             })
 
             const MessageMock = sinon.mock(models.Message)
