@@ -4,6 +4,7 @@ const express = require('express')
 const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
+const sinon = require('sinon')
 
 const { User, Application, Gateway, Device, Token, Rule, Setting, Module, Integration, PipelineStep, Plugin, } = require('../src/models')
 const { logger } = require('../src/lib')
@@ -56,10 +57,46 @@ function isObjectId(objId) {
     mongoose.Types.ObjectId.isValid(objId)
 }
 
+const Request = (options = {}) => ({
+    body: {},
+    cookies: {},
+    query: {},
+    params: {},
+    headers: {},
+    get: sinon.stub(),
+    ...options
+})
+
+const Response = (options = {}) => {
+    const res = {
+        cookie: sinon.spy(),
+        clearCookie: sinon.spy(),
+        download: sinon.spy(),
+        format: sinon.spy(),
+        json: sinon.spy(),
+        jsonp: sinon.spy(),
+        send: sinon.spy(),
+        sendFile: sinon.spy(),
+        sendStatus: sinon.spy(),
+        redirect: sinon.spy(),
+        render: sinon.spy(),
+        end: sinon.spy(),
+        set: sinon.spy(),
+        type: sinon.spy(),
+        get: sinon.stub(),
+        ...options
+    }
+    res.status = sinon.stub().returns(res)
+    res.vary = sinon.stub().returns(res)
+    return res
+}
+
 module.exports = {
     cleanDb,
     expressApp,
     logger,
     objectId,
     isObjectId,
+    Response,
+    Request,
 }

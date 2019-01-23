@@ -4,7 +4,7 @@ const mongoose = require('mongoose')
 const mqtt = require('mqtt')
 const amqp = require('amqplib')
 const Promise = require('bluebird')
-const { logger, constants } = require('../lib')
+const { logger, constants, persistency, } = require('../lib')
 const { Rule, Application, Gateway, Module, Integration } = require('../models')
 const Transformer = require('./transformer')
 
@@ -20,6 +20,11 @@ class MessageHandler {
         process.on(constants.EVENTS.BRIDGE_IN, e => this.bridgeMessage(e))
         process.on(constants.EVENTS.MQTT_PUBLISH_MESSAGE, e => this.publishMessage(e))
 
+        /**
+         * Manage module disable. This result in calling
+         * its lifecycle hooks: stop, unload and cleanup,
+         * in that order.
+         */
         process.on(constants.EVENTS.MODULE_DISABLE, e => {
             logger.info(`Disabling module ${e}`)
 
@@ -40,6 +45,13 @@ class MessageHandler {
 
             delete integrations[e]
         })
+
+        /**
+         * Manage module enable. This result in loadding
+         * the module (via require) and calling its
+         * lifecycle hooks: prepare, load, getCapabilities
+         * and start, in that order.
+         */
         process.on(constants.EVENTS.MODULE_ENABLE, async e => {
             logger.info(`Enabling module ${e}`)
 
@@ -86,6 +98,13 @@ class MessageHandler {
         })
     }
 
+    /**
+     * Run the message handler. This will setup
+     * all the clients listening for messages and
+     * interracting with the broker over MQTT and
+     * AMQP.
+     * @async
+     */
     async run() {
         this.setupMqtt()
         this.setupAmqp()
@@ -130,6 +149,9 @@ class MessageHandler {
         }
     }
 
+    /**
+     * Setup the AMQP client connection.
+     */
     setupAmqp() {
         amqp.connect(`amqp://${nconf.get('HANDLER_KEY')}:${nconf.get('HANDLER_SECRET')}@${nconf.get('BROKER_HOST')}:${nconf.get('BROKER_AMQP_PORT')}`)
         .then(conn => {
@@ -147,6 +169,12 @@ class MessageHandler {
         })
     }
 
+    /**
+     * Setup the MQTT client connection.
+     * The client uses HANDLER_KEY and HANDLER_SECRET
+     * (defined as env variables) to allow subscription
+     * to wildcard topic (+/+/#)
+     */
     setupMqtt() {
         this.mqttClient = mqtt.connect({
             host: nconf.get('BROKER_HOST'),
@@ -167,14 +195,35 @@ class MessageHandler {
         this.mqttClient.on('message', (topic, message) => this.handleMqttMessage(topic, message))
     }
 
+    /**
+     * Main handler for MQTT messages coming to the broker.
+     * This is the entry point for all broker communication
+     * including:
+     * - messages published from gateways
+     * - messages published from backend (usually on /message topic)
+     * - bridged in messages (incoming messages on the broker bridge)
+     * - messages published from this client (as a result of republish action)
+     * - messages published via the 'publish' event on the event bus
+     * @param {String} topic
+     * @param {Buffer} message
+     */
     handleMqttMessage(topic, message) {
+
+        // persist the message using default persistency policy
+        persistency.storeMessage(topic, message)
 
         let [appId, gatewayId, ...topicParts] = topic.split('/')
 
-        // do not process republished messages or messages on the feedback channel (for rules integration mode)
+        // do not process republished messages,
+        // messages on application level or
+        // messages on the feedback channel,
+        // i.e. from backend
+        // (for 'rules' integration mode)
         const lastSegment = topicParts[topicParts.length - 1]
         if ('rules' === nconf.get('global.integrationmode') &&
-            (!mongoose.Types.ObjectId.isValid(appId) || !mongoose.Types.ObjectId.isValid(gatewayId) || 'message' === lastSegment)
+            (!mongoose.Types.ObjectId.isValid(appId) ||
+             !mongoose.Types.ObjectId.isValid(gatewayId) ||
+             'message' === lastSegment)
         ) {
             logger.debug('Republished messages or messages on the feedback channel are not handled (to prevent recursion)')
             return
@@ -183,7 +232,9 @@ class MessageHandler {
         // assemble the topic name
         let topicName = topicParts.join('/')
 
-        // notify bridges to forward this raw published message (that is not republished or on the feedback channel)
+        // notify bridges to forward this raw published message
+        // (that is not republished, not in application scope
+        // or on the feedback channel)
         if (nconf.get('bridge.aws.aliases')) {
 
             // replace internal IDs with aliases
@@ -261,6 +312,18 @@ class MessageHandler {
         }
     }
 
+    /**
+     * Perform a specific action on a message coming on a topic.
+     * This is invokend only when the integration mode is configured
+     * as 'rules'. The action is one of:
+     * - discard - perform no action
+     * - republish - republish the message on {scope}/{output} topic
+     * - enqueue - put the message in {scope}/{output} queue
+     * @param {String} action
+     * @param {String} scope
+     * @param {String} output
+     * @param {Buffer} payload
+     */
     performTopicAction(action, scope, output, payload) {
         switch (action) {
             case 'discard':
@@ -285,6 +348,11 @@ class MessageHandler {
         }
     }
 
+    /**
+     * Publish messages coming from the broker bridge
+     * to the main broker.
+     * @param {Event} e
+     */
     bridgeMessage(e) {
         const { topic, payload } = e
         if (this.mqttClient) {
@@ -293,6 +361,11 @@ class MessageHandler {
 
     }
 
+    /**
+     * Publish messages coming from the 'publish' event on
+     * the event bus to the main broker.
+     * @param {Event} e
+     */
     publishMessage(e) {
         const { topic, payload } = e
         if (this.mqttClient) {

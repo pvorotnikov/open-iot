@@ -32,6 +32,7 @@ describe('Models', function() {
         models.Integration.should.be.a('function')
         models.PipelineStep.should.be.a('function')
         models.Plugin.should.be.a('function')
+        models.Message.should.be.a('function')
 
         models.ACCESS_LEVEL.should.be.an('object')
         models.connection.should.be.a('function')
@@ -198,6 +199,31 @@ describe('Models', function() {
             r.should.be.an('object')
         })
         .finally(() => done())
+    })
+
+    it('should create and remove plugin', async () => {
+        // create
+        const r = await new models.Plugin({
+            name: 'test.name',
+            description: 'test description'
+        }).save()
+        r.should.be.an('object')
+
+        // remove
+        const d = await r.remove()
+        d.should.be.an('object')
+    })
+
+    it('should create and remove message', async () => {
+        // create
+        const r = await new models.Message({
+            topic: 'test',
+        }).save()
+        r.should.be.an('object')
+
+        // remove
+        const d = await r.remove()
+        d.should.be.an('object')
     })
 
 })

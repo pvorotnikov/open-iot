@@ -4,6 +4,7 @@ const auth = require('./auth')
 const exchange = require('./exchange')
 const utils = require('./utils')
 const constants = require('./constants')
+const persistency = require('./persistency')
 
 module.exports = {
     logger,
@@ -12,4 +13,5 @@ module.exports = {
     exchange,
     utils,
     constants,
+    persistency,
 }

@@ -52,6 +52,8 @@ applicationSchema.pre('remove', function(next) {
     logger.info('Cascade removing rules attached to or associated with application ' + this._id)
     Rule.deleteMany({application: this._id}).exec()
     Rule.deleteMany({scope: this._id}).exec()
+    logger.info('Cascade removing messages persisted for application ' + this._id)
+    Message.deleteMany({application: this._id}).exec()
     next()
 })
 
@@ -65,6 +67,11 @@ const gatewaySchema = new Schema({
     statsOut: { type: Number, default: 0 },
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
+})
+gatewaySchema.pre('remove', function(next) {
+    logger.info('Cascade removing messages persisted for gateway ' + this._id)
+    Message.deleteMany({gateway: this._id}).exec()
+    next()
 })
 
 const deviceSchema = new Schema({
@@ -142,6 +149,15 @@ const pluginSchema = new Schema({
     updated: { type: Date, default: Date.now },
 })
 
+const messageSchema = new Schema({
+    topic: String,
+    payload: Schema.Types.Mixed,
+    application: { type: Schema.Types.ObjectId, ref: 'Application' },
+    gateway: { type: Schema.Types.ObjectId, ref: 'Gateway' },
+    created: { type: Date, default: Date.now, expires: 24 * 3600 },
+    updated: { type: Date, default: Date.now },
+})
+
 /* ================================
  * Models
  * ================================
@@ -157,6 +173,7 @@ const Integration = mongoose.model('Integration', integrationSchema)
 const Module = mongoose.model('Module', moduleSchema)
 const PipelineStep = mongoose.model('PipelineStep', pipelineStepSchema)
 const Plugin = mongoose.model('Plugin', pluginSchema)
+const Message = mongoose.model('Message', messageSchema)
 
 /* ================================
  * Database
@@ -196,4 +213,5 @@ module.exports = {
     Module,
     PipelineStep,
     Plugin,
+    Message,
 }

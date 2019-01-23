@@ -4,8 +4,8 @@ const jwt = require('jsonwebtoken')
 const uuidv4 = require('uuid/v4')
 
 const logger = require('./logger')
-const { ACCESS_LEVEL, Token, User } = require('../models')
-const { SuccessResponse, ErrorResponse } = require('./responses')
+const { ACCESS_LEVEL, Token, User, Application } = require('../models')
+const { SuccessResponse, ErrorResponse, HTTPError, } = require('./responses')
 
 function storeTokens(u, accessKey, refreshKey) {
     let accessToken = new Token({ user: u._id, type: 'access', value: accessKey, })
@@ -45,127 +45,139 @@ module.exports = {
     },
 
     protect: (requiredLevel=ACCESS_LEVEL.USER) => {
-        return (req, res, next) => {
+        return async (req, res, next) => {
 
-            // verify header
-            if (!req.headers.authorization) {
-                return res.status(401).json(new ErrorResponse('No authorization header'))
-            }
+            try {
 
-            const isBearer = req.headers.authorization.startsWith('Bearer ')
-            const isBasic = req.headers.authorization.startsWith('Basic ')
+                // verify header
+                if (!req.headers.authorization) {
+                    throw new HTTPError('No authorization header', 401)
+                }
 
-            // verify schema
-            if (!isBearer && !isBasic) {
-                return res.status(401).json(new ErrorResponse('Unsupported authorization schema'))
-            }
+                const isBearer = req.headers.authorization.startsWith('Bearer ')
+                const isBasic = req.headers.authorization.startsWith('Basic ')
 
-            let parts = req.headers.authorization.split(' ')
-            let rawToken = parts[1]
+                // verify schema
+                if (!isBearer && !isBasic) {
+                    throw new HTTPError('Unsupported authorization schema', 401)
+                }
 
-            // JWT auth
-            if (isBearer) {
+                let parts = req.headers.authorization.split(' ')
+                let rawToken = parts[1]
 
-                // verify token
-                verifyToken(rawToken)
-                .then(data => {
+                // JWT auth
+                if (isBearer) {
 
-                    Token.findOne({ user: data.id, type: data.type, value: data.key })
+                    // verify token
+                    let data = null
+                    try {
+                        data = await verifyToken(rawToken)
+                    } catch (err) {
+                        throw new HTTPError('Invalid token', 403)
+                    }
+
+                    // retreive token
+                    // TODO: take the information from the token instead
+                    const token = await Token.findOne({ user: data.id, type: data.type, value: data.key })
                     .sort({created: 'desc'})
                     .populate('user')
-                    .then(token => {
-                        if (token) {
 
-                            logger.debug(`Received ${data.type} token on endpoint ${req.method} ${req.originalUrl} for user ${token.user.firstName} ${token.user.lastName}`)
-
-                            // check token's access level and required access level
-                            if (data.accessLevel < requiredLevel) {
-                                logger.warn(`Token with access level ${data.accessLevel} received whereas min lvel ${requiredLevel} is required`)
-                                return res.status(403).json(new ErrorResponse('Insufficient access level'))
-                            }
-
-                            // determine token expiration
-                            let diff = moment().diff(moment(token.created), 'seconds')
-
-                            if ('access' === token.type && diff > nconf.get('ACCESS_TOKEN_EXPIRATION_TIME')) {
-                                logger.info(`Time difference: ${diff} seconds for ${token.type} token -> rejecting with 401`)
-                                return res.status(401).json(new ErrorResponse('Access token expired'))
-
-                            } else if  ('refresh' === token.type && diff > nconf.get('REFRESH_TOKEN_EXPIRATION_TIME')) {
-                                logger.info(`Time difference: ${diff} seconds for ${token.type} token -> rejecting with 403`)
-                                return res.status(403).json(new ErrorResponse('Refresh token expired'))
-                            }
-
-                            // store user model in request
-                            req.user = token.user
-                            next()
-
-                        } else {
-                            return res.status(403).json(new ErrorResponse('Token does not exist'))
-                        }
-                    })
-                })
-                .catch(err => {
-                    return res.status(403).json(new ErrorResponse('Invalid token'))
-                })
-
-            }
-
-            // key/secret auth
-            if (isBasic) {
-
-                let credentials = Buffer.from(rawToken, 'base64').toString()
-                const [key, secret] = credentials.split(':')
-
-                User.findOne({ key, secret })
-                .then(user => {
-                    if (user) {
-
-                        logger.debug(`Received basic credentials on endpoint ${req.method} ${req.originalUrl} for user ${user.firstName} ${user.lastName}`)
-
-                        // the user access level and required access level
-                        if (user.accessLevel < requiredLevel) {
-                            logger.warn(`Credentials with insufficient access level received whereas min lvel ${requiredLevel} is required`)
-                            return res.status(403).json(new ErrorResponse('Insufficient access level'))
-                        }
-
-                        // store user model in request
-                        req.user = user
-                        next()
-
-                    } else {
-                        return res.status(403).json(new ErrorResponse('Credentials do not exist'))
+                    if (!token) {
+                        throw new HTTPError('Token does not exist', 403)
                     }
-                })
-                .catch(err => {
-                    return res.status(403).json(new ErrorResponse('Invalid credentials'))
-                })
+
+                    logger.debug(`Received ${data.type} token on endpoint ${req.method} ${req.originalUrl} for user ${token.user.firstName} ${token.user.lastName}`)
+
+                    // check token's access level and required access level
+                    if (data.accessLevel < requiredLevel) {
+                        logger.warn(`Token with access level ${data.accessLevel} received whereas min lvel ${requiredLevel} is required`)
+                        throw new HTTPError('Insufficient access level', 403)
+                    }
+
+                    // determine token expiration
+                    let diff = moment().diff(moment(token.created), 'seconds')
+
+                    if ('access' === token.type && diff > nconf.get('ACCESS_TOKEN_EXPIRATION_TIME')) {
+                        logger.info(`Time difference: ${diff} seconds for ${token.type} token -> rejecting with 401`)
+                        throw new HTTPError('Access token expired', 401)
+
+                    } else if  ('refresh' === token.type && diff > nconf.get('REFRESH_TOKEN_EXPIRATION_TIME')) {
+                        logger.info(`Time difference: ${diff} seconds for ${token.type} token -> rejecting with 403`)
+                        throw new HTTPError('Refresh token expired', 403)
+                    }
+
+                    // store user model in request
+                    req.user = token.user
+                    return next()
+                }
+
+                // key/secret auth
+                if (isBasic) {
+
+                    let credentials = Buffer.from(rawToken, 'base64').toString()
+                    const [key, secret] = credentials.split(':')
+
+                    const user = await User.findOne({ key, secret })
+
+                    if (!user) {
+                        throw new HTTPError('Credentials do not exist', 403)
+                    }
+
+                    logger.debug(`Received basic credentials on endpoint ${req.method} ${req.originalUrl} for user ${user.firstName} ${user.lastName}`)
+
+                    // the user access level and required access level
+                    if (user.accessLevel < requiredLevel) {
+                        logger.warn(`Credentials with insufficient access level received whereas min lvel ${requiredLevel} is required`)
+                        throw new HTTPError('Insufficient access level', 403)
+                    }
+
+                    // store user model in request
+                    req.user = user
+                    return next()
+                }
+
+            } catch (err) {
+                return res.status(err.status || 500).json(new ErrorResponse(err.message))
             }
         }
     },
 
     basic: () => {
-        return (req, res, next) => {
-            // verify header
-            if (!req.headers.authorization) {
-                return res.status(401).json(new ErrorResponse('No authorization header'))
-            }
-
-            // verify schema
-            if (!req.headers.authorization.startsWith('Basic ')) {
-                return res.status(401).json(new ErrorResponse('Unsupported authorization schema'))
-            }
-
-            let parts = req.headers.authorization.split(' ')
-            let rawToken = parts[1]
+        return async (req, res, next) => {
 
             try {
-                let values = new Buffer(rawToken, 'base64').toString()
-                let [username, password] = values.split(':')
-                req.user = { username, password }
-                next()
+
+                // verify header
+                if (!req.headers.authorization) {
+                    throw new HTTPError('No authorization header', 401)
+                }
+
+                // verify schema
+                if (!req.headers.authorization.startsWith('Basic ')) {
+                    throw new HTTPError('Unsupported authorization schema', 401)
+                }
+
+                let parts = req.headers.authorization.split(' ')
+                let rawToken = parts[1]
+
+                const values = Buffer.from(rawToken, 'base64').toString()
+                const [username, password] = values.split(':')
+
+                const application = await Application.findOne()
+                .where('key').eq(username)
+                .where('secret').eq(password)
+                .populate('user')
+
+                if (!application) {
+                    throw new HTTPError('Invalid credentials', 403)
+                }
+
+                req.user = application.user
+                req.application = application
+                return next()
+
             } catch(err) {
-                return res.status(403).json(new ErrorResponse('Invalid credentials'))
+                return res.status(err.status || 500).json(new ErrorResponse(err.message))
             }
         }
     }
