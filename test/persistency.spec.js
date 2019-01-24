@@ -69,6 +69,8 @@ describe('Persistency', function() {
             MessageMock.expects('find')
             .chain('where').withArgs('application')
             .chain('eq').withArgs(appId)
+            .chain('sort').withArgs('-created')
+            .chain('exec')
             .resolves([response])
 
             const res = await request(app)
@@ -98,6 +100,8 @@ describe('Persistency', function() {
             MessageMock.expects('find')
             .chain('where').withArgs('application')
             .chain('eq').withArgs(appId)
+            .chain('sort').withArgs('-created')
+            .chain('exec')
             .resolves([response])
 
             const res = await request(app)
@@ -120,6 +124,8 @@ describe('Persistency', function() {
             MessageMock.expects('find')
             .chain('where').withArgs('application')
             .chain('eq').withArgs(appId)
+            .chain('sort').withArgs('-created')
+            .chain('exec')
             .rejects(new Error('DB Error'))
 
             const res = await request(app)
@@ -157,6 +163,8 @@ describe('Persistency', function() {
             .chain('eq').withArgs(gwId)
             .chain('where').withArgs('topic')
             .chain('eq').withArgs('test/topic')
+            .chain('sort').withArgs('-created')
+            .chain('exec')
             .resolves([response])
 
             const res = await request(app)
@@ -190,6 +198,8 @@ describe('Persistency', function() {
             .chain('eq').withArgs(null)
             .chain('where').withArgs('topic')
             .chain('eq').withArgs('test/topic')
+            .chain('sort').withArgs('-created')
+            .chain('exec')
             .resolves([response])
 
             const res = await request(app)
@@ -223,6 +233,8 @@ describe('Persistency', function() {
             .chain('eq').withArgs(null)
             .chain('where').withArgs('topic')
             .chain('eq').withArgs('topic')
+            .chain('sort').withArgs('-created')
+            .chain('exec')
             .resolves([response])
 
             const res = await request(app)
@@ -255,6 +267,8 @@ describe('Persistency', function() {
             .chain('eq').withArgs(appId)
             .chain('where').withArgs('gateway')
             .chain('eq').withArgs(gwId)
+            .chain('sort').withArgs('-created')
+            .chain('exec')
             .resolves([response])
 
             const res = await request(app)
@@ -289,6 +303,8 @@ describe('Persistency', function() {
             .chain('eq').withArgs(gwId)
             .chain('where').withArgs('topic')
             .chain('eq').withArgs('')
+            .chain('sort').withArgs('-created')
+            .chain('exec')
             .resolves([response])
 
             const res = await request(app)
@@ -315,6 +331,8 @@ describe('Persistency', function() {
             .chain('eq').withArgs(null)
             .chain('where').withArgs('topic')
             .chain('eq').withArgs('topic')
+            .chain('sort').withArgs('-created')
+            .chain('exec')
             .rejects(new Error('DB Error'))
 
             const res = await request(app)
