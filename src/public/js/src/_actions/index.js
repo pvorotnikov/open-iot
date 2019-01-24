@@ -7,4 +7,5 @@ export * from './scope.actions'
 export * from './setting.actions'
 export * from './module.actions'
 export * from './integration.actions'
+export * from './persistency.actions'
 export * from './todo.actions' // TODO: remove this eventually

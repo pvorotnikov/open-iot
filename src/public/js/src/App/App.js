@@ -19,6 +19,7 @@ import { ApplicationPage } from '../ApplicationPage'
 import { NewGatewayPage } from '../NewGatewayPage'
 import { SettingsPage } from '../SettingsPage'
 import { IntegrationsPage } from '../IntegrationsPage'
+import { MessagesPage } from '../MessagesPage'
 
 class App extends Component {
 
@@ -64,6 +65,7 @@ class App extends Component {
                                 { message }
                                 <PrivateRoute exact path="/" component={HomePage} />
                                 <PrivateRoute exact path="/playground" component={PlaygroundPage} />
+                                <PrivateRoute exact path="/messages" component={MessagesPage} />
                                 <PrivateRoute exact path="/users" component={UsersPage} />
                                 <PrivateRoute exact path="/apps" component={ApplicationsPage} />
                                 <PrivateRoute exact path="/apps/i/:id" component={ApplicationPage} />

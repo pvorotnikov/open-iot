@@ -29,18 +29,15 @@ const { AwsIotBridge } = require('./bridge')
  */
 let mh = new MessageHandler()
 let awsBridge = null
-function setupServer(instance) {
-
-    instance.models.Setting.find()
-    .then(settings => {
+async function setupServer(instance) {
+    try {
+        const settings = await instance.models.Setting.find()
         settings.forEach(s => nconf.set(s.key, s.value))
-
         mh.run()
         awsBridge = new AwsIotBridge()
-    })
-    .catch(err => {
+    } catch (err) {
         logger.error(err.message)
-    })
+    }
 }
 
 /* ================================
@@ -58,6 +55,11 @@ DB.connection()
 
 // create app
 const app = express()
+
+// app configuration
+if ('development' === nconf.get('ENV')) {
+    app.set('json spaces', 2)
+}
 
 // setup middleware
 app.use(morgan('combined', { 'stream': logger.stream, skip: (req, res) => { return res.statusCode < 400 } }))

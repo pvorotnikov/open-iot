@@ -2,8 +2,11 @@ import StateMachine from 'javascript-state-machine'
 
 export class Request {
 
-    constructor(forceLogoutOnAuthError=true) {
+    constructor(forceLogoutOnAuthError=true, authSchema='bearer', username, password) {
         this.forceLogoutOnAuthError = forceLogoutOnAuthError
+        this.authSchema = authSchema
+        this.username = username
+        this.password = password
         this.requestLimit = 0
         this.requestCount = 0
 
@@ -46,6 +49,14 @@ export class Request {
                 reject(err.message)
             }
         })
+    }
+
+    getBasicAuth() {
+        if (this.username && this.password) {
+            return btoa(`${this.username}:${this.password}`)
+        } else {
+            return null
+        }
     }
 
     getAccessToken() {
@@ -167,9 +178,16 @@ export class Request {
     sendRequest(req) {
         return new Promise((fulfill, reject) => {
 
-            let token = this.getAccessToken()
-            if (token) {
-                req.requestOptions.headers = { ...req.requestOptions.headers, Authorization: 'Bearer ' + token }
+            if ('bearer' === this.authSchema) {
+                let token = this.getAccessToken()
+                if (token) {
+                    req.requestOptions.headers = { ...req.requestOptions.headers, Authorization: 'Bearer ' + token }
+                }
+            } else {
+                let auth = this.getBasicAuth()
+                if (auth) {
+                    req.requestOptions.headers = { ...req.requestOptions.headers, Authorization: 'Basic ' + auth }
+                }
             }
 
             console.debug(`Calling ${req.requestOptions.method} ${req.url}`);

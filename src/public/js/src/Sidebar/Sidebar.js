@@ -53,6 +53,9 @@ class Sidebar extends Component {
                 <Menu.Item active={currentPath.startsWith('/playground')} as={Link} to='/playground'>
                     <Icon name='soccer' /> Playground
                 </Menu.Item>
+                <Menu.Item active={currentPath.startsWith('/messages')} as={Link} to='/messages'>
+                    <Icon name='mail' /> Messages
+                </Menu.Item>
                 { user.accessLevel >= ACCESS_LEVEL.MANAGER && <Menu.Item active={currentPath.startsWith('/users')} as={Link} to='/users'>
                     <Icon name='users' /> Users
                 </Menu.Item> }
