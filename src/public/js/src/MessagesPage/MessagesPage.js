@@ -157,27 +157,32 @@ class MessagesPage extends Component {
                 }
             })
 
-            console.log('Should view messages for topic', subTopic)
-            console.log('App key', key)
-            console.log('App secret', secret)
-
             dispatch(persistencyActions.get(subTopic, key, secret))
         }
     }
 
     renderMessages() {
 
-        const messages = this.props.persistency.map((m, i) => (
-            <List.Item key={i}>
-                <List.Header>
-                    <Icon name='envelope' />
-                    {moment(m.created).format('LTS')} - {m.topic}
-                </List.Header>
-                <List.Content as='pre'>
-                    <HighlightBlock>{JSON.stringify(m.payload)}</HighlightBlock>
-                </List.Content>
-            </List.Item>
-        ))
+        const messages = this.props.persistency.map((m, i) => {
+
+            let topic = m.topic
+            if (null === m.gateway) {
+                topic = `${m.application}/${m.topic}`
+            } else {
+                topic = `${m.application}/${m.gateway}/${m.topic}`
+            }
+            return (
+                <List.Item key={i}>
+                    <List.Header>
+                        <Icon name='envelope' />
+                        {moment(m.created).format('LTS')} - {topic}
+                    </List.Header>
+                    <List.Content as='pre'>
+                        <HighlightBlock>{JSON.stringify(m.payload)}</HighlightBlock>
+                    </List.Content>
+                </List.Item>
+            )
+        })
         return (
             <Segment raised>
                 <Label color='blue' ribbon>Messages</Label>
