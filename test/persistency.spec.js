@@ -19,40 +19,124 @@ describe('Persistency', function() {
 
     const app = expressApp([persistency])
 
+    let user, application
+    let userAuthorization
+
+    before(async () => {
+        await cleanDb()
+        user = await new models.User({
+            firstName: 'Test',
+            lastName: 'User',
+            email: 'test@test.com',
+            password: utils.generatePassword('test'),
+        }).save()
+        application = await new models.Application({
+            user: user._id,
+            name: 'Test app',
+            alias: 'testapp',
+            description: 'test app description',
+            key: hat(32),
+            secret: hat(64),
+        }).save()
+        userAuthorization = `Basic ${Buffer.from(
+            `${application.key}:${application.secret}`
+        ).toString('base64')}`
+    })
+
+    after(async () => {
+        await cleanDb()
+    })
+
     /* ============================
      * RETRIEVE MESSAGES
      * ============================
      */
 
-    describe('Retrieve messages', function() {
+    describe('Retrieve application messages', function() {
 
-        let user, application
-        let userAuthorization
+        it('should retrieve messages for :appId', async () => {
 
-        before(async () => {
-            await cleanDb()
-            user = await new models.User({
-                firstName: 'Test',
-                lastName: 'User',
-                email: 'test@test.com',
-                password: utils.generatePassword('test'),
-            }).save()
-            application = await new models.Application({
-                user: user._id,
-                name: 'Test app',
-                alias: 'testapp',
-                description: 'test app description',
-                key: hat(32),
-                secret: hat(64),
-            }).save()
-            userAuthorization = `Basic ${Buffer.from(
-                `${application.key}:${application.secret}`
-            ).toString('base64')}`
+            const appId = objectId().toString()
+            const gwId = objectId().toString()
+
+            const response = new models.Message({
+                application: appId,
+                gateway: gwId,
+                topic: 'test/topic',
+                payload: Buffer.from('payload')
+            })
+            const MessageMock = sinon.mock(models.Message)
+            MessageMock.expects('find')
+            .chain('where').withArgs('application')
+            .chain('eq').withArgs(appId)
+            .resolves([response])
+
+            const res = await request(app)
+            .get(`/api/persistency/${appId}`)
+            .set('Authorization', userAuthorization)
+
+            MessageMock.verify()
+            MessageMock.restore()
+
+            res.status.should.equal(200)
+            res.body.status.should.equal('ok')
+            res.body.data.should.be.an('array')
         })
 
-        after(async () => {
-            await cleanDb()
+        it('should retrieve messages for :appId/', async () => {
+
+            const appId = objectId().toString()
+
+            const response = new models.Message({
+                application: appId,
+                gateway: null,
+                topic: 'test/topic',
+                payload: Buffer.from('payload')
+            })
+
+            const MessageMock = sinon.mock(models.Message)
+            MessageMock.expects('find')
+            .chain('where').withArgs('application')
+            .chain('eq').withArgs(appId)
+            .resolves([response])
+
+            const res = await request(app)
+            .get(`/api/persistency/${appId}/`)
+            .set('Authorization', userAuthorization)
+
+            MessageMock.verify()
+            MessageMock.restore()
+
+            res.status.should.equal(200)
+            res.body.status.should.equal('ok')
+            res.body.data.should.be.an('array')
         })
+
+        it('should not retrieve messages - db error', async () => {
+
+            const appId = objectId().toString()
+
+            const MessageMock = sinon.mock(models.Message)
+            MessageMock.expects('find')
+            .chain('where').withArgs('application')
+            .chain('eq').withArgs(appId)
+            .rejects(new Error('DB Error'))
+
+            const res = await request(app)
+            .get(`/api/persistency/${appId}`)
+            .set('Authorization', userAuthorization)
+
+            MessageMock.verify()
+            MessageMock.restore()
+
+            res.status.should.equal(500)
+            res.body.status.should.equal('error')
+            res.body.errorMessage.should.equal('DB Error')
+        })
+
+    })
+
+    describe('Retrieve gateway messages', function() {
 
         it('should retrieve messages for :appId/:gwId/test/topic', async () => {
 
@@ -171,8 +255,6 @@ describe('Persistency', function() {
             .chain('eq').withArgs(appId)
             .chain('where').withArgs('gateway')
             .chain('eq').withArgs(gwId)
-            .chain('where').withArgs('topic')
-            .chain('eq').withArgs('')
             .resolves([response])
 
             const res = await request(app)

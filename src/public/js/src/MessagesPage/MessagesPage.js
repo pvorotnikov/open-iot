@@ -196,6 +196,10 @@ class MessagesPage extends Component {
             return `${app}/${topic}`
         } else if ('' !== app && '' !== gateway && '' !== topic) {
             return `${app}/${gateway}/${topic}`
+        } else if ('' !== app && '' !== gateway) {
+            return `${app}/${gateway}`
+        } else if ('' !== app) {
+            return app
         } else {
             return null
         }
