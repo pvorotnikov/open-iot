@@ -41,7 +41,7 @@ router.get('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
     .findById(req.params.id)
     .where('user').eq(req.user._id)
     .then((g) => {
-        if (a) {
+        if (g) {
             let data = {
                 id: g.id,
                 name: g.name,
