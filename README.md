@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/pvorotnikov/open-iot.svg?branch=master)](https://travis-ci.org/pvorotnikov/open-iot)
 [![Coverage Status](https://coveralls.io/repos/github/pvorotnikov/open-iot/badge.svg)](https://coveralls.io/github/pvorotnikov/open-iot)
+[![Docker Pulls](https://img.shields.io/docker/pulls/pvorotnikov/open-iot-ui.svg)](https://hub.docker.com/r/pvorotnikov/open-iot-ui)
 
 Open IoT is intended to be a flexible IoT backend and gateway management system, offering:
 * easy and secure data ingestion

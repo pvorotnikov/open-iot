@@ -17,7 +17,7 @@ module.exports = function(app) {
             const secret = req.application.secret
             const appId = req.params.appId
 
-            const messages = await models.Message.find().where('application').eq(appId)
+            const messages = await models.Message.find().where('application').eq(appId).sort('-created').exec()
             const data = messages.map(m => {
 
                 // form payload
@@ -64,12 +64,16 @@ module.exports = function(app) {
                     query = models.Message.find()
                             .where('application').eq(appId)
                             .where('gateway').eq(gwId)
+                            .sort('-created')
+                            .exec()
                 } else {
                     topicName = topicParts.join('/')
                     query = models.Message.find()
                             .where('application').eq(appId)
                             .where('gateway').eq(gwId)
                             .where('topic').eq(topicName)
+                            .sort('-created')
+                            .exec()
                 }
 
             // :appId/topic1/topic2
@@ -79,6 +83,8 @@ module.exports = function(app) {
                         .where('application').eq(appId)
                         .where('gateway').eq(null)
                         .where('topic').eq(topicName)
+                        .sort('-created')
+                        .exec()
 
             // :appId/topic
             } else {
@@ -87,6 +93,8 @@ module.exports = function(app) {
                         .where('application').eq(appId)
                         .where('gateway').eq(null)
                         .where('topic').eq(topicName)
+                        .sort('-created')
+                        .exec()
             }
 
             const messages = await query
