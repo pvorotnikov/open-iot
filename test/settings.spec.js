@@ -114,14 +114,6 @@ describe('Settings', function() {
             })
         })
 
-        it('should not get all settings - insufficient credentials', async () => {
-            const res = await request(app)
-            .get('/api/settings')
-            .set('Authorization', userAuthorization)
-
-            res.status.should.equal(403)
-        })
-
         it('should not get all settings - db error', async () => {
             const settingStub = sinon.stub(Setting, 'find').rejects(new Error('setting-find'))
             const res = await request(app)

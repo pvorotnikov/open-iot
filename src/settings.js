@@ -17,7 +17,7 @@ module.exports = function(app) {
     })
 
     // fetch all settings
-    router.get('/', auth.protect(ACCESS_LEVEL.ADMIN), (req, res, next) => {
+    router.get('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
 
         Setting.find()
         .then(settings => {
