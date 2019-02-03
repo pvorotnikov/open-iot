@@ -67,6 +67,12 @@ module.exports = function(app) {
             const { name, description } = await validatePlugin(path.join(TEMP_DIR, pluginTempName))
             logger.info(`Plugin ${name} is valid.`)
 
+            const hasModule = await utils.fileExists(path.join(MODULES_DIR, name))
+            if (hasModule) {
+                logger.info(`Deleting previous module ${name}`)
+                await utils.unlinkDir(path.join(MODULES_DIR, name))
+            }
+
             // install plugin
             await utils.renameFile(path.join(TEMP_DIR, pluginTempName), path.join(MODULES_DIR, name))
 

@@ -74,6 +74,16 @@ function index(Module, Integration) {
                             await dbm.save()
                         }
                     })
+
+                    // update module description
+                    let packageInfo = JSON.parse(fs.readFileSync(path.join(MODULES_DIR, d, 'package.json'), 'utf8'))
+                    dbModules.forEach(async dbm => {
+                        if (dbm.name === packageInfo.name) {
+                            dbm.description = packageInfo.description || null
+                            dbm.meta = packageInfo
+                            await dbm.save()
+                        }
+                    })
                 }
 
             })

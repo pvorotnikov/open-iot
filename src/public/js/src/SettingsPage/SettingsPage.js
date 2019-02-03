@@ -136,7 +136,7 @@ class SettingsPage extends Component {
                         <Table.Cell>
                             <Header as='h4'>
                                 <Header.Content>
-                                    { m.name }
+                                    { m.name } { m.meta.version ? m.meta.version : '' }
                                     <Header.Subheader>{ m.description }</Header.Subheader>
                                 </Header.Content>
                             </Header>
