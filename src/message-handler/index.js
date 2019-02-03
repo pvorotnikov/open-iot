@@ -7,6 +7,7 @@ const Promise = require('bluebird')
 const { logger, constants, persistency, } = require('../lib')
 const { Rule, Application, Gateway, Module, Integration } = require('../models')
 const Transformer = require('./transformer')
+const Context = require('./context')
 
 const integrations = {}
 
@@ -283,12 +284,11 @@ class MessageHandler {
         } else if ('integrations' === nconf.get('global.integrationmode')) {
 
             // create context that is passed to the invoked integration step
-            const context = {
-                appId,
-                gatewayId,
-                topic: topicName,
-                message,
-            }
+            const context = new Context()
+            context.appId = appId
+            context.gatewayId = gatewayId
+            context.topic = topicName
+            context.message = message
 
             Integration.find({ topic: topicName, status: 'enabled' })
             .then(integrationList => {
