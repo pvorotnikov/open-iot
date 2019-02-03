@@ -114,10 +114,13 @@ async function authorizeTopicPublishIntegrations(key, topic, track=true) {
         throw new Error('Application id and key do not match')
     }
 
-    // evaluate it is valid topic
-    const integration = await Integration.findOne({ topic: topicName })
-    if (!integration) {
-        throw new Error(`Unknown topic: ${topicName} (${app.name})`)
+    // by default allow publishing on the feedback channel
+    if (!topicName.endsWith('message')) {
+        // evaluate it is valid topic
+        const integration = await Integration.findOne({ topic: topicName })
+        if (!integration) {
+            throw new Error(`Unknown topic: ${topicName} (${app.name})`)
+        }
     }
 
     return app.name
@@ -182,10 +185,13 @@ async function authorizeTopicSubscribeIntegrations(key, topic) {
         throw new Error('Application id and key do not match')
     }
 
-    // evaluate it is valid topic
-    const integration = await Integration.findOne({ topic: topicName })
-    if (!integration) {
-        throw new Error(`Unknown topic: ${topicName} (${app.name})`)
+    // by default allow subscription on the feedback channel
+    if (!topicName.endsWith('message')) {
+        // evaluate it is valid topic (for non feed)
+        const integration = await Integration.findOne({ topic: topicName })
+        if (!integration) {
+            throw new Error(`Unknown topic: ${topicName} (${app.name})`)
+        }
     }
 
     return app.name
