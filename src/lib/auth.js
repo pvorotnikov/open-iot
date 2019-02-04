@@ -166,6 +166,7 @@ module.exports = {
 
                 if (username === nconf.get('HANDLER_KEY') && password === nconf.get('HANDLER_SECRET')) {
                     logger.info('Request from privileged client. Allow by default.')
+                    req.application = { key: username, secret: password }
                     return next()
                 }
 
