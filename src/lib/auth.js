@@ -163,6 +163,12 @@ module.exports = {
                 const values = Buffer.from(rawToken, 'base64').toString()
                 const [username, password] = values.split(':')
 
+
+                if (username === nconf.get('HANDLER_KEY') && password === nconf.get('HANDLER_SECRET')) {
+                    logger.info('Request from privileged client. Allow by default.')
+                    return next()
+                }
+
                 const application = await Application.findOne()
                 .where('key').eq(username)
                 .where('secret').eq(password)
