@@ -136,8 +136,8 @@ module.exports = function(app) {
         const name = manifest.name
         const description = manifest.description || null
 
-        if (_(name).isEmpty()) {
-            throw new HTTPError('Plugin name is required')
+        if (_.isEmpty(name)) {
+            throw new HTTPError('Plugin name is required', 400)
         }
 
         return { name, description }

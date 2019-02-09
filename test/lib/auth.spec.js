@@ -406,6 +406,32 @@ describe('Authentication', function() {
             args[0].errorMessage.should.equal('Invalid credentials')
         })
 
+
+        it('basic: should reject - db error', async () => {
+
+            const applicationFindStub = sinon.stub(Application, 'findOne').returns({
+                where: sinon.stub().returnsThis(),
+                eq: sinon.stub().returnsThis(),
+                populate: sinon.stub().rejects(new Error('DB Error')),
+            })
+            const credentials = Buffer.from('key:secret').toString('base64')
+            const basic = auth.basic()
+            const req = Request({ headers: { authorization: 'Basic ' + credentials } })
+            const res = Response()
+            const next = sinon.stub()
+            await basic(req, res, next)
+
+            applicationFindStub.restore()
+
+            next.should.not.have.been.called
+            res.status.should.have.been.calledWith(500)
+            res.json.should.have.been.called
+            const args = res.json.getCall(0).args
+            args[0].status.should.equal('error')
+            args[0].errorMessage.should.equal('DB Error')
+        })
+
+
         it('basic: should allow - valid credentials', async () => {
             const credentials = Buffer.from(`${application.key}:${application.secret}`).toString('base64')
             const basic = auth.basic()
@@ -421,6 +447,21 @@ describe('Authentication', function() {
             req.application.should.not.be.null
             req.application.should.be.an('object')
             req.application._id.toString().should.equal(application._id.toString())
+        })
+
+        it('basic: should allow - message handler credentials', async () => {
+            const credentials = Buffer.from(`${nconf.get('HANDLER_KEY')}:${nconf.get('HANDLER_SECRET')}`).toString('base64')
+            const basic = auth.basic()
+            const req = Request({ headers: { authorization: 'Basic ' + credentials } })
+            const res = Response()
+            const next = sinon.stub()
+            await basic(req, res, next)
+
+            next.should.have.been.called
+            req.application.should.not.be.null
+            req.application.should.be.an('object')
+            req.application.key.should.equal(nconf.get('HANDLER_KEY'))
+            req.application.secret.should.equal(nconf.get('HANDLER_SECRET'))
         })
 
     })
