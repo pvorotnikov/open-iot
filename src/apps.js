@@ -206,6 +206,7 @@ router.get('/:id/gateways', auth.protect(ACCESS_LEVEL.USER), (req, res, next) =>
                 name: g.name,
                 alias: g.alias,
                 description: g.description,
+                tags: g.tags,
                 statsIn: g.statsIn,
                 statsOut: g.statsOut,
                 created: g.created,

@@ -63,6 +63,7 @@ const gatewaySchema = new Schema({
     name: String,
     alias: String,
     description: String,
+    tags: { type: Object, default: {} },
     statsIn: { type: Number, default: 0 },
     statsOut: { type: Number, default: 0 },
     created: { type: Date, default: Date.now },
