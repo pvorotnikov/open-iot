@@ -2,7 +2,7 @@ const express = require('express')
 const validator = require('validator')
 const { logger, responses, auth } = require('./lib')
 const { ACCESS_LEVEL, Gateway, Application } = require('./models')
-const { SuccessResponse, ErrorResponse } = responses
+const { SuccessResponse, ErrorResponse, HTTPError } = responses
 
 module.exports = function(app) {
 
@@ -10,14 +10,14 @@ module.exports = function(app) {
     app.use('/api/gateways', router)
 
     // fetch all registered gateways
-    router.get('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+    router.get('/', auth.protect(ACCESS_LEVEL.USER), async (req, res, next) => {
 
-        Gateway
-        .find()
-        .where('user').eq(req.user._id)
-        .populate('application')
-        .then(gateways => {
-            let data = gateways.map(g => ({
+        try {
+            const gateways = await Gateway.find()
+            .where('user').eq(req.user._id)
+            .populate('application')
+
+            const data = gateways.map(g => ({
                 id: g.id,
                 name: g.name,
                 alias: g.alias,
@@ -31,77 +31,76 @@ module.exports = function(app) {
                 },
             }))
             res.json(new SuccessResponse(data))
-        })
-        .catch((err) => {
-            res.status(500).json(new ErrorResponse(err.message))
-        })
 
+        } catch (err) {
+            res.status(err.status || 500).json(new ErrorResponse(err.message))
+        }
     })
 
     // fetch gateway by id that belongs to a particular user
-    router.get('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+    router.get('/:id', auth.protect(ACCESS_LEVEL.USER), async (req, res, next) => {
 
-        Gateway
-        .findById(req.params.id)
-        .where('user').eq(req.user._id)
-        .then((g) => {
-            if (g) {
-                let data = {
-                    id: g.id,
-                    name: g.name,
-                    alias: g.alias,
-                    description: g.description,
-                    created: g.created,
-                    updated: g.updated,
-                }
-                res.json({ status: 'ok', data })
-            } else {
-                res.status(400).json(new ErrorResponse('Gateway not found'))
+        try {
+
+            const g = await Gateway.findById(req.params.id)
+            .where('user').eq(req.user._id)
+            if (!g) {
+                throw new HTTPError('Gateway not found', 400)
             }
-        })
-        .catch((err) => {
-            res.status(500).json(new ErrorResponse(err.message))
-        })
 
+            const data = {
+                id: g.id,
+                name: g.name,
+                alias: g.alias,
+                description: g.description,
+                created: g.created,
+                updated: g.updated,
+            }
+            res.json(new SuccessResponse(data))
+
+        } catch (err) {
+            res.status(err.status || 500).json(new ErrorResponse(err.message))
+        }
     })
 
     // create new gateway
-    router.post('/', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+    router.post('/', auth.protect(ACCESS_LEVEL.USER), async (req, res, next) => {
 
-        const { application, name, description } = req.body
+        try {
 
-        if (validator.isEmpty(application)) {
-            return res.status(400).json(new ErrorResponse('You need to specify a parent application'))
-        }
+            const { application, name, description } = req.body
 
-        if (validator.isEmpty(name)) {
-            return res.status(400).json(new ErrorResponse('Please, enter gateway name'))
-        }
-
-        if (validator.isEmpty(description)) {
-            return res.status(400).json(new ErrorResponse('Please, enter gateway description'))
-        }
-
-        // check the owner of the application
-        Application.findById(application)
-        .where('user').eq(req.user._id)
-        .then(app => {
-
-            if (!app) {
-                throw new Error('This application belongs to somebody else')
+            if (!application || validator.isEmpty(application)) {
+                throw new HTTPError('You need to specify a parent application', 400)
             }
 
-            let gateway = new Gateway({
+            if (!name || validator.isEmpty(name)) {
+                throw new HTTPError('Please, enter gateway name', 400)
+            }
+
+            if (!description || validator.isEmpty(description)) {
+                throw new HTTPError('Please, enter gateway description', 400)
+            }
+
+            // check the owner of the application
+            const app = await Application.findById(application)
+            .where('user').eq(req.user._id)
+
+            if (!app) {
+                throw new HTTPError('This application belongs to somebody else', 400)
+            }
+
+            // create gateway
+            const gateway = new Gateway({
                 user: req.user._id,
                 application,
                 name,
                 alias: name.toLowerCase().replace(/\s/g, ''),
                 description,
             })
-            return gateway.save()
-        })
-        .then(gateway => {
-            let data = {
+            await gateway.save()
+
+            const data = {
                 id: gateway.id,
                 name: gateway.name,
                 alias: gateway.alias,
@@ -109,57 +108,63 @@ module.exports = function(app) {
                 created: gateway.created,
                 updated: gateway.updated,
             }
-            res.json({ status: 'ok', data })
-        })
-        .catch(err => {
-            res.status(500).json(new ErrorResponse(err.message))
-        })
+            res.json(new SuccessResponse(data))
 
+        } catch (err) {
+            res.status(err.status || 500).json(new ErrorResponse(err.message))
+        }
     })
 
     // update gateway
-    router.put('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+    router.put('/:id', auth.protect(ACCESS_LEVEL.USER), async (req, res, next) => {
 
-        const { name, description, alias } = req.body
+        try {
 
-        const updateDefintion = {}
+            const { name, description, alias } = req.body
 
-        if (name && !validator.isEmpty(name)) {
-            updateDefintion.name = name
-        }
+            const updateDefintion = {}
 
-        if (alias && !validator.isEmpty(alias)) {
-            updateDefintion.alias = alias.toLowerCase().replace(/\s/g, '')
-        }
+            if (name && !validator.isEmpty(name)) {
+                updateDefintion.name = name
+            }
 
-        if (description && !validator.isEmpty(description)) {
-            updateDefintion.description = description
-        }
+            if (alias && !validator.isEmpty(alias)) {
+                updateDefintion.alias = alias.toLowerCase().replace(/\s/g, '')
+            }
 
-        Gateway.findByIdAndUpdate(req.params.id, updateDefintion)
-        .where('user').eq(req.user._id)
-        .then(() => {
+            if (description && !validator.isEmpty(description)) {
+                updateDefintion.description = description
+            }
+
+            await Gateway.findByIdAndUpdate(req.params.id, updateDefintion)
+            .where('user').eq(req.user._id)
+
             res.json(new SuccessResponse())
-        })
-        .catch(err => {
-            res.status(500).json(new ErrorResponse(err.message))
-        })
 
+        } catch (err) {
+            res.status(err.status || 500).json(new ErrorResponse(err.message))
+        }
     })
 
     // delete gateway
-    router.delete('/:id', auth.protect(ACCESS_LEVEL.USER), (req, res, next) => {
+    router.delete('/:id', auth.protect(ACCESS_LEVEL.USER), async (req, res, next) => {
 
-        Gateway.findById(req.params.id)
-        .where('user').eq(req.user._id)
-        .then(gateway => gateway.remove())
-        .then(() => {
+        try {
+
+            const gateway = await Gateway.findById(req.params.id)
+            .where('user').eq(req.user._id)
+
+            if (!gateway) {
+                throw new HTTPError('This gateway belongs to somebody else', 400)
+            }
+
+            await gateway.remove()
+
             res.json(new SuccessResponse())
-        })
-        .catch(err => {
-            res.status(500).json(new ErrorResponse(err.message))
-        })
 
+        } catch (err) {
+            res.status(err.status || 500).json(new ErrorResponse(err.message))
+        }
     })
 
 }

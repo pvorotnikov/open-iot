@@ -246,7 +246,7 @@ describe('Gateways', function() {
             // restore stubs
             applicationStub.restore()
 
-            res.status.should.equal(500)
+            res.status.should.equal(400)
         })
 
         it('should create a gateway - empty application', async () => {
@@ -374,6 +374,25 @@ describe('Gateways', function() {
 
             res.status.should.equal(200)
             gw.remove.should.have.been.called
+        })
+
+        it('should not remove a gateway - gateway not found', async () => {
+
+            // create stubs
+            let gatewayStub = sinon.stub(Gateway, 'findById').returns({
+                where: sinon.stub().returnsThis(),
+                eq: sinon.stub().resolves(null),
+            })
+
+            const res = await request(app)
+            .delete('/api/gateways/123')
+            .set('Authorization', userAuthorization)
+
+            // restore stubs
+            gatewayStub.restore()
+
+            res.status.should.equal(400)
+            res.body.status.should.equal('error')
         })
 
         it('should not remove a gateway - DB Error', async () => {
