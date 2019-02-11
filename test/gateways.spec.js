@@ -36,6 +36,7 @@ describe('Gateways', function() {
             name: 'gwname',
             description: 'gwdescription',
             alias: 'gwalias',
+            tags: {},
             created: moment().toISOString(),
             updated: moment().toISOString(),
             application: {
@@ -183,13 +184,32 @@ describe('Gateways', function() {
 
     describe('Create a gateway', function() {
 
-        const GatewayModel = gateways.__get__('Gateway')
+        it('should create a gateway', async () => {
 
-        afterEach(() => {
-            gateways.__set__('Gateway', GatewayModel)
+            // create stubs
+            let applicationStub = sinon.stub(Application, 'findById').returns({
+                where: sinon.stub().returnsThis(),
+                eq: sinon.stub().resolves({_id: objectId() }),
+            })
+
+            const res = await request(app)
+            .post('/api/gateways')
+            .set('Authorization', userAuthorization)
+            .send({
+                application: objectId(),
+                name: 'gateway',
+                description: 'gateway',
+                tags: { tag: 'value' },
+            })
+
+            // restore stubs
+            applicationStub.restore()
+
+            res.status.should.equal(200)
+            res.body.data.should.be.an('object')
         })
 
-        it('should create a gateway', async () => {
+        it('should create a gateway - no tags', async () => {
 
             // create stubs
             let applicationStub = sinon.stub(Application, 'findById').returns({
@@ -249,7 +269,7 @@ describe('Gateways', function() {
             res.status.should.equal(400)
         })
 
-        it('should create a gateway - empty application', async () => {
+        it('should not create a gateway - empty application', async () => {
 
             const res = await request(app)
             .post('/api/gateways')
@@ -259,7 +279,7 @@ describe('Gateways', function() {
             res.status.should.equal(400)
         })
 
-        it('should create a gateway - empty name', async () => {
+        it('should  notcreate a gateway - empty name', async () => {
 
             const res = await request(app)
             .post('/api/gateways')
@@ -269,7 +289,7 @@ describe('Gateways', function() {
             res.status.should.equal(400)
         })
 
-        it('should create a gateway - empty description', async () => {
+        it('should not create a gateway - empty description', async () => {
 
             const res = await request(app)
             .post('/api/gateways')
@@ -299,7 +319,12 @@ describe('Gateways', function() {
             const res = await request(app)
             .put('/api/gateways/123')
             .set('Authorization', userAuthorization)
-            .send({ name: 'gateway', description: 'gateway', alias: 'gateway' })
+            .send({
+                name: 'gateway',
+                description: 'gateway',
+                alias: 'gateway',
+                tags: { 'new-tag': 'new-value' },
+            })
 
             // restore stubs
             gatewayStub.restore()

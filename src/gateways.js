@@ -1,5 +1,6 @@
 const express = require('express')
 const validator = require('validator')
+const _ = require('lodash')
 const { logger, responses, auth } = require('./lib')
 const { ACCESS_LEVEL, Gateway, Application } = require('./models')
 const { SuccessResponse, ErrorResponse, HTTPError } = responses
@@ -68,7 +69,7 @@ module.exports = function(app) {
 
         try {
 
-            const { application, name, description } = req.body
+            const { application, name, description, tags, } = req.body
 
             if (!application || validator.isEmpty(application)) {
                 throw new HTTPError('You need to specify a parent application', 400)
@@ -90,6 +91,11 @@ module.exports = function(app) {
                 throw new HTTPError('This application belongs to somebody else', 400)
             }
 
+            let gwTags = {}
+            if (tags && _.isObject(tags)) {
+                gwTags = tags
+            }
+
             // create gateway
             const gateway = new Gateway({
                 user: req.user._id,
@@ -97,6 +103,7 @@ module.exports = function(app) {
                 name,
                 alias: name.toLowerCase().replace(/\s/g, ''),
                 description,
+                tags: gwTags,
             })
             await gateway.save()
 
@@ -120,7 +127,7 @@ module.exports = function(app) {
 
         try {
 
-            const { name, description, alias } = req.body
+            const { name, description, alias, tags } = req.body
 
             const updateDefintion = {}
 
@@ -134,6 +141,10 @@ module.exports = function(app) {
 
             if (description && !validator.isEmpty(description)) {
                 updateDefintion.description = description
+            }
+
+            if (tags && _.isObject(tags)) {
+                updateDefintion.tags = tags
             }
 
             await Gateway.findByIdAndUpdate(req.params.id, updateDefintion)
