@@ -23,6 +23,7 @@ module.exports = function(app) {
                 name: g.name,
                 alias: g.alias,
                 description: g.description,
+                tags: g.tags,
                 created: g.created,
                 updated: g.updated,
                 application: {
@@ -54,6 +55,7 @@ module.exports = function(app) {
                 name: g.name,
                 alias: g.alias,
                 description: g.description,
+                tags: g.tags,
                 created: g.created,
                 updated: g.updated,
             }
@@ -112,6 +114,7 @@ module.exports = function(app) {
                 name: gateway.name,
                 alias: gateway.alias,
                 description: gateway.description,
+                tags: gateway.tags,
                 created: gateway.created,
                 updated: gateway.updated,
             }
