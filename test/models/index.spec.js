@@ -33,6 +33,7 @@ describe('Models', function() {
         models.PipelineStep.should.be.a('function')
         models.Plugin.should.be.a('function')
         models.Message.should.be.a('function')
+        models.Tag.should.be.a('function')
 
         models.ACCESS_LEVEL.should.be.an('object')
         models.connection.should.be.a('function')
@@ -218,6 +219,19 @@ describe('Models', function() {
         // create
         const r = await new models.Message({
             topic: 'test',
+        }).save()
+        r.should.be.an('object')
+
+        // remove
+        const d = await r.remove()
+        d.should.be.an('object')
+    })
+
+    it('should create and remove tag', async () => {
+        // create
+        const r = await new models.Tag({
+            name: 'test',
+            constraint: 'application'
         }).save()
         r.should.be.an('object')
 

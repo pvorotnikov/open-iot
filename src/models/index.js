@@ -159,6 +159,13 @@ const messageSchema = new Schema({
     updated: { type: Date, default: Date.now },
 })
 
+const tagSchema = new Schema({
+    name: String,
+    constraint: { type: String, enum: ['no', 'application', 'global'], default: 'no' },
+    created: { type: Date, default: Date.now },
+    updated: { type: Date, default: Date.now },
+})
+
 /* ================================
  * Models
  * ================================
@@ -175,6 +182,7 @@ const Module = mongoose.model('Module', moduleSchema)
 const PipelineStep = mongoose.model('PipelineStep', pipelineStepSchema)
 const Plugin = mongoose.model('Plugin', pluginSchema)
 const Message = mongoose.model('Message', messageSchema)
+const Tag = mongoose.model('Tag', tagSchema)
 
 /* ================================
  * Database
@@ -215,4 +223,5 @@ module.exports = {
     PipelineStep,
     Plugin,
     Message,
+    Tag,
 }

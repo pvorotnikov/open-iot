@@ -1,8 +1,9 @@
 const express = require('express')
 const validator = require('validator')
+const Promise = require('bluebird')
 const _ = require('lodash')
 const { logger, responses, auth } = require('./lib')
-const { ACCESS_LEVEL, Gateway, Application } = require('./models')
+const { ACCESS_LEVEL, Gateway, Application, Tag } = require('./models')
 const { SuccessResponse, ErrorResponse, HTTPError } = responses
 
 module.exports = function(app) {
@@ -95,6 +96,10 @@ module.exports = function(app) {
 
             let gwTags = {}
             if (tags && _.isObject(tags)) {
+                let tagNames = Object.keys(tags)
+                await Promise.all(tagNames.map(
+                    tagName => allowTag(tagName, tags[tagName], application)
+                ))
                 gwTags = tags
             }
 
@@ -147,6 +152,11 @@ module.exports = function(app) {
             }
 
             if (tags && _.isObject(tags)) {
+                let gw = await Gateway.findById(req.params.id)
+                let tagNames = Object.keys(tags)
+                await Promise.all(tagNames.map(
+                    tagName => allowTag(tagName, tags[tagName], gw.application)
+                ))
                 updateDefintion.tags = tags
             }
 
@@ -180,5 +190,23 @@ module.exports = function(app) {
             res.status(err.status || 500).json(new ErrorResponse(err.message))
         }
     })
+
+    async function allowTag(tagName, tagValue, application) {
+        let tagDefinition = await Tag.findOne({ name: tagName })
+        if (tagDefinition) {
+            let gw = null
+            if (tagDefinition.constraint === 'application') {
+                gw = await Gateway.find()
+                .where('application').eq(application)
+                .where(`tags.${tagName}`).eq(tagValue)
+            } else if (tagDefinition.constraint === 'global') {
+                gw = await Gateway.find()
+                .where(`tags.${tagName}`).eq(tagValue)
+            }
+            if (!_.isEmpty(gw)) {
+                throw new HTTPError(`Tag ${tagName} is constrained: ${tagDefinition.constraint}`, 400)
+            }
+        }
+    }
 
 }

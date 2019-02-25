@@ -12,7 +12,7 @@ const rewire = require('rewire')
 const { cleanDb, expressApp, objectId, } = require('./_utils')
 
 const { utils } = require('../src/lib')
-const { User, Gateway, Application, ACCESS_LEVEL } = require('../src/models')
+const { User, Gateway, Application, Tag, ACCESS_LEVEL } = require('../src/models')
 const gateways = rewire('../src/gateways')
 
 describe('Gateways', function() {
@@ -30,9 +30,9 @@ describe('Gateways', function() {
         adminAuthorization = 'Basic ' + Buffer.from(admin.key + ':' + admin.secret).toString('base64')
     }
 
-    function fakeGateway() {
+    function fakeGateway(gw={}) {
         return {
-            id: 'gwid',
+            id: objectId(),
             name: 'gwname',
             description: 'gwdescription',
             alias: 'gwalias',
@@ -40,13 +40,25 @@ describe('Gateways', function() {
             created: moment().toISOString(),
             updated: moment().toISOString(),
             application: {
-                id: 'appid',
+                id: objectId(),
                 name: 'appname',
                 alias: 'appalias',
                 created: moment().toISOString(),
                 updated: moment().toISOString(),
             },
             remove: sinon.stub().resolves(),
+            ...gw,
+        }
+    }
+
+    function fakeTag(tag={}) {
+        return {
+            id: objectId(),
+            name: 'tag',
+            constrained: 'no',
+            created: moment().toISOString(),
+            updated: moment().toISOString(),
+            ...tag,
         }
     }
 
@@ -122,7 +134,7 @@ describe('Gateways', function() {
             // create stubs
             let gatewayStub = sinon.stub(Gateway, 'findById').returns({
                 where: sinon.stub().returnsThis(),
-                eq: sinon.stub().resolves(fakeGateway()),
+                eq: sinon.stub().resolves(fakeGateway({id: 'gwid'})),
             })
 
             const res = await request(app)
@@ -229,6 +241,109 @@ describe('Gateways', function() {
             res.body.data.should.be.an('object')
         })
 
+        it('should create a gateway - application no constrained tag', async () => {
+
+            // create stubs
+            let applicationId = objectId().toString()
+            let applicationStub = sinon.stub(Application, 'findById').returns({
+                where: sinon.stub().returnsThis(),
+                eq: sinon.stub().resolves({_id: applicationId }),
+            })
+            let tagStub = sinon.stub(Tag, 'findOne').resolves(fakeTag({
+                constraint: 'no'
+            }))
+
+            const res = await request(app)
+            .post('/api/gateways')
+            .set('Authorization', userAuthorization)
+            .send({
+                application: applicationId,
+                name: 'gateway',
+                description: 'gateway',
+                tags: { tag: 'value' },
+            })
+
+            // restore stubs
+            tagStub.restore()
+            applicationStub.restore()
+
+            res.status.should.equal(200)
+        })
+
+        it('should not create a gateway - application constrained tag', async () => {
+
+            // create stubs
+            let applicationId = objectId().toString()
+            let applicationStub = sinon.stub(Application, 'findById').returns({
+                where: sinon.stub().returnsThis(),
+                eq: sinon.stub().resolves({_id: applicationId }),
+            })
+            let tagStub = sinon.stub(Tag, 'findOne').resolves(fakeTag({
+                constraint: 'application'
+            }))
+            const gatewayMock = sinon.mock(Gateway)
+            gatewayMock.expects('find')
+            .chain('where').withArgs('application')
+            .chain('eq').withArgs(applicationId)
+            .chain('where').withArgs('tags.tag')
+            .chain('eq').withArgs('value')
+            .resolves([ fakeGateway() ])
+
+            const res = await request(app)
+            .post('/api/gateways')
+            .set('Authorization', userAuthorization)
+            .send({
+                application: applicationId,
+                name: 'gateway',
+                description: 'gateway',
+                tags: { tag: 'value' },
+            })
+
+            // restore stubs
+            gatewayMock.restore()
+            tagStub.restore()
+            applicationStub.restore()
+
+            gatewayMock.verify()
+            res.status.should.equal(400)
+        })
+
+        it('should not create a gateway - globally constrained tag', async () => {
+
+            // create stubs
+            let applicationId = objectId().toString()
+            let applicationStub = sinon.stub(Application, 'findById').returns({
+                where: sinon.stub().returnsThis(),
+                eq: sinon.stub().resolves({_id: applicationId }),
+            })
+            let tagStub = sinon.stub(Tag, 'findOne').resolves(fakeTag({
+                constraint: 'global'
+            }))
+            const gatewayMock = sinon.mock(Gateway)
+            gatewayMock.expects('find')
+            .chain('where').withArgs('tags.tag')
+            .chain('eq').withArgs('value')
+            .resolves([ fakeGateway() ])
+
+            const res = await request(app)
+            .post('/api/gateways')
+            .set('Authorization', userAuthorization)
+            .send({
+                application: applicationId,
+                name: 'gateway',
+                description: 'gateway',
+                tags: { tag: 'value' },
+            })
+
+            // restore stubs
+            gatewayMock.restore()
+            tagStub.restore()
+            applicationStub.restore()
+
+            gatewayMock.verify()
+            res.status.should.equal(400)
+        })
+
         it('should not create a gateway - DB error', async () => {
 
             // create stubs
@@ -311,13 +426,15 @@ describe('Gateways', function() {
         it('should update a gateway', async () => {
 
             // create stubs
-            let gatewayStub = sinon.stub(Gateway, 'findByIdAndUpdate').returns({
+            let gw = fakeGateway()
+            let gatewayUpdateStub = sinon.stub(Gateway, 'findByIdAndUpdate').returns({
                 where: sinon.stub().returnsThis(),
-                eq: sinon.stub().resolves(fakeGateway()),
+                eq: sinon.stub().resolves(gw),
             })
+            let gatewayFindStub = sinon.stub(Gateway, 'findById').resolves(gw)
 
             const res = await request(app)
-            .put('/api/gateways/123')
+            .put(`/api/gateways/${gw.id}`)
             .set('Authorization', userAuthorization)
             .send({
                 name: 'gateway',
@@ -327,7 +444,8 @@ describe('Gateways', function() {
             })
 
             // restore stubs
-            gatewayStub.restore()
+            gatewayUpdateStub.restore()
+            gatewayFindStub.restore()
 
             res.status.should.equal(200)
         })
