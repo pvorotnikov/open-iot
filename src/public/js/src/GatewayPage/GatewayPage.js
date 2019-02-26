@@ -1,8 +1,11 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
+import _ from 'lodash'
+import hat from 'hat'
+import reactCSS from 'reactcss'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
-import { Header, Container, Segment, Icon, Button, Form, Dimmer, Loader } from 'semantic-ui-react'
+import { Header, Container, Segment, Icon, Form, Label, Loader, Button } from 'semantic-ui-react'
 
 import { EditableText, ConfirmModal } from '../_components'
 import { gatewayActions } from '../_actions'
@@ -11,12 +14,8 @@ class GatewayPage extends PureComponent {
 
     constructor(props) {
         super(props)
-
         this.state = {
-            values: {
-                name: '',
-                description: ''
-            }
+            tags: [['', '']]
         }
     }
 
@@ -24,21 +23,43 @@ class GatewayPage extends PureComponent {
         this.props.dispatch(gatewayActions.getSingle(this.props.match.params.gw))
     }
 
-    onChange(e, data) {
-        let { name, value } = data
-        value = value.trim()
-        this.setState({ values: {
-            ...this.state.values,
-            [name]: value
-        }})
+    componentWillReceiveProps(newProps) {
+        if (!_.isEqual(this.props.gateway, newProps.gateway) && newProps.gateway.tags) {
+            let tags = newProps.gateway.tags
+            let tagEntries = Object.keys(tags).map(tagName => [tagName, tags[tagName]])
+            tagEntries.push(['', ''])
+            this.setState({ tags: tagEntries })
+        }
     }
 
-    onSubmit(e) {
-        const { name, description } = this.state.values
-        const application = this.props.match.params.id
-        if (name && description) {
-            this.props.dispatch(gatewayActions.create({ application, name, description }, this.props.history))
+    onSubmit() {
+        const { gateway } = this.props
+        let tags = {}
+        this.state.tags.filter(t => {
+            let [name, value] = t
+            return (!_.isEmpty(name) && !_.isEmpty(value))
+        }).forEach(t => {
+            let [name, value] = t
+            tags[name] = value
+        })
+        this.props.dispatch(gatewayActions.update(gateway.id, {tags}))
+    }
+
+    onChange(e, data) {
+        let { name, value } = data
+        let [fieldName, index] = name.split('-')
+        index = parseInt(index)
+        let newTags = this.state.tags.map((t, i) => {
+            return i !== index
+                ? t
+                : 'name' === fieldName
+                    ? [value.toLowerCase().replace(/\s/g, ''), t[1]]
+                    : [t[0], value]
+        })
+        if (index === this.state.tags.length - 1) {
+            newTags.push(['', ''])
         }
+        this.setState({ tags: newTags })
     }
 
     onEditableTextUpdate(name, value) {
@@ -48,6 +69,14 @@ class GatewayPage extends PureComponent {
             [name]: trimmedValue,
         }
         this.props.dispatch(gatewayActions.update(gateway.id, updatedGateway))
+    }
+
+    onTagDelete(index) {
+        let newTags = this.state.tags.filter((t, i) => i !== index)
+        if (!newTags.length) {
+            newTags.push(['', ''])
+        }
+        this.setState({ tags: newTags })
     }
 
     renderHeader() {
@@ -70,12 +99,52 @@ class GatewayPage extends PureComponent {
         )
     }
 
+    renderTags() {
+        const { gateway, loading, history } = this.props
+        const { tags } = this.state
+        const styles = reactCSS({
+            default: {
+                form: {
+                    marginTop: 10,
+                },
+                delete: {
+                    verticalAlign: 'middle'
+                },
+            }
+        })
+
+        const tagFields = tags.map((tag, index) => {
+            const [tagName, tagValue] = tag
+            return (
+                <Form.Group key={index}>
+                    <Form.Input name={`name-${index}`} placeholder='tag-name' value={tagName} onChange={this.onChange.bind(this)} />
+                    <Form.Input name={`value-${index}`} placeholder='tag-value' value={tagValue} onChange={this.onChange.bind(this)} />
+                    <Icon style={styles.delete} link name='delete' color='red' onClick={() => this.onTagDelete(index)} />
+                </Form.Group>
+            )
+        })
+
+        return (
+            <Segment raised loading={loading}>
+                <Label color='blue' ribbon>Tags</Label>
+                <Form style={styles.form} onSubmit={this.onSubmit.bind(this)}>
+                    { tagFields }
+                    <Form.Group>
+                        <Form.Button circular icon='save' color='green' />
+                        <Button circular floated='right' icon='chevron left' color='orange' onClick={ e => history.goBack() } />
+                    </Form.Group>
+                </Form>
+            </Segment>
+        )
+    }
+
     render() {
         const { history, gateway } = this.props
 
         return (
             <Container>
                 { this.renderHeader() }
+                { this.renderTags() }
             </Container>
         )
     }
