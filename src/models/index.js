@@ -160,7 +160,7 @@ const messageSchema = new Schema({
 })
 
 const tagSchema = new Schema({
-    name: String,
+    name: { type: String, unique : true },
     constraint: { type: String, enum: ['no', 'application', 'global'], default: 'no' },
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now },
