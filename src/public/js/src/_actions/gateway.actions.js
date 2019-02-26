@@ -6,6 +6,7 @@ import { alertActions } from './'
 export const gatewayActions = {
     clear,
     getAll,
+    getSingle,
     create,
     update,
     delete: _delete,
@@ -38,6 +39,31 @@ function getAll(id) {
     function request() { return { type: gatewayConstants.GETALL_REQUEST } }
     function success(gateways) { return { type: gatewayConstants.GETALL_SUCCESS, gateways } }
     function failure(error) { return { type: gatewayConstants.GETALL_FAILURE, error } }
+}
+
+/**
+ * Get single gateway by id
+ * @param {String} id gateway id
+ * @return {Function}
+ */
+function getSingle(id) {
+    return dispatch => {
+        dispatch(request())
+
+        // perform async operation
+        gatewayService.getById(id)
+        .then(gateway => {
+            dispatch(success(gateway))
+        })
+        .catch(error => {
+            dispatch(failure(error))
+            dispatch(alertActions.error(error))
+        })
+    }
+
+    function request() { return { type: gatewayConstants.GET_SINGLE_REQUEST } }
+    function success(gateway) { return { type: gatewayConstants.GET_SINGLE_SUCCESS, gateway } }
+    function failure(error) { return { type: gatewayConstants.GET_SINGLE_FAILURE, error } }
 }
 
 /**

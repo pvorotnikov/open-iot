@@ -11,12 +11,12 @@ import { gatewayConstants } from '../_constants'
  * @param  {Object} action reducer action
  * @return {Object}        new state
  */
-export function gateways(state = {items: [], loading: false}, action) {
+export function gateways(state = {items: [], gateway: {}, loading: false}, action) {
 
     switch (action.type) {
 
         case gatewayConstants.CLEAR:
-            return { items: [], loading: false, }
+            return { ...state, items: [], gateway: {}, loading: false, }
             break
 
         case gatewayConstants.CREATE_REQUEST:
@@ -32,15 +32,27 @@ export function gateways(state = {items: [], loading: false}, action) {
             break
 
         case gatewayConstants.GETALL_REQUEST:
-            return { items: [], loading: true, }
+            return { ...state, items: [], loading: true, }
             break
 
         case gatewayConstants.GETALL_SUCCESS:
-            return { items: action.gateways, loading: false, }
+            return { ...state, items: action.gateways, loading: false, }
             break
 
         case gatewayConstants.GETALL_FAILURE:
-            return { items: [], loading: false, }
+            return { ...state, items: [], loading: false, }
+            break
+
+        case gatewayConstants.GET_SINGLE_REQUEST:
+            return { ...state, loading: true, }
+            break
+
+        case gatewayConstants.GET_SINGLE_SUCCESS:
+            return { ...state, gateway: action.gateway, loading: false }
+            break
+
+        case gatewayConstants.GET_SINGLE_FAILURE:
+            return { ...state, error: action.error }
             break
 
         case gatewayConstants.UPDATE_REQUEST:
@@ -55,6 +67,7 @@ export function gateways(state = {items: [], loading: false}, action) {
                         ? { ...gateway, ...action.gateway }
                         : gateway
                 ),
+                gateway: { ...state.gateway, ...action.gateway },
                 loading: false,
             }
             break

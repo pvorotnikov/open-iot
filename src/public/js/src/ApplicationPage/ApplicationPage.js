@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+import reactCSS from 'reactcss'
 import { withRouter } from 'react-router'
+import { Link } from 'react-router-dom'
 import { connect } from 'react-redux'
 import { Rules } from './'
 
@@ -191,12 +193,26 @@ class ApplicationPage extends Component {
 
     renderGatewaysCards() {
         const { gateways } = this.props
+        const appId = this.props.app.id
+        const styles = reactCSS({
+            default: {
+                delete: {
+                    position: 'absolute',
+                    top: 5,
+                    right: 0,
+                },
+            }
+        })
+
         const cards = gateways.items.map(gateway => (
             <Card key={gateway.id}>
                 <Dimmer active={gateway.deleting} inverted>
                     <Loader inverted />
                 </Dimmer>
                 <Card.Content>
+                    <ConfirmModal title='Are you sure you want to delete this gateway?'
+                        trigger={<Icon style={styles.delete} link circular name='delete' color='red' />}
+                        onConfirm={() => this.handleDeleteGateway(gateway.id)} />
                     <Card.Header>
                         <EditableText text={gateway.name} onUpdate={(value) => this.onGatewayPropertyUpdate(gateway.id, 'name', value)} />
                     </Card.Header>
@@ -219,9 +235,7 @@ class ApplicationPage extends Component {
                     </Label>
                 </Card.Content>
                 <Card.Content extra>
-                    <ConfirmModal title='Are you sure you want to delete this gateway?'
-                            trigger={<Button circular icon='delete' label='Delete' color='red' />}
-                            onConfirm={() => this.handleDeleteGateway(gateway.id)} />
+                    <Button as={Link} to={`/apps/i/${appId}/g/${gateway.id}`} circular icon='edit' label='Modify' color='green' />
                 </Card.Content>
             </Card>
         ))

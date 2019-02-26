@@ -3,6 +3,7 @@ import { Request } from '../_helpers'
 
 export const gatewayService = {
     getAll,
+    getById,
     create,
     update,
     delete: _delete,
@@ -17,6 +18,18 @@ function getAll(id) {
         method: 'GET',
     }
     return new Request().send('/api/apps/' + id + '/gateways', requestOptions)
+}
+
+/**
+ * Get a single gateway by id
+ * @param  {String} id gateway id
+ * @return {Promise} response promise
+ */
+function getById(id) {
+    const requestOptions = {
+        method: 'GET',
+    }
+    return new Request().send('/api/gateways/' + id, requestOptions)
 }
 
 /**
