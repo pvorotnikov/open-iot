@@ -6,7 +6,7 @@ const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
 const sinon = require('sinon')
 
-const { User, Application, Gateway, Device, Token, Rule, Setting, Module, Integration, PipelineStep, Plugin, } = require('../src/models')
+const { User, Application, Gateway, Device, Token, Rule, Setting, Module, Integration, PipelineStep, Plugin, Tag, } = require('../src/models')
 const { logger } = require('../src/lib')
 
 function cleanDb() {
@@ -21,7 +21,8 @@ function cleanDb() {
         Module.deleteMany({}),
         Integration.deleteMany({}),
         PipelineStep.deleteMany({}),
-        Plugin.deleteMany({})
+        Plugin.deleteMany({}),
+        Tag.deleteMany({})
     ])
 }
 
@@ -55,6 +56,21 @@ function objectId() {
  */
 function isObjectId(objId) {
     mongoose.Types.ObjectId.isValid(objId)
+}
+
+/**
+ * Create a new protect mock middleware
+ */
+function protectMock() {
+    return (req, res, next) => {
+        req.user = new User({
+            email: 'user@example.com',
+            password: 'abcd',
+            firstName: 'Example',
+            lastName: 'User',
+        })
+        next()
+    }
 }
 
 const Request = (options = {}) => ({
@@ -97,6 +113,7 @@ module.exports = {
     logger,
     objectId,
     isObjectId,
+    protectMock,
     Response,
     Request,
 }

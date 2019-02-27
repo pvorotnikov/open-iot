@@ -52,14 +52,7 @@ describe('Gateways', function() {
     }
 
     function fakeTag(tag={}) {
-        return {
-            id: objectId(),
-            name: 'tag',
-            constrained: 'no',
-            created: moment().toISOString(),
-            updated: moment().toISOString(),
-            ...tag,
-        }
+        return new Tag({ name: 'tag', constraint: 'no', ...tag })
     }
 
     before(async () => {

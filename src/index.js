@@ -20,6 +20,7 @@ const modules = require('./modules')
 const integrations = require('./integrations')
 const plugins = require('./plugins')
 const persistency = require('./persistency')
+const tags = require('./tags')
 const MessageHandler = require('./message-handler')
 const { AwsIotBridge } = require('./bridge')
 
@@ -82,6 +83,7 @@ modules(app)
 integrations(app)
 plugins(app)
 persistency(app)
+tags(app)
 
 // catch 404 and forward it to error handler
 app.use((req, res, next) => {
