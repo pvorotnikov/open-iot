@@ -1,4 +1,5 @@
 const fs = require('fs')
+const mv = require('mv')
 const hat = require('hat')
 const util = require('util')
 const path = require('path')
@@ -10,6 +11,7 @@ const fsRename = util.promisify(fs.rename)
 const writeFile = util.promisify(fs.writeFile)
 const readdir = util.promisify(fs.readdir)
 const fsRmdir = util.promisify(fs.rmdir)
+const mvPromise = util.promisify(mv)
 
 function generatePassword(password) {
     const saltRounds = 10;
@@ -41,6 +43,10 @@ async function unlinkDirectory(dir) {
     await fsRmdir(dir)
 }
 
+async function move(source, destination) {
+    await mvPromise(source, destination, {mkdirp: true})
+}
+
 module.exports = {
     generatePassword,
     generateAccessKey,
@@ -48,6 +54,7 @@ module.exports = {
     fileExists,
     writeFile,
     readdir,
+    move,
     renameFile: fsRename,
     unlinkFile: fsUnlink,
     unlinkDir: unlinkDirectory,

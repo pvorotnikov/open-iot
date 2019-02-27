@@ -74,7 +74,7 @@ module.exports = function(app) {
             }
 
             // install plugin
-            await utils.renameFile(path.join(TEMP_DIR, pluginTempName), path.join(MODULES_DIR, name))
+            await utils.move(path.join(TEMP_DIR, pluginTempName), path.join(MODULES_DIR, name))
 
             const plugin = await new Plugin({
                 name: name,

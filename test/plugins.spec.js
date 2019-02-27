@@ -97,7 +97,7 @@ describe('Plugins', function() {
         it('should create a plugins without previous module', async () => {
 
             // stub fs operations
-            const renameFileStub = sinon.stub(utils, 'renameFile').resolves()
+            const moveStub = sinon.stub(utils, 'move').resolves()
             const unlinkDirStub = sinon.stub(utils, 'unlinkDir').resolves()
             const fileExistsStub = sinon.stub(utils, 'fileExists')
             fileExistsStub.onCall(0).returns(true)
@@ -111,11 +111,11 @@ describe('Plugins', function() {
             .send(fs.readFileSync(`${__dirname}/data/com.example.plugin1-v1.0.0.zip`))
 
             // restore stub
-            renameFileStub.restore()
+            moveStub.restore()
             fileExistsStub.restore()
             unlinkDirStub.restore()
 
-            renameFileStub.should.have.been.called
+            moveStub.should.have.been.called
             fileExistsStub.should.have.been.called
             unlinkDirStub.should.not.have.been.called
 
@@ -131,7 +131,7 @@ describe('Plugins', function() {
         it('should create a plugins with previous module', async () => {
 
             // stub fs operations
-            const renameFileStub = sinon.stub(utils, 'renameFile').resolves()
+            const moveStub = sinon.stub(utils, 'move').resolves()
             const unlinkDirStub = sinon.stub(utils, 'unlinkDir').resolves()
             const fileExistsStub = sinon.stub(utils, 'fileExists')
             fileExistsStub.onCall(0).returns(true)
@@ -145,11 +145,11 @@ describe('Plugins', function() {
             .send(fs.readFileSync(`${__dirname}/data/com.example.plugin1-v1.0.0.zip`))
 
             // restore stub
-            renameFileStub.restore()
+            moveStub.restore()
             fileExistsStub.restore()
             unlinkDirStub.restore()
 
-            renameFileStub.should.have.been.called
+            moveStub.should.have.been.called
             fileExistsStub.should.have.been.called
             unlinkDirStub.should.have.been.called
 
