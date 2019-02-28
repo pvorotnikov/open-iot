@@ -280,6 +280,8 @@ describe('Gateways', function() {
             .chain('eq').withArgs(applicationId)
             .chain('where').withArgs('tags.tag')
             .chain('eq').withArgs('value')
+            .chain('where').withArgs('id')
+            .chain('ne').withArgs(null)
             .resolves([ fakeGateway() ])
 
             const res = await request(app)
@@ -316,6 +318,8 @@ describe('Gateways', function() {
             gatewayMock.expects('find')
             .chain('where').withArgs('tags.tag')
             .chain('eq').withArgs('value')
+            .chain('where').withArgs('id')
+            .chain('ne').withArgs(null)
             .resolves([ fakeGateway() ])
 
             const res = await request(app)

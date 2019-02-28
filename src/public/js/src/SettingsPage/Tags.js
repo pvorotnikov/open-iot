@@ -25,12 +25,10 @@ class Tags extends PureComponent {
         this.props.dispatch(tagActions.getAll())
     }
 
-
-
     onTagChange(id, data) {
         const { name, value } = data
         let updatedTag = name === 'name'
-            ? { ...this.state.values[id], name: value }
+            ? { ...this.state.values[id], name: this.sanitizeTagName(value) }
             : { ...this.state.values[id], constraint: value }
         this.setState({ values: { ...this.state.values, [id]: updatedTag }})
     }
@@ -44,9 +42,6 @@ class Tags extends PureComponent {
         this.props.dispatch(tagActions.update(id, updatedTag))
     }
 
-
-
-
     onNewTagAdd() {
         this.setState({ newTags: [...this.state.newTags, {name: '', constraint: 'no'}] })
     }
@@ -57,7 +52,7 @@ class Tags extends PureComponent {
             newTags: this.state.newTags.map((t, i) => {
                 if (i === index) {
                     return name === 'name'
-                        ? { ...t, name: value, }
+                        ? { ...t, name: this.sanitizeTagName(value), }
                         : { ...t, constraint: value }
                 } else {
                     return t
@@ -76,14 +71,16 @@ class Tags extends PureComponent {
         this.props.dispatch(tagActions.create({ name, constraint }))
     }
 
-
-
     availableConstraints() {
         return [
             { value: 'no', text: 'None' },
             { value: 'application', text: 'Application' },
             { value: 'global', text: 'Global' },
         ]
+    }
+
+    sanitizeTagName(name) {
+        return name.toLowerCase().replace(/\s/g, '')
     }
 
     renderTags() {

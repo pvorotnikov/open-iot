@@ -155,7 +155,7 @@ module.exports = function(app) {
                 let gw = await Gateway.findById(req.params.id)
                 let tagNames = Object.keys(tags)
                 await Promise.all(tagNames.map(
-                    tagName => allowTag(tagName, tags[tagName], gw.application)
+                    tagName => allowTag(tagName, tags[tagName], gw.application, req.params.id)
                 ))
                 updateDefintion.tags = tags
             }
@@ -191,7 +191,7 @@ module.exports = function(app) {
         }
     })
 
-    async function allowTag(tagName, tagValue, application) {
+    async function allowTag(tagName, tagValue, application, gateway=null) {
         let tagDefinition = await Tag.findOne({ name: tagName })
         if (tagDefinition) {
             let gw = null
@@ -199,9 +199,11 @@ module.exports = function(app) {
                 gw = await Gateway.find()
                 .where('application').eq(application)
                 .where(`tags.${tagName}`).eq(tagValue)
+                .where('id').ne(gateway)
             } else if (tagDefinition.constraint === 'global') {
                 gw = await Gateway.find()
                 .where(`tags.${tagName}`).eq(tagValue)
+                .where('id').ne(gateway)
             }
             if (!_.isEmpty(gw)) {
                 throw new HTTPError(`Tag ${tagName} is constrained: ${tagDefinition.constraint}`, 400)
