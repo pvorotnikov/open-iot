@@ -5,8 +5,10 @@ import moment from 'moment'
 
 import { Header, Container, Icon, Loader, Table, Checkbox, TextArea, Dropdown } from 'semantic-ui-react'
 
+import { Tags } from './'
 import { EditableText } from '../_components'
 import { settingActions, moduleActions } from '../_actions'
+
 
 class SettingsPage extends Component {
 
@@ -151,20 +153,17 @@ class SettingsPage extends Component {
         }
 
         return (
-            <div>
-                <Header as='h2'>Modules</Header>
-                <Table celled columns='2'>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell>Module</Table.HeaderCell>
-                            <Table.HeaderCell>Enable/Disable</Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        { moduleItems }
-                    </Table.Body>
-                </Table>
-            </div>
+            <Table celled columns='2'>
+                <Table.Header>
+                    <Table.Row>
+                        <Table.HeaderCell>Module</Table.HeaderCell>
+                        <Table.HeaderCell>Enable/Disable</Table.HeaderCell>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                    { moduleItems }
+                </Table.Body>
+            </Table>
         )
     }
 
@@ -173,12 +172,18 @@ class SettingsPage extends Component {
 
         return (
             <Container>
+
                 <Header as='h1'>
                     <Icon name='settings' circular />
                     <Header.Content>Service Settings <Loader active={settings.loading} inline size='small' /></Header.Content>
                 </Header>
                 { settings.items && this.renderSettings() }
+
+                <Header as='h2'>Modules</Header>
                 { this.renderModules() }
+
+                <Header as='h2'>Tags</Header>
+                <Tags />
             </Container>
         )
     }
