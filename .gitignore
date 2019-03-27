@@ -60,6 +60,9 @@ typings/
 # dotenv environment variables file
 .env
 
+# Visual studio code
+.vscode
+
 # Built public/js/dist files
 src/public/js/dist
 src/public/css

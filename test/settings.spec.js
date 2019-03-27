@@ -37,8 +37,8 @@ describe('Settings', function() {
             ])
             .then(users => {
                 const [user, admin] = users
-                userAuthorization = 'Basic ' + new Buffer(user.key + ':' + user.secret).toString('base64')
-                adminAuthorization = 'Basic ' + new Buffer(admin.key + ':' + admin.secret).toString('base64')
+                userAuthorization = 'Basic ' + Buffer.from(user.key + ':' + user.secret).toString('base64')
+                adminAuthorization = 'Basic ' + Buffer.from(admin.key + ':' + admin.secret).toString('base64')
                 fulfill()
             })
             .catch(err => reject(err))

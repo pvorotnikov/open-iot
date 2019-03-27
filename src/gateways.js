@@ -4,7 +4,7 @@ const Promise = require('bluebird')
 const _ = require('lodash')
 const { logger, responses, auth } = require('./lib')
 const { ACCESS_LEVEL, Gateway, Application, Tag } = require('./models')
-const { SuccessResponse, ErrorResponse, HTTPError } = responses
+const { SuccessResponse, ErrorResponse, HTTPError, ERROR_CODES, } = responses
 
 module.exports = function(app) {
 
@@ -36,7 +36,7 @@ module.exports = function(app) {
             res.json(new SuccessResponse(data))
 
         } catch (err) {
-            res.status(err.status || 500).json(new ErrorResponse(err.message))
+            res.status(err.status || 500).json(new ErrorResponse(err.message, err.code))
         }
     })
 
@@ -63,7 +63,7 @@ module.exports = function(app) {
             res.json(new SuccessResponse(data))
 
         } catch (err) {
-            res.status(err.status || 500).json(new ErrorResponse(err.message))
+            res.status(err.status || 500).json(new ErrorResponse(err.message, err.code))
         }
     })
 
@@ -126,7 +126,7 @@ module.exports = function(app) {
             res.json(new SuccessResponse(data))
 
         } catch (err) {
-            res.status(err.status || 500).json(new ErrorResponse(err.message))
+            res.status(err.status || 500).json(new ErrorResponse(err.message, err.code))
         }
     })
 
@@ -166,7 +166,7 @@ module.exports = function(app) {
             res.json(new SuccessResponse())
 
         } catch (err) {
-            res.status(err.status || 500).json(new ErrorResponse(err.message))
+            res.status(err.status || 500).json(new ErrorResponse(err.message, err.code))
         }
     })
 
@@ -187,7 +187,7 @@ module.exports = function(app) {
             res.json(new SuccessResponse())
 
         } catch (err) {
-            res.status(err.status || 500).json(new ErrorResponse(err.message))
+            res.status(err.status || 500).json(new ErrorResponse(err.message, err.code))
         }
     })
 
@@ -206,7 +206,7 @@ module.exports = function(app) {
                 .where('id').ne(gateway)
             }
             if (!_.isEmpty(gw)) {
-                throw new HTTPError(`Tag ${tagName} is constrained: ${tagDefinition.constraint}`, 400)
+                throw new HTTPError(`Tag ${tagName} is constrained: ${tagDefinition.constraint}`, 400, ERROR_CODES.CONSTRAINED_TAG)
             }
         }
     }

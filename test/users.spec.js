@@ -28,7 +28,7 @@ describe('Users', function() {
                 password: utils.generatePassword('test'),
             }).save()
             .then(user => {
-                userAuthorization = 'Basic ' + new Buffer(user.key + ':' + user.secret).toString('base64')
+                userAuthorization = 'Basic ' + Buffer.from(user.key + ':' + user.secret).toString('base64')
                 currentUser = user
                 fulfill(user)
             })
@@ -46,7 +46,7 @@ describe('Users', function() {
                 accessLevel: ACCESS_LEVEL.MANAGER,
             }).save()
             .then(user => {
-                managerAuthorization = 'Basic ' + new Buffer(user.key + ':' + user.secret).toString('base64')
+                managerAuthorization = 'Basic ' + Buffer.from(user.key + ':' + user.secret).toString('base64')
                 currentManager = user
                 fulfill(user)
             })

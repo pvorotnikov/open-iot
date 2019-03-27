@@ -40,7 +40,7 @@ module.exports = function(app) {
             res.json(new SuccessResponse(data))
 
         } catch (err) {
-            res.status(err.status || 500).json(new ErrorResponse(err.message))
+            res.status(err.status || 500).json(new ErrorResponse(err.message, err.code))
         }
 
     })
@@ -120,7 +120,7 @@ module.exports = function(app) {
             res.json(new SuccessResponse(data))
 
         } catch (err) {
-            res.status(err.status || 500).json(new ErrorResponse(err.message))
+            res.status(err.status || 500).json(new ErrorResponse(err.message, err.code))
         }
 
     })

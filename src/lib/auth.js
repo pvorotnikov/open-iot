@@ -137,7 +137,7 @@ module.exports = {
                 }
 
             } catch (err) {
-                return res.status(err.status || 500).json(new ErrorResponse(err.message))
+                return res.status(err.status || 500).json(new ErrorResponse(err.message, err.code))
             }
         }
     },
@@ -184,7 +184,7 @@ module.exports = {
                 return next()
 
             } catch(err) {
-                return res.status(err.status || 500).json(new ErrorResponse(err.message))
+                return res.status(err.status || 500).json(new ErrorResponse(err.message, err.code))
             }
         }
     }

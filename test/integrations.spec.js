@@ -30,7 +30,7 @@ describe('Integrations', function() {
                 accessLevel: ACCESS_LEVEL.MANAGER,
             }).save()
             .then(user => {
-                managerAuthorization = 'Basic ' + new Buffer(user.key + ':' + user.secret).toString('base64')
+                managerAuthorization = 'Basic ' + Buffer.from(user.key + ':' + user.secret).toString('base64')
                 fulfill(user)
             })
             .catch(err => reject(err))

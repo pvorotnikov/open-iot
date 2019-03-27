@@ -301,6 +301,7 @@ describe('Gateways', function() {
 
             gatewayMock.verify()
             res.status.should.equal(400)
+            res.body.errorCode.should.equal('CONSTRAINED_TAG')
         })
 
         it('should not create a gateway - globally constrained tag', async () => {
@@ -339,6 +340,7 @@ describe('Gateways', function() {
 
             gatewayMock.verify()
             res.status.should.equal(400)
+            res.body.errorCode.should.equal('CONSTRAINED_TAG')
         })
 
         it('should not create a gateway - DB error', async () => {
