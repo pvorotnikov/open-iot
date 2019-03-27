@@ -1,19 +1,14 @@
-const _ = require('lodash')
-const nconf = require('nconf')
-const Promise = require('bluebird')
 const chai = require('chai')
 const request = require('supertest')
 const sinon = require('sinon')
 const should = chai.should()
-const expect = chai.expect
 const moment = require('moment')
-const rewire = require('rewire')
 
 const { cleanDb, expressApp, objectId, } = require('./_utils')
 
-const { utils } = require('../src/lib')
+const { utils, responses } = require('../src/lib')
 const { User, Gateway, Application, Tag, ACCESS_LEVEL } = require('../src/models')
-const gateways = rewire('../src/gateways')
+const gateways = require('../src/gateways')
 
 describe('Gateways', function() {
 
@@ -158,6 +153,7 @@ describe('Gateways', function() {
             gatewayStub.restore()
 
             res.status.should.equal(400)
+            res.body.errorCode.should.equal(responses.ERROR_CODES.NOT_FOUND)
         })
 
         it('should not get a gateway - DB Error', async () => {
@@ -301,7 +297,7 @@ describe('Gateways', function() {
 
             gatewayMock.verify()
             res.status.should.equal(400)
-            res.body.errorCode.should.equal('CONSTRAINED_TAG')
+            res.body.errorCode.should.equal(responses.ERROR_CODES.CONSTRAINED_TAG)
         })
 
         it('should not create a gateway - globally constrained tag', async () => {
@@ -340,7 +336,7 @@ describe('Gateways', function() {
 
             gatewayMock.verify()
             res.status.should.equal(400)
-            res.body.errorCode.should.equal('CONSTRAINED_TAG')
+            res.body.errorCode.should.equal(responses.ERROR_CODES.CONSTRAINED_TAG)
         })
 
         it('should not create a gateway - DB error', async () => {
@@ -381,6 +377,7 @@ describe('Gateways', function() {
             applicationStub.restore()
 
             res.status.should.equal(400)
+            res.body.errorCode.should.equal(responses.ERROR_CODES.NOT_FOUND)
         })
 
         it('should not create a gateway - empty application', async () => {
@@ -391,6 +388,7 @@ describe('Gateways', function() {
             .send({ application: '', name: 'gateway', description: 'gateway' })
 
             res.status.should.equal(400)
+            res.body.errorCode.should.equal(responses.ERROR_CODES.MISSING_DATA)
         })
 
         it('should  notcreate a gateway - empty name', async () => {
@@ -401,6 +399,7 @@ describe('Gateways', function() {
             .send({ application: objectId(), name: '', description: 'gateway' })
 
             res.status.should.equal(400)
+            res.body.errorCode.should.equal(responses.ERROR_CODES.MISSING_DATA)
         })
 
         it('should not create a gateway - empty description', async () => {
@@ -411,6 +410,7 @@ describe('Gateways', function() {
             .send({ application: objectId(), name: 'gateway', description: '' })
 
             res.status.should.equal(400)
+            res.body.errorCode.should.equal(responses.ERROR_CODES.MISSING_DATA)
         })
 
     })

@@ -48,7 +48,7 @@ module.exports = function(app) {
             const g = await Gateway.findById(req.params.id)
             .where('user').eq(req.user._id)
             if (!g) {
-                throw new HTTPError('Gateway not found', 400)
+                throw new HTTPError('Gateway not found', 400, ERROR_CODES.NOT_FOUND)
             }
 
             const data = {
@@ -75,15 +75,15 @@ module.exports = function(app) {
             const { application, name, description, tags, } = req.body
 
             if (!application || validator.isEmpty(application)) {
-                throw new HTTPError('You need to specify a parent application', 400)
+                throw new HTTPError('You need to specify a parent application', 400, ERROR_CODES.MISSING_DATA)
             }
 
             if (!name || validator.isEmpty(name)) {
-                throw new HTTPError('Please, enter gateway name', 400)
+                throw new HTTPError('Please, enter gateway name', 400, ERROR_CODES.MISSING_DATA)
             }
 
             if (!description || validator.isEmpty(description)) {
-                throw new HTTPError('Please, enter gateway description', 400)
+                throw new HTTPError('Please, enter gateway description', 400, ERROR_CODES.MISSING_DATA)
             }
 
             // check the owner of the application
@@ -91,7 +91,7 @@ module.exports = function(app) {
             .where('user').eq(req.user._id)
 
             if (!app) {
-                throw new HTTPError('This application belongs to somebody else', 400)
+                throw new HTTPError('This application belongs to somebody else', 400, ERROR_CODES.NOT_FOUND)
             }
 
             let gwTags = {}
@@ -179,7 +179,7 @@ module.exports = function(app) {
             .where('user').eq(req.user._id)
 
             if (!gateway) {
-                throw new HTTPError('This gateway belongs to somebody else', 400)
+                throw new HTTPError('This gateway belongs to somebody else', 400, ERROR_CODES.NOT_FOUND)
             }
 
             await gateway.remove()

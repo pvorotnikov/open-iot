@@ -5,7 +5,7 @@ const uuidv4 = require('uuid/v4')
 
 const logger = require('./logger')
 const { ACCESS_LEVEL, Token, User, Application } = require('../models')
-const { SuccessResponse, ErrorResponse, HTTPError, } = require('./responses')
+const { ErrorResponse, HTTPError, ERROR_CODES } = require('./responses')
 
 function storeTokens(u, accessKey, refreshKey) {
     let accessToken = new Token({ user: u._id, type: 'access', value: accessKey, })
@@ -51,7 +51,7 @@ module.exports = {
 
                 // verify header
                 if (!req.headers.authorization) {
-                    throw new HTTPError('No authorization header', 401)
+                    throw new HTTPError('No authorization header', 401, ERROR_CODES.MISSING_DATA)
                 }
 
                 const isBearer = req.headers.authorization.startsWith('Bearer ')
@@ -59,7 +59,7 @@ module.exports = {
 
                 // verify schema
                 if (!isBearer && !isBasic) {
-                    throw new HTTPError('Unsupported authorization schema', 401)
+                    throw new HTTPError('Unsupported authorization schema', 401, ERROR_CODES.INVALID_DATA)
                 }
 
                 let parts = req.headers.authorization.split(' ')
@@ -73,7 +73,7 @@ module.exports = {
                     try {
                         data = await verifyToken(rawToken)
                     } catch (err) {
-                        throw new HTTPError('Invalid token', 403)
+                        throw new HTTPError('Invalid token', 403, ERROR_CODES.INVALID_TOKEN)
                     }
 
                     // retreive token
@@ -83,7 +83,7 @@ module.exports = {
                     .populate('user')
 
                     if (!token) {
-                        throw new HTTPError('Token does not exist', 403)
+                        throw new HTTPError('Token does not exist', 403, ERROR_CODES.INVALID_TOKEN)
                     }
 
                     logger.debug(`Received ${data.type} token on endpoint ${req.method} ${req.originalUrl} for user ${token.user.firstName} ${token.user.lastName}`)
@@ -91,7 +91,7 @@ module.exports = {
                     // check token's access level and required access level
                     if (data.accessLevel < requiredLevel) {
                         logger.warn(`Token with access level ${data.accessLevel} received whereas min lvel ${requiredLevel} is required`)
-                        throw new HTTPError('Insufficient access level', 403)
+                        throw new HTTPError('Insufficient access level', 403, ERROR_CODES.INVALID_TOKEN)
                     }
 
                     // determine token expiration
@@ -99,11 +99,11 @@ module.exports = {
 
                     if ('access' === token.type && diff > nconf.get('ACCESS_TOKEN_EXPIRATION_TIME')) {
                         logger.info(`Time difference: ${diff} seconds for ${token.type} token -> rejecting with 401`)
-                        throw new HTTPError('Access token expired', 401)
+                        throw new HTTPError('Access token expired', 401, ERROR_CODES.EXPIRED_TOKEN)
 
                     } else if  ('refresh' === token.type && diff > nconf.get('REFRESH_TOKEN_EXPIRATION_TIME')) {
                         logger.info(`Time difference: ${diff} seconds for ${token.type} token -> rejecting with 403`)
-                        throw new HTTPError('Refresh token expired', 403)
+                        throw new HTTPError('Refresh token expired', 403, ERROR_CODES.INVALID_TOKEN)
                     }
 
                     // store user model in request
@@ -120,7 +120,7 @@ module.exports = {
                     const user = await User.findOne({ key, secret })
 
                     if (!user) {
-                        throw new HTTPError('Credentials do not exist', 403)
+                        throw new HTTPError('Credentials do not exist', 403, ERROR_CODES.INVALID_TOKEN)
                     }
 
                     logger.debug(`Received basic credentials on endpoint ${req.method} ${req.originalUrl} for user ${user.firstName} ${user.lastName}`)
@@ -149,12 +149,12 @@ module.exports = {
 
                 // verify header
                 if (!req.headers.authorization) {
-                    throw new HTTPError('No authorization header', 401)
+                    throw new HTTPError('No authorization header', 401, ERROR_CODES.MISSING_DATA)
                 }
 
                 // verify schema
                 if (!req.headers.authorization.startsWith('Basic ')) {
-                    throw new HTTPError('Unsupported authorization schema', 401)
+                    throw new HTTPError('Unsupported authorization schema', 401, ERROR_CODES.INVALID_DATA)
                 }
 
                 let parts = req.headers.authorization.split(' ')
@@ -176,7 +176,7 @@ module.exports = {
                 .populate('user')
 
                 if (!application) {
-                    throw new HTTPError('Invalid credentials', 403)
+                    throw new HTTPError('Invalid credentials', 403, ERROR_CODES.INVALID_TOKEN)
                 }
 
                 req.user = application.user
