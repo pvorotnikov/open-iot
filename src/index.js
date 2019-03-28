@@ -72,7 +72,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 passport(app)
 users(app)
-app.use('/api/apps', apps)
+apps(app)
 gateways(app)
 app.use('/api/broker', broker)
 app.use('/api/rules', rules)
