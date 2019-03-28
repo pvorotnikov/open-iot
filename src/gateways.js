@@ -2,9 +2,7 @@ const express = require('express')
 const validator = require('validator')
 const Promise = require('bluebird')
 const _ = require('lodash')
-const qs = require('qs')
-const url = require('url')
-const { responses, auth } = require('./lib')
+const { responses, auth, utils } = require('./lib')
 const { ACCESS_LEVEL, Gateway, Application, Tag } = require('./models')
 const { SuccessResponse, ErrorResponse, HTTPError, ERROR_CODES, } = responses
 
@@ -17,9 +15,16 @@ module.exports = function(app) {
     router.get('/', auth.protect(ACCESS_LEVEL.USER), async (req, res, next) => {
 
         try {
+            let allowedFields = [
+                /tags\..+/g,
+                /name/g,
+                /alias/g,
+                /created/g,
+                /updated/g,
+            ]
 
             let mainQuery = Gateway.find().where('user').eq(req.user._id)
-            mainQuery = applyFilters(req, mainQuery)
+            mainQuery = utils.applyFilters(req, mainQuery, allowedFields)
 
             const gateways = await mainQuery.populate('application')
             const data = gateways.map(g => ({
@@ -212,20 +217,6 @@ module.exports = function(app) {
                 throw new HTTPError(`Tag ${tagName} is constrained: ${tagDefinition.constraint}`, 400, ERROR_CODES.CONSTRAINED_TAG)
             }
         }
-    }
-
-    function applyFilters(req, query, allowedOps=['eq']) {
-        const filters = qs.parse(url.parse(req.url).query)
-        if (Object.keys(filters).length) {
-            for (let field in filters) {
-                for (let op in filters[field]) {
-                    if (allowedOps.includes(op)) {
-                        query = query.where(field)[op](field[op])
-                    }
-                }
-            }
-        }
-        return query
     }
 
 }
