@@ -2,7 +2,7 @@ const express = require('express')
 const validator = require('validator')
 const Promise = require('bluebird')
 const _ = require('lodash')
-const { logger, responses, auth } = require('./lib')
+const { responses, auth, utils } = require('./lib')
 const { ACCESS_LEVEL, Gateway, Application, Tag } = require('./models')
 const { SuccessResponse, ErrorResponse, HTTPError, ERROR_CODES, } = responses
 
@@ -15,10 +15,18 @@ module.exports = function(app) {
     router.get('/', auth.protect(ACCESS_LEVEL.USER), async (req, res, next) => {
 
         try {
-            const gateways = await Gateway.find()
-            .where('user').eq(req.user._id)
-            .populate('application')
+            let allowedFields = [
+                /tags\..+/g,
+                /name/g,
+                /alias/g,
+                /created/g,
+                /updated/g,
+            ]
 
+            let mainQuery = Gateway.find().where('user').eq(req.user._id)
+            mainQuery = utils.applyFilters(req, mainQuery, allowedFields)
+
+            const gateways = await mainQuery.populate('application')
             const data = gateways.map(g => ({
                 id: g.id,
                 name: g.name,

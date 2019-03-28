@@ -4,6 +4,8 @@ const hat = require('hat')
 const util = require('util')
 const path = require('path')
 const bcrypt = require('bcrypt')
+const qs = require('qs')
+const url = require('url')
 
 const fsAccess = util.promisify(fs.access)
 const fsUnlink = util.promisify(fs.unlink)
@@ -47,6 +49,29 @@ async function move(source, destination) {
     await mvPromise(source, destination, {mkdirp: true})
 }
 
+function applyFilters(req, query, allowedFields=[], allowedOps=['eq']) {
+    const filters = qs.parse(url.parse(req.url).query)
+    if (Object.keys(filters).length) {
+        for (let field in filters) {
+            let isAllowed = false
+            allowedFields.forEach(regex => {
+                let match = field.match(regex)
+                if (match) {
+                    isAllowed = true
+                }
+            })
+            if (isAllowed) {
+                for (let op in filters[field]) {
+                    if (allowedOps.includes(op)) {
+                        query = query.where(field)[op](filters[field][op])
+                    }
+                }
+            }
+        }
+    }
+    return query
+}
+
 module.exports = {
     generatePassword,
     generateAccessKey,
@@ -58,4 +83,6 @@ module.exports = {
     renameFile: fsRename,
     unlinkFile: fsUnlink,
     unlinkDir: unlinkDirectory,
+
+    applyFilters,
 }

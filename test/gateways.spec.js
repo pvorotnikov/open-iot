@@ -87,6 +87,27 @@ describe('Gateways', function() {
             res.body.data.length.should.equal(1)
         })
 
+        it('should get all gateways - filter', async () => {
+
+            // create stubs
+            let gatewayStub = sinon.stub(Gateway, 'find').returns({
+                where: sinon.stub().returnsThis(),
+                eq: sinon.stub().returnsThis(),
+                populate: sinon.stub().resolves([fakeGateway({ tags: { sn: 'abc' } })]),
+            })
+
+            const res = await request(app)
+            .get('/api/gateways?tags.sn[eq]=abc')
+            .set('Authorization', userAuthorization)
+
+            // restore stubs
+            gatewayStub.restore()
+
+            res.status.should.equal(200)
+            res.body.data.should.be.an('array')
+            res.body.data.length.should.equal(1)
+        })
+
         it('should not all gateways - db error', async () => {
 
             // create stubs
