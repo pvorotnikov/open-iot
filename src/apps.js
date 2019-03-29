@@ -15,7 +15,20 @@ module.exports = function(app) {
     router.get('/', auth.protect(ACCESS_LEVEL.USER), async (req, res, next) => {
 
         try {
-            const apps = await Application.find().where('user').eq(req.user._id)
+            let allowedFields = [
+                /name/g,
+                /alias/g,
+                /public/g,
+                /statsIn/g,
+                /statsOut/g,
+                /created/g,
+                /updated/g,
+            ]
+
+            let query = Application.find().where('user').eq(req.user._id)
+            query = utils.applyFilters(req, query, allowedFields)
+
+            const apps = await query
             const data = apps.map(a => ({
                 id: a.id,
                 name: a.name,
@@ -204,10 +217,20 @@ module.exports = function(app) {
 
         try {
 
-            const gateways = await Gateway.find()
+            let allowedFields = [
+                /tags\..+/g,
+                /name/g,
+                /alias/g,
+                /created/g,
+                /updated/g,
+            ]
+
+            let query = Gateway.find()
             .where('application').eq(req.params.id)
             .where('user').eq(req.user._id)
+            query = utils.applyFilters(req, query, allowedFields)
 
+            const gateways = await query
             const data = gateways.map(g => {
                 return {
                     id: g.id,
@@ -234,10 +257,22 @@ module.exports = function(app) {
 
         try {
 
-            const rules = await Rule.find()
+            let allowedFields = [
+                /topic/g,
+                /transformation/g,
+                /action/g,
+                /output/g,
+                /scope/g,
+                /created/g,
+                /updated/g,
+            ]
+
+            let query = Rule.find()
             .where('application').eq(req.params.id)
             .where('user').eq(req.user._id)
+            query = utils.applyFilters(req, query, allowedFields)
 
+            const rules = await query
             const data = rules.map(r => {
                 return {
                     id: r.id,

@@ -6,6 +6,7 @@ const path = require('path')
 const bcrypt = require('bcrypt')
 const qs = require('qs')
 const url = require('url')
+const { HTTPError, ERROR_CODES } = require('./responses')
 
 const fsAccess = util.promisify(fs.access)
 const fsUnlink = util.promisify(fs.unlink)
@@ -66,6 +67,8 @@ function applyFilters(req, query, allowedFields=[], allowedOps=['eq']) {
                         query = query.where(field)[op](filters[field][op])
                     }
                 }
+            } else {
+                throw new HTTPError(`Field ${field} is not allowed`, 400, ERROR_CODES.INVALID_DATA)
             }
         }
     }

@@ -23,10 +23,10 @@ module.exports = function(app) {
                 /updated/g,
             ]
 
-            let mainQuery = Gateway.find().where('user').eq(req.user._id)
-            mainQuery = utils.applyFilters(req, mainQuery, allowedFields)
+            let query = Gateway.find().where('user').eq(req.user._id)
+            query = utils.applyFilters(req, query, allowedFields)
 
-            const gateways = await mainQuery.populate('application')
+            const gateways = await query.populate('application')
             const data = gateways.map(g => ({
                 id: g.id,
                 name: g.name,

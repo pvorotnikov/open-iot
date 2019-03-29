@@ -119,7 +119,8 @@ describe('Applications', function() {
             // create stubs
             let appStub = sinon.stub(Application, 'find').returns({
                 where: sinon.stub().returnsThis(),
-                eq: sinon.stub().resolves([fakeApp()]),
+                eq: sinon.stub().onFirstCall().returnsThis()
+                    .onSecondCall().resolves([fakeApp()])
             })
 
             const res = await request(app)
