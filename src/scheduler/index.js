@@ -1,6 +1,6 @@
 const moment = require('moment')
 const cron = require('cron')
-const { utils, logger } = require('../lib')
+const { constants, logger } = require('../lib')
 const { Cron } = require('../models')
 
 class Scheduler {
@@ -34,24 +34,35 @@ class Scheduler {
             const nextExecution = job.nextDates()
             const scheduledExecution = moment(c.next)
 
+            // determine whether this needs to be executed
             const diff = scheduledExecution.diff(now)
             if (diff < 0) {
                 await this.handleSchedule(c.id, c.type, c.arguments)
                 c.next = nextExecution.toDate()
                 c.updated = now.toDate()
                 await c.save()
-            } else {
-                logger.info(`Next execution coming at ${scheduledExecution}`)
             }
 
         })
 
     }
 
+    /**
+     * Execute cron job
+     * @param {String} id cron id
+     * @param {String} type cron type
+     * @param {Object} args cron arguments
+     */
     async handleSchedule(id, type, args) {
-        logger.info(`Executing schedule ${id}`)
-        logger.info(`Cron type: ${type}`)
-        logger.info(args)
+        logger.info(`Executing cron ${id}`)
+        switch (type) {
+            case 'publish':
+                const { topic, payload } = args
+                process.emit(constants.EVENTS.MQTT_PUBLISH_MESSAGE, { topic, payload })
+                break
+            default:
+                logger.error(`Unsupported cron type: ${type}`)
+        }
     }
 
 }

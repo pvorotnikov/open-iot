@@ -176,6 +176,9 @@ module.exports = async function(app) {
                 if (_.isEmpty(args.topic)) {
                     throw new HTTPError(`Topic is required for cron type ${type}`, 400, ERROR_CODES.INVALID_DATA)
                 }
+
+                // TODO: validate topic to match the :appId/:gwId/topic/parts pattern
+
                 if (_.isEmpty(args.payload)) {
                     throw new HTTPError(`Payload is required for cron type ${type}`, 400, ERROR_CODES.INVALID_DATA)
                 }

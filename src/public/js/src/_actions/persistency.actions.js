@@ -16,7 +16,6 @@ export const persistencyActions = {
  */
 function get(topic, username, password) {
     return dispatch => {
-        debugger
         dispatch(request())
 
         // perform async operation
