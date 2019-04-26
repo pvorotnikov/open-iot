@@ -21,21 +21,25 @@ const integrations = require('./integrations')
 const plugins = require('./plugins')
 const persistency = require('./persistency')
 const tags = require('./tags')
+const crons = require('./crons')
 const MessageHandler = require('./message-handler')
 const { AwsIotBridge } = require('./bridge')
+const Scheduler = require('./scheduler')
 
 /* ================================
- * MESSAGE HANDLER AND BRIDGES
+ * MESSAGE HANDLER, SCHEDULER, AND BRIDGES
  * ================================
  */
 let mh = new MessageHandler()
 let awsBridge = null
+let scheduler = null
 async function setupServer(instance) {
     try {
         const settings = await instance.models.Setting.find()
         settings.forEach(s => nconf.set(s.key, s.value))
         mh.run()
         awsBridge = new AwsIotBridge()
+        scheduler = new Scheduler()
     } catch (err) {
         logger.error(err.message)
     }
@@ -84,6 +88,7 @@ integrations(app)
 plugins(app)
 persistency(app)
 tags(app)
+crons(app)
 
 // catch 404 and forward it to error handler
 app.use((req, res, next) => {

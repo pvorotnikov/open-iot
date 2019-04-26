@@ -166,6 +166,16 @@ const tagSchema = new Schema({
     updated: { type: Date, default: Date.now },
 })
 
+const cronSchema = new Schema({
+    user: { type: Schema.Types.ObjectId, ref: 'User' },
+    cron: { type: String, },
+    next: { type: Date, default: Date.now },
+    type: { type: String, enum: ['publish'], default: 'publish' },
+    arguments: { type: Object, default: {} },
+    created: { type: Date, default: Date.now },
+    updated: { type: Date, default: Date.now },
+})
+
 /* ================================
  * Models
  * ================================
@@ -183,6 +193,7 @@ const PipelineStep = mongoose.model('PipelineStep', pipelineStepSchema)
 const Plugin = mongoose.model('Plugin', pluginSchema)
 const Message = mongoose.model('Message', messageSchema)
 const Tag = mongoose.model('Tag', tagSchema)
+const Cron = mongoose.model('Cron', cronSchema)
 
 /* ================================
  * Database
@@ -224,4 +235,5 @@ module.exports = {
     Plugin,
     Message,
     Tag,
+    Cron,
 }

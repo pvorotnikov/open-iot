@@ -6,8 +6,9 @@ const rewire = require('rewire')
 const sinon = require('sinon')
 const should = chai.should()
 const expect = chai.expect
+const cron = require('cron')
 
-const { logger, cleanDb } = require('../_utils')
+const { cleanDb } = require('../_utils')
 const models = require('../../src/models')
 
 describe('Models', function() {
@@ -34,6 +35,7 @@ describe('Models', function() {
         models.Plugin.should.be.a('function')
         models.Message.should.be.a('function')
         models.Tag.should.be.a('function')
+        models.Cron.should.be.a('function')
 
         models.ACCESS_LEVEL.should.be.an('object')
         models.connection.should.be.a('function')
@@ -232,6 +234,20 @@ describe('Models', function() {
         const r = await new models.Tag({
             name: 'test',
             constraint: 'application'
+        }).save()
+        r.should.be.an('object')
+
+        // remove
+        const d = await r.remove()
+        d.should.be.an('object')
+    })
+
+    it('should create and remove cron', async () => {
+        // create
+        const r = await new models.Cron({
+            cron: 'test',
+            type: 'publish',
+            arguments: { topic: 'test-topic', payload: 'test-payload' },
         }).save()
         r.should.be.an('object')
 
