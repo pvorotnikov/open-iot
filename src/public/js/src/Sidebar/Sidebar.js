@@ -56,6 +56,9 @@ class Sidebar extends Component {
                 <Menu.Item active={currentPath.startsWith('/messages')} as={Link} to='/messages'>
                     <Icon name='mail' /> Messages
                 </Menu.Item>
+                <Menu.Item active={currentPath.startsWith('/cron')} as={Link} to='/cron'>
+                    <Icon name='clock outline' /> Crons
+                </Menu.Item>
                 { user.accessLevel >= ACCESS_LEVEL.MANAGER && <Menu.Item active={currentPath.startsWith('/users')} as={Link} to='/users'>
                     <Icon name='users' /> Users
                 </Menu.Item> }

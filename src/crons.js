@@ -173,10 +173,10 @@ module.exports = async function(app) {
     function validateCronArguments(type, args) {
         switch (type) {
             case 'publish':
-                if (!args.hasOwnProperty('topic')) {
+                if (_.isEmpty(args.topic)) {
                     throw new HTTPError(`Topic is required for cron type ${type}`, 400, ERROR_CODES.INVALID_DATA)
                 }
-                if (!args.hasOwnProperty('payload')) {
+                if (_.isEmpty(args.payload)) {
                     throw new HTTPError(`Payload is required for cron type ${type}`, 400, ERROR_CODES.INVALID_DATA)
                 }
                 break
