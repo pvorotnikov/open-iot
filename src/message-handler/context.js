@@ -27,6 +27,15 @@ class Context {
         }
     }
 
+    async gatewayTags() {
+        let gw = await Gateway.findById(this.gatewayId)
+        if (gw) {
+            return gw.tags
+        } else {
+            return null
+        }
+    }
+
 }
 
 module.exports = Context

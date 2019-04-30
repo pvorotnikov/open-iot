@@ -21,6 +21,7 @@ import { GatewayPage } from '../GatewayPage'
 import { SettingsPage } from '../SettingsPage'
 import { IntegrationsPage } from '../IntegrationsPage'
 import { MessagesPage } from '../MessagesPage'
+import { CronPage } from '../CronPage'
 
 class App extends Component {
 
@@ -75,6 +76,7 @@ class App extends Component {
                                 <PrivateRoute exact path="/apps/i/:id/g/:gw" component={GatewayPage} />
                                 <PrivateRoute exact path="/integrations" component={IntegrationsPage} />
                                 <PrivateRoute exact path="/settings" component={SettingsPage} />
+                                <PrivateRoute exact path="/cron" component={CronPage} />
                                 <Route exact path="/login" component={LoginPage} />
                                 <Route exact path="/register" component={RegisterPage} />
                             </Grid.Column>
