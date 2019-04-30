@@ -69,7 +69,7 @@ if ('development' === nconf.get('ENV')) {
 // setup middleware
 app.use(morgan('combined', { 'stream': logger.stream, skip: (req, res) => { return res.statusCode < 400 } }))
 app.use(bodyParser.json())
-app.use(bodyParser.raw({ type: 'application/zip' }))
+app.use(bodyParser.raw({ type: 'application/zip', limit: '10mb' }))
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
