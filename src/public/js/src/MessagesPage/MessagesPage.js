@@ -9,6 +9,7 @@ import moment from 'moment'
 import { ACTION_REPUBLISH, FEEDBACK_CHANNEL } from '../_constants'
 import { appActions, gatewayActions, ruleActions, persistencyActions } from '../_actions'
 import { HighlightBlock } from '../_components'
+import { MessageChart } from './MessageChart';
 
 const APPLICATION_WIDE_ALIAS = 'all'
 
@@ -22,7 +23,7 @@ class MessagesPage extends Component {
                 app: '',
                 gateway: '',
                 topic: '',
-                limit: '10',
+                limit: '50',
             },
             extraTopics: [],
         }
@@ -265,6 +266,9 @@ class MessagesPage extends Component {
                             View
                         </Form.Button>
                     </Form.Group>
+
+                    <MessageChart />
+
                     {this.renderMessages()}
                 </Form>
             </div>
