@@ -13,6 +13,10 @@ export class HighlightBlock extends Component {
         hljs.highlightBlock(this.codeBlock)
     }
 
+    componentDidUpdate() {
+        hljs.highlightBlock(this.codeBlock)
+    }
+
     render() {
         return (
             <code className={this.props.language}

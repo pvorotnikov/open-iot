@@ -12,14 +12,15 @@ export const persistencyActions = {
  * @param {String} topic
  * @param {String} username
  * @param {String} password
+ * @param {String} limit
  * @return {Function}
  */
-function get(topic, username, password) {
+function get(topic, username, password, limit) {
     return dispatch => {
         dispatch(request())
 
         // perform async operation
-        persistencyService.get(topic, username, password)
+        persistencyService.get(topic, username, password, limit)
         .then(messages => {
             dispatch(success(messages))
         })

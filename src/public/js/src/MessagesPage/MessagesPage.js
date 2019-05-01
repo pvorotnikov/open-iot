@@ -2,17 +2,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
-import {
-    Header,
-    Icon,
-    List,
-    Button,
-    Loader,
-    Form,
-    Dimmer,
-    Segment,
-    Label
-} from 'semantic-ui-react'
+import { Header, Icon, List, Loader, Form, Segment, Label } from 'semantic-ui-react'
 
 import moment from 'moment'
 
@@ -32,6 +22,7 @@ class MessagesPage extends Component {
                 app: '',
                 gateway: '',
                 topic: '',
+                limit: '10',
             },
             extraTopics: [],
         }
@@ -68,6 +59,16 @@ class MessagesPage extends Component {
         } else {
             return []
         }
+    }
+
+    availableLimits() {
+        return [
+            { text: '10', value: '10' },
+            { text: '50', value: '50' },
+            { text: '100', value: '100' },
+            { text: '200', value: '200' },
+            { text: 'All', value: '0' },
+        ]
     }
 
     deepUnique(data) {
@@ -156,8 +157,9 @@ class MessagesPage extends Component {
                     secret = app.secret
                 }
             })
+            const limit = this.state.values.limit
 
-            dispatch(persistencyActions.get(subTopic, key, secret))
+            dispatch(persistencyActions.get(subTopic, key, secret, limit))
         }
     }
 
@@ -249,6 +251,14 @@ class MessagesPage extends Component {
                             options={ this.availableTopics() }
                             onAddItem={ this.onAddTopic.bind(this) }
                             onChange={ this.onChange.bind(this) } />
+
+                        <Form.Dropdown name='limit'
+                            placeholder='Choose a topic'
+                            selection
+                            value={ this.state.values.limit }
+                            options={ this.availableLimits() }
+                            onChange={ this.onChange.bind(this) } />
+
                         <Form.Button disabled={!this.canView()}
                             color='green'
                             onClick={this.onView.bind(this)}>

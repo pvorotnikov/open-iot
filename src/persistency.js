@@ -16,8 +16,9 @@ module.exports = function(app) {
             const key = req.application.key
             const secret = req.application.secret
             const appId = req.params.appId
+            const limit = parseInt(req.query.limit) || 0
 
-            const messages = await models.Message.find().where('application').eq(appId).sort('-created').exec()
+            const messages = await models.Message.find().where('application').eq(appId).sort('-created').limit(limit).exec()
             const data = messages.map(m => {
 
                 // form payload
@@ -53,6 +54,7 @@ module.exports = function(app) {
             const secret = req.application.secret
             const appId = req.params.appId
             const topic = req.params['0']
+            const limit = parseInt(req.query.limit) || 0
 
             // analyze topic and perform different tasks
             const [ gwId, ...topicParts ] = topic.split('/')
@@ -65,6 +67,7 @@ module.exports = function(app) {
                             .where('application').eq(appId)
                             .where('gateway').eq(gwId)
                             .sort('-created')
+                            .limit(limit)
                             .exec()
                 } else {
                     topicName = topicParts.join('/')
@@ -73,6 +76,7 @@ module.exports = function(app) {
                             .where('gateway').eq(gwId)
                             .where('topic').eq(topicName)
                             .sort('-created')
+                            .limit(limit)
                             .exec()
                 }
 
@@ -94,6 +98,7 @@ module.exports = function(app) {
                         .where('gateway').eq(null)
                         .where('topic').eq(topicName)
                         .sort('-created')
+                        .limit(limit)
                         .exec()
             }
 

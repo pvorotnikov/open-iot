@@ -5,10 +5,10 @@ export const persistencyService = {
     get,
 }
 
-function get(topic, username, password) {
+function get(topic, username, password, limit) {
     const requestOptions = {
         method: 'GET',
     }
     return new Request(false, 'basic', username, password)
-    .send(`/api/persistency/${topic}`, requestOptions)
+    .send(`/api/persistency/${topic}?limit=${limit}`, requestOptions)
 }
