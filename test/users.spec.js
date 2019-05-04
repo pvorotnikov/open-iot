@@ -1,4 +1,3 @@
-const nconf = require('nconf')
 const Promise = require('bluebird')
 const chai = require('chai')
 const request = require('supertest')
@@ -7,7 +6,7 @@ const sinon = require('sinon')
 const should = chai.should()
 const expect = chai.expect
 
-const { cleanDb, expressApp, logger } = require('./_utils')
+const { cleanDb, expressApp, objectId } = require('./_utils')
 
 const { utils } = require('../src/lib')
 const { User, ACCESS_LEVEL } = require('../src/models')
@@ -19,39 +18,29 @@ describe('Users', function() {
     let userAuthorization, managerAuthorization
     let currentUser, currentManager
 
-    function createUser() {
-        return new Promise((fulfill, reject) => {
-            new User({
-                firstName: 'Test',
-                lastName: 'User',
-                email: 'test',
-                password: utils.generatePassword('test'),
-            }).save()
-            .then(user => {
-                userAuthorization = 'Basic ' + Buffer.from(user.key + ':' + user.secret).toString('base64')
-                currentUser = user
-                fulfill(user)
-            })
-            .catch(err => reject(err))
-        })
+    async function createUser() {
+        const user = await new User({
+            firstName: 'Test',
+            lastName: 'User',
+            email: 'test',
+            password: utils.generatePassword('test'),
+        }).save()
+        userAuthorization = 'Basic ' + Buffer.from(user.key + ':' + user.secret).toString('base64')
+        currentUser = user
+        return user
     }
 
-    function createManager() {
-        return new Promise((fulfill, reject) => {
-            new User({
-                firstName: 'Manager',
-                lastName: 'User',
-                email: 'manager',
-                password: utils.generatePassword('test'),
-                accessLevel: ACCESS_LEVEL.MANAGER,
-            }).save()
-            .then(user => {
-                managerAuthorization = 'Basic ' + Buffer.from(user.key + ':' + user.secret).toString('base64')
-                currentManager = user
-                fulfill(user)
-            })
-            .catch(err => reject(err))
-        })
+    async function createManager() {
+        const user = await new User({
+            firstName: 'Manager',
+            lastName: 'User',
+            email: 'manager',
+            password: utils.generatePassword('test'),
+            accessLevel: ACCESS_LEVEL.MANAGER,
+        }).save()
+        managerAuthorization = 'Basic ' + Buffer.from(user.key + ':' + user.secret).toString('base64')
+        currentManager = user
+        return user
     }
 
     before(() => {
@@ -66,51 +55,43 @@ describe('Users', function() {
 
     describe('User list', function() {
 
-        before(done => {
-            Promise.all([ cleanDb(), createUser(), createManager() ])
-            .then(res => done())
+        before(async () => {
+            await Promise.all([ cleanDb(), createUser(), createManager() ])
         })
 
-        it('should fetch all users', done => {
-            request(app)
+        it('should fetch all users', async () => {
+            const res = await request(app)
             .get('/api/users')
             .set('Authorization', managerAuthorization)
-            .expect(200)
-            .end((err, res) => {
-                if (err) return done(err)
-                res.body.data.length.should.be.gt(0)
-                res.body.data.forEach(u => {
-                    u.should.have.all.keys('email', 'firstName', 'lastName', 'accessLevel', 'id', 'key', 'secret')
-                    u.email.should.be.a('string')
-                    u.firstName.should.be.a('string')
-                    u.lastName.should.be.a('string')
-                    u.accessLevel.should.be.a('number')
-                    u.id.should.be.a('string')
-                    u.key.should.be.a('string')
-                    u.secret.should.be.a('string')
-                })
-                done()
+
+            res.status.should.equal(200)
+            res.body.data.length.should.be.gt(0)
+            res.body.data.forEach(u => {
+                u.should.have.all.keys('email', 'firstName', 'lastName', 'accessLevel', 'id', 'key', 'secret')
+                u.email.should.be.a('string')
+                u.firstName.should.be.a('string')
+                u.lastName.should.be.a('string')
+                u.accessLevel.should.be.a('number')
+                u.id.should.be.a('string')
+                u.key.should.be.a('string')
+                u.secret.should.be.a('string')
             })
         })
 
-        it('should not fetch all users - insufficient credentials', done => {
-            request(app)
+        it('should not fetch all users - insufficient credentials', async () => {
+            const res = await request(app)
             .get('/api/users')
             .set('Authorization', userAuthorization)
-            .expect(403, done)
+            res.status.should.equal(403)
         })
 
-        it('should not fetch all users - db error', done => {
+        it('should not fetch all users - db error', async () => {
             const userStub = sinon.stub(User, 'find').rejects(new Error('user-find'))
-            request(app)
+            const res = await request(app)
             .get('/api/users')
             .set('Authorization', managerAuthorization)
-            .expect(500)
-            .end((err, res) => {
-                userStub.restore()
-                if (err) return done(err)
-                done()
-            })
+            userStub.restore()
+            res.status.should.equal(500)
         })
 
     })
@@ -122,95 +103,91 @@ describe('Users', function() {
 
     describe('User update', function() {
 
-        before(done => {
-            Promise.all([ cleanDb(), createUser(), createManager() ])
-            .then(res => done())
+        before(async () => {
+            await Promise.all([ cleanDb(), createUser(), createManager() ])
         })
 
-        it('should update user', done => {
-            request(app)
+        it('should update user', async () => {
+            const res = await request(app)
             .put(`/api/users/${currentUser._id}`)
             .send({ firstName: 'Updated', lastName: 'User', email: 'update@user.com' })
             .set('Authorization', managerAuthorization)
-            .expect(200)
-            .end((err, res) => {
-                if (err) return done(err)
-                res.body.status.should.equal('ok')
-                res.body.data.should.be.an('object')
-                User.findById(currentUser._id)
-                .then(user => {
-                    user.firstName.should.equal('Updated')
-                    user.lastName.should.equal('User')
-                    user.email.should.equal('update@user.com')
-                })
-                .finally(() => done())
-            })
+
+            res.status.should.equal(200)
+            res.body.status.should.equal('ok')
+            res.body.data.should.be.an('object')
+
+            const user = await User.findById(currentUser._id)
+            user.firstName.should.equal('Updated')
+            user.lastName.should.equal('User')
+            user.email.should.equal('update@user.com')
         })
 
-        it('should update user passord', done => {
-            request(app)
+        it('should update user passord', async () => {
+            const res = await request(app)
             .put(`/api/users/${currentUser._id}`)
             .send({ firstName: 'Updated2', lastName: 'User2', email: 'update2@user.com', password: '123456' })
             .set('Authorization', managerAuthorization)
-            .expect(200)
-            .end((err, res) => {
-                if (err) return done(err)
-                res.body.status.should.equal('ok')
-                res.body.data.should.be.an('object')
-                User.findById(currentUser._id)
-                .then(user => {
-                    user.firstName.should.equal('Updated2')
-                    user.lastName.should.equal('User2')
-                    user.email.should.equal('update2@user.com')
-                })
-                .finally(() => done())
-            })
+
+            res.status.should.equal(200)
+            res.body.status.should.equal('ok')
+            res.body.data.should.be.an('object')
+
+            const user = await User.findById(currentUser._id)
+            user.firstName.should.equal('Updated2')
+            user.lastName.should.equal('User2')
+            user.email.should.equal('update2@user.com')
         })
 
-        it('should not update user - no first name', done => {
-            request(app)
+        it('should not update user - does not exist', async () => {
+            const res = await request(app)
+            .put(`/api/users/${objectId()}`)
+            .send({ firstName: 'Updated', lastName: 'User', email: 'update@user.com', password: '123456' })
+            .set('Authorization', managerAuthorization)
+            res.status.should.equal(400)
+        })
+
+        it('should update user - no first name', async () => {
+            const res = await request(app)
             .put(`/api/users/${currentUser._id}`)
             .send({ lastName: 'User', email: 'update@user.com', password: '123456' })
             .set('Authorization', managerAuthorization)
-            .expect(400, done)
+            res.status.should.equal(200)
         })
 
-        it('should not update user - no last name', done => {
-            request(app)
+        it('should update user - no last name', async () => {
+            const res = await request(app)
             .put(`/api/users/${currentUser._id}`)
             .send({ firstName: 'Updated', email: 'update@user.com', password: '123456' })
             .set('Authorization', managerAuthorization)
-            .expect(400, done)
+            res.status.should.equal(200)
         })
 
-        it('should not update user - no email', done => {
-            request(app)
+        it('should update user - no email', async () => {
+            const res = await request(app)
             .put(`/api/users/${currentUser._id}`)
             .send({ firstName: 'Updated', lastName: 'User', password: '123456' })
             .set('Authorization', managerAuthorization)
-            .expect(400, done)
+            res.status.should.equal(200)
         })
 
-        it('should not update user - short password', done => {
-            request(app)
+        it('should not update user - short password', async () => {
+            const res = await request(app)
             .put(`/api/users/${currentUser._id}`)
             .send({ firstName: 'Updated', lastName: 'User', email: 'update@user.com', password: '12345' })
             .set('Authorization', managerAuthorization)
-            .expect(400, done)
+            res.status.should.equal(400)
         })
 
-        it('should not update user - db error', done => {
+        it('should not update user - db error', async () => {
             const userStub = sinon.stub(User, 'findByIdAndUpdate').rejects(new Error('user-find'))
-            request(app)
+            const res = await request(app)
             .put(`/api/users/${currentUser._id}`)
             .send({ firstName: 'Updated', lastName: 'User', email: 'update@user.com', password: '123456' })
             .set('Authorization', managerAuthorization)
-            .expect(500)
-            .end((err, res) => {
-                userStub.restore()
-                if (err) return done(err)
-                done()
-            })
+
+            userStub.restore()
+            res.status.should.equal(500)
         })
 
     })
@@ -222,56 +199,48 @@ describe('Users', function() {
 
     describe('User delete', function() {
 
-        before(done => {
-            Promise.all([ cleanDb(), createUser(), createManager() ])
-            .then(res => done())
+        before(async () => {
+            await Promise.all([ cleanDb(), createUser(), createManager() ])
         })
 
-        it('should delete user', done => {
-            request(app)
+        it('should delete user', async () => {
+            const res = await request(app)
             .delete(`/api/users/${currentUser._id}`)
             .set('Authorization', managerAuthorization)
-            .expect(200)
-            .end((err, res) => {
-                if (err) return done(err)
-                res.body.status.should.equal('ok')
-                res.body.data.should.be.an('object')
-                done()
-            })
+
+            res.status.should.equal(200)
+            res.body.status.should.equal('ok')
+            res.body.data.should.be.an('object')
         })
 
-        it('should not delete user - does not exist', done => {
-            request(app)
-            .delete(`/api/users/dummy`)
+        it('should not delete user - does not exist', async () => {
+            const res = await request(app)
+            .delete(`/api/users/${objectId()}`)
             .set('Authorization', managerAuthorization)
-            .expect(500, done)
+            res.status.should.equal(400)
         })
 
-        it('should not delete user - insufficient credentials', done => {
-            request(app)
+        it('should not delete user - insufficient credentials', async () => {
+            const res = await request(app)
             .delete(`/api/users/${currentUser._id}`)
             .set('Authorization', userAuthorization)
-            .expect(403, done)
+            res.status.should.equal(403)
         })
 
-        it('should not delete user - self', done => {
-            request(app)
+        it('should not delete user - self', async () => {
+            const res = await request(app)
             .delete(`/api/users/${currentManager._id}`)
             .set('Authorization', managerAuthorization)
-            .expect(400, done)
+            res.status.should.equal(400)
         })
 
-        it('should not delete user - db error', done => {
+        it('should not delete user - db error', async () => {
             const userStub = sinon.stub(User, 'findById').rejects(new Error('user-find'))
-            request(app)
+            const res = await request(app)
             .delete(`/api/users/${currentUser._id}`)
             .set('Authorization', managerAuthorization)
-            .expect(500)
-            .end((err, res) => {
-                userStub.restore()
-                if (err) return done(err)
-                done()
-            })
+            userStub.restore()
+            res.status.should.equal(500)
         })
 
     })
@@ -283,49 +252,42 @@ describe('Users', function() {
 
     describe('User key', function() {
 
-        before(done => {
-            Promise.all([ cleanDb(), createUser(), createManager() ])
-            .then(res => done())
+        before(async () => {
+            await Promise.all([ cleanDb(), createUser(), createManager() ])
         })
 
-        it('should update user key', done => {
-            request(app)
+        it('should update user key', async () => {
+            const res = await request(app)
             .put(`/api/users/${currentUser._id}/key`)
             .set('Authorization', managerAuthorization)
-            .expect(200)
-            .end((err, res) => {
-                if (err) return done(err)
-                res.body.status.should.equal('ok')
-                res.body.data.key.should.be.a('string')
-                done()
-            })
+
+            res.status.should.equal(200)
+            res.body.status.should.equal('ok')
+            res.body.data.key.should.be.a('string')
         })
 
-        it('should not update user key user - insufficient credentials', done => {
-            request(app)
+        it('should not update user key user - insufficient credentials', async () => {
+            const res = await request(app)
             .put(`/api/users/${currentUser._id}/key`)
             .set('Authorization', userAuthorization)
-            .expect(403, done)
+            res.status.should.equal(403)
         })
 
-        it('should not update user key user - does not exist', done => {
-            request(app)
-            .put(`/api/users/dummy/key`)
+        it('should not update user key user - does not exist', async () => {
+            const res = await request(app)
+            .put(`/api/users/${objectId()}/key`)
             .set('Authorization', managerAuthorization)
-            .expect(500, done)
+            res.status.should.equal(200)
         })
 
-        it('should not update user key - db error', done => {
+        it('should not update user key - db error', async () => {
             const userStub = sinon.stub(User, 'findByIdAndUpdate').rejects(new Error('user-find'))
-            request(app)
+            const res = await request(app)
             .put(`/api/users/${currentUser._id}/key`)
             .set('Authorization', managerAuthorization)
-            .expect(500)
-            .end((err, res) => {
-                userStub.restore()
-                if (err) return done(err)
-                done()
-            })
+
+            userStub.restore()
+            res.status.should.equal(500)
         })
 
     })
@@ -337,49 +299,42 @@ describe('Users', function() {
 
     describe('User secret', function() {
 
-        before(done => {
-            Promise.all([ cleanDb(), createUser(), createManager() ])
-            .then(res => done())
+        before(async () => {
+            await Promise.all([ cleanDb(), createUser(), createManager() ])
         })
 
-        it('should update user secret', done => {
-            request(app)
+        it('should update user secret', async () => {
+            const res = await request(app)
             .put(`/api/users/${currentUser._id}/secret`)
             .set('Authorization', managerAuthorization)
-            .expect(200)
-            .end((err, res) => {
-                if (err) return done(err)
-                res.body.status.should.equal('ok')
-                res.body.data.secret.should.be.a('string')
-                done()
-            })
+
+            res.status.should.equal(200)
+            res.body.status.should.equal('ok')
+            res.body.data.secret.should.be.a('string')
         })
 
-        it('should not update user secret user - insufficient credentials', done => {
-            request(app)
+        it('should not update user secret user - insufficient credentials', async () => {
+            const res = await request(app)
             .put(`/api/users/${currentUser._id}/secret`)
             .set('Authorization', userAuthorization)
-            .expect(403, done)
+            res.status.should.equal(403)
         })
 
-        it('should not update user secret user - does not exist', done => {
-            request(app)
-            .put(`/api/users/dummy/secret`)
+        it('should not update user secret user - does not exist', async () => {
+            const res = await request(app)
+            .put(`/api/users/${objectId()}/secret`)
             .set('Authorization', managerAuthorization)
-            .expect(500, done)
+            res.status.should.equal(200)
         })
 
-        it('should not update user secret - db error', done => {
+        it('should not update user secret - db error', async () => {
             const userStub = sinon.stub(User, 'findByIdAndUpdate').rejects(new Error('user-find'))
-            request(app)
+            const res = await request(app)
             .put(`/api/users/${currentUser._id}/secret`)
             .set('Authorization', managerAuthorization)
-            .expect(500)
-            .end((err, res) => {
-                userStub.restore()
-                if (err) return done(err)
-                done()
-            })
+
+            userStub.restore()
+            res.status.should.equal(500)
         })
 
     })
