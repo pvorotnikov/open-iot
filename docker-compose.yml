@@ -35,6 +35,8 @@ services:
             dockerfile: ./Dockerfile
         image: open-iot-ui:latest
         hostname: ui
+        command: npm run dev
+        restart: always
         environment:
             VIRTUAL_HOST: 127.0.0.1                             # how is the host reached
             DB_CONNECTION: mongodb://db/openiot
@@ -52,3 +54,4 @@ services:
         ports:
             - 27017:27017
         hostname: db
+        restart: always

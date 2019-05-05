@@ -40,9 +40,21 @@ async function fileExists(filename) {
     }
 }
 
+/**
+ * Remove directory by recursively removing all files inside
+ * and finally removing the directory itself.
+ * @param {String} dir
+ * @return {Promise<>}
+ */
 async function unlinkDirectory(dir) {
     const files = await readdir(dir)
-    await Promise.all(files.map(f => fsUnlink(path.join(dir, f))))
+    await Promise.all(files.map(f => {
+        if (fs.lstatSync(path.join(dir, f)).isDirectory()) {
+            return unlinkDirectory(path.join(dir, f))
+        } else {
+            return fsUnlink(path.join(dir, f))
+        }
+    }))
     await fsRmdir(dir)
 }
 

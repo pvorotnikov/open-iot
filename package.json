@@ -4,7 +4,8 @@
   "description": "Open IoT project",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon src/bin/www",
+    "start": "node src/bin/www",
+    "dev": "nodemon src/bin/www",
     "test": "mocha --exit --timeout 120000 --recursive",
     "test:coverage": "nyc --reporter=html --reporter=text npm test",
     "test:coveralls": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
@@ -96,7 +97,8 @@
       "test/*",
       "docs/*",
       "src/public/*",
-      "src/temp"
+      "src/temp",
+      "src/modules"
     ]
   }
 }

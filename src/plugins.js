@@ -74,6 +74,7 @@ module.exports = function(app) {
             }
 
             // install plugin
+            logger.info(`Installing plugin ${name}`)
             await utils.move(path.join(TEMP_DIR, pluginTempName), path.join(MODULES_DIR, name))
 
             const plugin = await new Plugin({
@@ -81,12 +82,17 @@ module.exports = function(app) {
                 description: description,
             }).save()
 
+            logger.info(`Plugin installed ${name}`)
+
             const data = {
                 id: plugin._id,
                 name: plugin.name,
                 description: plugin.description,
             }
             res.json(new SuccessResponse(data))
+
+            logger.info(`Exitting process...`)
+            process.exit()
 
         } catch (err) {
             res.status(err.status || 500).json(new ErrorResponse(err.message, err.code))

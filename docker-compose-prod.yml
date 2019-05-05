@@ -27,6 +27,7 @@ services:
     ui:
         image: pvorotnikov/open-iot-ui:latest
         hostname: ui
+        restart: always
         environment:
             VIRTUAL_HOST: example.com                              # how is the host reached
             DB_CONNECTION: mongodb://db.example.com/prod           # db connection string
