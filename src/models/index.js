@@ -204,7 +204,10 @@ const Cron = mongoose.model('Cron', cronSchema)
 const connection = async function() {
     try {
 
-        const instance = await mongoose.connect(nconf.get('DB_CONNECTION'), { useNewUrlParser: true })
+        const instance = await mongoose.connect(nconf.get('DB_CONNECTION'), {
+            useNewUrlParser: true,
+            server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } },
+        })
         logger.info('Connected to DB')
         await Promise.all([
             defaults.user(User), // create default user for the first time
