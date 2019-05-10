@@ -206,7 +206,8 @@ const connection = async function() {
 
         const instance = await mongoose.connect(nconf.get('DB_CONNECTION'), {
             useNewUrlParser: true,
-            server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } },
+            keepAlive: 1,
+            connectTimeoutMS: 30000,
         })
         logger.info('Connected to DB')
         await Promise.all([
