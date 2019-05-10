@@ -206,8 +206,18 @@ const connection = async function() {
 
         const instance = await mongoose.connect(nconf.get('DB_CONNECTION'), {
             useNewUrlParser: true,
-            keepAlive: 1,
+            keepAlive: true,
             connectTimeoutMS: 30000,
+        })
+        instance.connection.on('disconnected', () => {
+            logger.info('Mongoose disconnected')
+        })
+        instance.connection.on('reconnected', () => {
+            logger.info('Mongoose reconnected')
+        })
+        instance.connection.on('error', (err) => {
+            logger.error('Mongoose error')
+            logger.error(err)
         })
         logger.info('Connected to DB')
         await Promise.all([
