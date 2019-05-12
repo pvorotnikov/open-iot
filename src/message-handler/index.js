@@ -208,7 +208,7 @@ class MessageHandler {
      * @param {String} topic
      * @param {Buffer} message
      */
-    handleMqttMessage(topic, message) {
+    async handleMqttMessage(topic, message) {
 
         // persist the message using default persistency policy
         persistency.storeMessage(topic, message)
@@ -266,46 +266,49 @@ class MessageHandler {
 
         if ('rules' === nconf.get('global.integrationmode')) {
 
-            Rule.find()
-            .where('application').eq(appId)
-            .where('topic').eq(topicName)
-            .then(rules => {
+            try {
+                const rules = await Rule.find()
+                .where('application').eq(appId)
+                .where('topic').eq(topicName)
                 rules.forEach(r => {
                     // perform transformation
                     let t = new Transformer(r.transformation, message)
                     let tm = t.getTransformedMessage()
                     this.performTopicAction(r.action, r.scope, r.output, tm)
                 })
-            })
-            .catch(err => {
+            } catch (err) {
                 logger.error(err.message)
-            })
+            }
 
         } else if ('integrations' === nconf.get('global.integrationmode')) {
 
-            // create context that is passed to the invoked integration step
-            const context = new Context()
-            context.appId = appId
-            context.gatewayId = gatewayId
-            context.topic = topicName
-            context.message = message
+            try {
 
-            Integration.find({ topic: topicName, status: 'enabled' })
-            .then(integrationList => {
+                // create context that is passed to the invoked integration step
+                const context = new Context()
+                context.appId = appId
+                context.gatewayId = gatewayId
+                context.topic = topicName
+                context.message = message
+
+                // run integrations concurrently
+                const integrationList = await Integration.find({ topic: topicName, status: 'enabled' })
                 integrationList.forEach(i => {
+
+                    // waterfall pipelines for each integration (sequential invocation)
                     logger.debug('Invoking integration', i._id.toString())
-                    i.pipeline.filter(s => 'enabled' === s.status).reduce((accumulator, s) => {
+                    i.pipeline.filter(s => 'enabled' === s.status).reduce(async (previousPromise, s) => {
                         // call plugin hook - process
+                        context.message = await previousPromise
                         logger.debug(`Calling module ${integrations[s.module.toString()]._name} with arguments ${JSON.stringify(s.arguments)}`)
-                        context.message = accumulator
-                        let newMessage = integrations[s.module.toString()].process.apply(null, s.arguments.concat([context]))
-                        return _.isUndefined(newMessage) ? accumulator : newMessage
-                    }, message)
+                        return integrations[s.module.toString()].process.apply(null, s.arguments.concat([context]))
+                    }, Promise.resolve(message))
+
                 })
-            })
-            .catch(err => {
+
+            } catch (err) {
                 logger.error(err.message)
-            })
+            }
 
         } else {
             logger.warn('Unsupported integration mode:', nconf.get('global.integrationmode'))
