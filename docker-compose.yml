@@ -1,4 +1,4 @@
-version: '2'
+version: '2.1'
 
 services:
 
@@ -55,3 +55,8 @@ services:
             - 27017:27017
         hostname: db
         restart: always
+
+networks:
+    default:
+        driver: bridge
+        name: openiot
