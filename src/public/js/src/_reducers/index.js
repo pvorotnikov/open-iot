@@ -14,6 +14,7 @@ import { integrations } from './integrations.reducer'
 import { persistency } from './persistency.reducer'
 import { tags } from './tags.reducer'
 import { crons } from './crons.reducer'
+import { plugins } from './plugins.reducer'
 
 import { todos, visibilityFilter } from './todo.reducer'
 
@@ -32,6 +33,7 @@ const rootReducer = combineReducers({
     persistency,    // state.persistency
     tags,           // state.tags
     crons,          // state.crons
+    plugins,        // state.plugins
 
     todos,              // TODO: remove this eventually
     visibilityFilter,   // TODO: remove this eventually

@@ -44,6 +44,8 @@ module.exports = function(app) {
                 id: p._id,
                 name: p.name,
                 description: p.description,
+                created: p.created,
+                updated: p.updated,
             }))
             res.json(new SuccessResponse(data))
 
@@ -88,6 +90,8 @@ module.exports = function(app) {
                 id: plugin._id,
                 name: plugin.name,
                 description: plugin.description,
+                created: p.created,
+                updated: p.updated,
             }
             res.json(new SuccessResponse(data))
 

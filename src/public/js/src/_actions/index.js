@@ -10,4 +10,5 @@ export * from './integration.actions'
 export * from './persistency.actions'
 export * from './tag.actions'
 export * from './cron.actions'
+export * from './plugin.actions'
 export * from './todo.actions' // TODO: remove this eventually

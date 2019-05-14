@@ -3,11 +3,11 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import moment from 'moment'
 
-import { Header, Container, Icon, Loader, Table, Checkbox, TextArea, Dropdown } from 'semantic-ui-react'
+import { Header, Container, Icon, Loader, Table, Checkbox, TextArea, Dropdown, Tab } from 'semantic-ui-react'
 
 import { Tags } from './'
 import { EditableText } from '../_components'
-import { settingActions, moduleActions } from '../_actions'
+import { settingActions, moduleActions, pluginActions } from '../_actions'
 
 
 class SettingsPage extends Component {
@@ -15,6 +15,7 @@ class SettingsPage extends Component {
     componentDidMount() {
         this.props.dispatch(settingActions.getAll())
         this.props.dispatch(moduleActions.getAll())
+        this.props.dispatch(pluginActions.getAll())
     }
 
     onSettingUpdate(key, value) {
@@ -147,17 +148,21 @@ class SettingsPage extends Component {
                             { !moduleMissing && <Checkbox toggle defaultChecked={moduleEnabled} onChange={(e, data) => this.onModuleEnable(m.id, data.checked)} /> }
                             { moduleMissing && <span>Missing module</span> }
                         </Table.Cell>
+                        <Table.Cell>
+                            { moment(m.uploaded).calendar() }
+                        </Table.Cell>
                     </Table.Row>
                 )
             })
         }
 
         return (
-            <Table celled columns='2'>
+            <Table celled columns='3'>
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell>Module</Table.HeaderCell>
                         <Table.HeaderCell>Enable/Disable</Table.HeaderCell>
+                        <Table.HeaderCell>Uploaded</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
@@ -196,10 +201,13 @@ SettingsPage.propTypes = {
 }
 
 function mapStateToProps(state) {
-    const { settings, modules } = state
+    const { settings, modules, plugins } = state
     return {
         settings,
-        modules,
+        modules: { loading: modules.loading, items: modules.items.map(m => ({
+            ...m,
+            uploaded: plugins.items.reduce((acc, plg) => plg.name === m.name ? plg.created : acc, null)
+        })) },
     }
 }
 

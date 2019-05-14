@@ -10,6 +10,7 @@ export * from './integration.constants'
 export * from './persistency.constants'
 export * from './tag.constants'
 export * from './cron.constants'
+export * from './plugin.constants'
 export * from './todo.constants' // TODO: remove this eventually
 
 export const ACTION_REPUBLISH = 'republish'
