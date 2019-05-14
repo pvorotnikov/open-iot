@@ -90,8 +90,8 @@ module.exports = function(app) {
                 id: plugin._id,
                 name: plugin.name,
                 description: plugin.description,
-                created: p.created,
-                updated: p.updated,
+                created: plugin.created,
+                updated: plugin.updated,
             }
             res.json(new SuccessResponse(data))
 
