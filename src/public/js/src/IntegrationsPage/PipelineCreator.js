@@ -57,11 +57,8 @@ class PipelineCreator extends Component {
         if ('' !== args.trim()) {
             try {
                 parsedArguments = JSON.parse(args)
-                if (!Array.isArray(parsedArguments)) {
-                    throw new Error('You need to specify an Array')
-                }
             } catch (err) {
-                this.props.dispatch(alertActions.error('Arguments are not in valid JSON format or not an array.'))
+                this.props.dispatch(alertActions.error('Arguments are not in valid JSON format.'))
                 return
             }
         }
