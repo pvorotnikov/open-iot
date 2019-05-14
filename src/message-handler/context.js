@@ -7,6 +7,7 @@ class Context {
         this.gatewayId = null
         this.topic = null
         this.message = null
+        this.arguments = null
     }
 
     async appAlias() {

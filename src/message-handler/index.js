@@ -296,12 +296,13 @@ class MessageHandler {
                 integrationList.forEach(i => {
 
                     // waterfall pipelines for each integration (sequential invocation)
-                    logger.debug('Invoking integration', i._id.toString())
+                    logger.debug('Invoking integration', i.id.toString())
                     i.pipeline.filter(s => 'enabled' === s.status).reduce(async (previousPromise, s) => {
                         // call plugin hook - process
                         context.message = await previousPromise
+                        context.arguments = s.arguments
                         logger.debug(`Calling module ${integrations[s.module.toString()]._name} with arguments ${JSON.stringify(s.arguments)}`)
-                        return integrations[s.module.toString()].process.apply(null, s.arguments.concat([context]))
+                        return integrations[s.module.toString()].process(context)
                     }, Promise.resolve(message))
 
                 })
