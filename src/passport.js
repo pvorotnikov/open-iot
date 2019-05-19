@@ -1,96 +1,106 @@
 const nconf = require('nconf')
+const _ = require('lodash')
 const express = require('express')
 const bcrypt = require('bcrypt')
 const validator = require('validator')
 const { logger, responses, auth, utils } = require('./lib')
 const { User } = require('./models')
-const { SuccessResponse, ErrorResponse } = responses
+const { SuccessResponse, ErrorResponse, HTTPError, ERROR_CODES } = responses
 
 module.exports = function(app) {
 
     const router = express.Router()
     app.use('/api/passport', router)
 
-    // perform login
-    router.post('/auth', (req, res, next) => {
+    // Perform basic login.
+    // The response returns access token and refresh token
+    router.post('/auth', async (req, res, next) => {
 
-        User.findOne({ email: req.body.email })
-        .then((u) => {
-            if (u) {
-                if (bcrypt.compareSync(req.body.password, u.password)) {
-                    const { accessToken, refreshToken } = auth.createTokens(u)
-                    let user =  {
-                        firstName: u.firstName,
-                        lastName: u.lastName,
-                        accessLevel: u.accessLevel,
-                        id: u._id,
-                        accessToken,
-                        refreshToken,
-                    }
-                    res.json(new SuccessResponse(user))
+        try {
 
-                } else {
-                    res.status(403).json(new ErrorResponse('Wrong password'))
-                }
-            } else {
-                res.status(401).json(new ErrorResponse('User does not exist'))
+            const user = await User.findOne({ email: req.body.email })
+
+            if (!user) {
+                throw new HTTPError('User does not exist', 401, ERROR_CODES.NOT_FOUND)
             }
-        })
-        .catch((err) => {
-            res.status(500).json(new ErrorResponse(err.message))
-        })
+
+            if (!bcrypt.compareSync(req.body.password, user.password)) {
+                throw new HTTPError('Wrong password', 403, ERROR_CODES.INVALID_DATA)
+            }
+
+            const { accessToken, refreshToken } = auth.createTokens(user)
+            const data =  {
+                firstName: user.firstName,
+                lastName: user.lastName,
+                accessLevel: user.accessLevel,
+                id: user.id,
+                accessToken,
+                refreshToken,
+            }
+            res.json(new SuccessResponse(data))
+
+        } catch (err) {
+            res.status(err.status || 500).json(new ErrorResponse(err.message, err.code))
+        }
 
     })
 
-    // refresh token
+    // refresh JWT token
     router.get('/refresh', auth.protect(), (req, res, next) => {
         res.json(new SuccessResponse(auth.createTokens(req.user)))
     })
 
-    // register user
-    router.post('/register', (req, res, next) => {
+    // Register a new user
+    router.post('/register', async (req, res, next) => {
 
-        const { firstName, lastName, email, password } = req.body
+        try {
 
-        if (!nconf.get('global.enableregistrations')) {
-            return res.status(400).json(new ErrorResponse('Registrations are disabled'))
+            const { firstName, lastName, email, password } = req.body
+
+            if (!nconf.get('global.enableregistrations')) {
+                throw new HTTPError('Registrations are disabled', 400, ERROR_CODES.GENERAL)
+            }
+
+            if (!validator.isEmail(email)) {
+                throw new HTTPError('Please, enter a valid email', 400, ERROR_CODES.INVALID_DATA)
+            }
+
+            if (!validator.isLength(password, {min:6, max:36})) {
+                throw new HTTPError('Please, enter a password between 6 and 36 symbols', 400, ERROR_CODES.INVALID_DATA)
+            }
+
+            if (_.isEmpty(firstName)) {
+                throw new HTTPError('Please, enter your first name', 400, ERROR_CODES.MISSING_DATA)
+            }
+
+            if (_.isEmpty(lastName)) {
+                throw new HTTPError('Please, enter your last name', 400, ERROR_CODES.MISSING_DATA)
+            }
+
+            // create the user
+            let user
+            try {
+                user = await new User({ firstName, lastName, email, password: utils.generatePassword(password) }).save()
+            } catch (err) {
+                if (err.code === 11000) {
+                    throw new HTTPError(`The email ${email} is already in use`, 400, ERROR_CODES.INVALID_DATA)
+                } else {
+                    throw err
+                }
+            }
+
+            // return the user
+            const data = {
+                firstName: user.firstName,
+                lastName: user.lastName,
+                accessLevel: user.accessLevel,
+                id: user.id,
+            }
+            res.json(new SuccessResponse(data))
+
+        } catch (err) {
+            res.status(err.status || 500).json(new ErrorResponse(err.message, err.code))
         }
-
-        if (!validator.isEmail(email)) {
-            return res.status(400).json(new ErrorResponse('Please, enter a valid email'))
-        }
-
-        if (!validator.isLength(password, {min:6, max:36})) {
-            return res.status(400).json(new ErrorResponse('Please, enter a password between 6 and 36 symbols'))
-        }
-
-        if (validator.isEmpty(firstName)) {
-            return res.status(400).json(new ErrorResponse('Please, enter your first name'))
-        }
-
-        if (validator.isEmpty(lastName)) {
-            return res.status(400).json(new ErrorResponse('Please, enter your last name'))
-        }
-
-        let newUser = new User({
-            firstName,
-            lastName,
-            email,
-            password: utils.generatePassword(password),
-        })
-        newUser.save()
-        .then(u => {
-            res.json(new SuccessResponse({
-                firstName: u.firstName,
-                lastName: u.lastName,
-                accessLevel: u.accessLevel,
-                id: u._id,
-            }))
-        })
-        .catch(err => {
-            let message = err.code === 11000 ? `The email ${email} is already in use` : err.message
-            res.status(500).json(new ErrorResponse(message))
-        })
 
     })
 
