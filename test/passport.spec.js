@@ -7,7 +7,7 @@ const sinon = require('sinon')
 const should = chai.should()
 const expect = chai.expect
 
-const { cleanDb, expressApp, logger } = require('./_utils')
+const { cleanDb, expressApp } = require('./_utils')
 
 const { utils } = require('../src/lib')
 const { User, ACCESS_LEVEL } = require('../src/models')
@@ -208,7 +208,7 @@ describe('Passport', function() {
             request(app)
             .post('/api/passport/register')
             .send({ email: 'test@test.com', password: 'goodPassword', firstName: 'New', lastName: 'User' })
-            .expect(500, done)
+            .expect(400, done)
         })
 
         it('should not register user - db error', done => {
