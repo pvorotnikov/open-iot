@@ -155,7 +155,7 @@ describe('Plugins', function() {
 
             res.status.should.equal(200)
             res.body.data.should.be.an('object')
-            res.body.data.should.have.all.keys('id', 'name', 'description')
+            res.body.data.should.have.all.keys('id', 'name', 'description', 'created', 'updated')
             res.body.data.id.should.be.a('string')
             res.body.data.name.should.be.a('string')
             res.body.data.description.should.be.a('string')

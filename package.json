@@ -97,8 +97,7 @@
       "test/*",
       "docs/*",
       "src/public/*",
-      "src/temp",
-      "src/modules"
+      "src/temp"
     ]
   }
 }

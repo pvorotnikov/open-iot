@@ -9,7 +9,7 @@
  */
 
 const express = require('express')
-const validator = require('validator')
+const nconf = require('nconf')
 const _ = require('lodash')
 const fs = require('fs')
 const path = require('path')
@@ -95,8 +95,12 @@ module.exports = function(app) {
             }
             res.json(new SuccessResponse(data))
 
-            logger.info(`Exitting process...`)
-            process.exit()
+            if (nconf.get('ENV') === 'production') {
+                logger.info(`Exitting process...`)
+                process.exit()
+            } else {
+                logger.info('Skipping process.exit()')
+            }
 
         } catch (err) {
             res.status(err.status || 500).json(new ErrorResponse(err.message, err.code))

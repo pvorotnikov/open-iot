@@ -29,6 +29,7 @@ services:
         hostname: ui
         restart: always
         environment:
+            NODE_ENV: production
             VIRTUAL_HOST: example.com                              # how is the host reached
             DB_CONNECTION: mongodb://db.example.com/prod           # db connection string
             ENCRYPTION_SECRET: my-super-secret-key                 # change this (JWT)
