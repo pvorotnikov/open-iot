@@ -48,7 +48,7 @@
     "jsonwebtoken": "^8.4.0",
     "lodash": "^4.17.13",
     "moment": "^2.23.0",
-    "mongoose": "^5.3.16",
+    "mongoose": "^5.7.5",
     "morgan": "^1.9.1",
     "mqtt": "^2.18.8",
     "mv": "^2.1.1",
